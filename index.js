@@ -11,13 +11,13 @@ var svg = d3.select("body").append("svg")
 
 var path = d3.geo.path();
 
-const legend_title = "Number of confirmed COVID cases on 6/30/2020";
+const legend_title = "Number of new confirmed COVID cases on 6/30/2020";
 
 const num_color_divisions = 13;
  
 // Gets the desired data value from a row in the CSV dataset.
 function getDataValue(d) {
-    return parseInt(d["6/30/20"]);
+    return parseInt(d["6/30/20"]) - parseInt(d["6/29/20"]);
 }
 
 // Return the minimum value in the color domain.
