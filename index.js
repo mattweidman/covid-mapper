@@ -11,13 +11,21 @@ var svg = d3.select("body").append("svg")
 
 var path = d3.geo.path();
 
-const legend_title = "Number of new confirmed COVID cases on 6/30/2020";
+const legend_title = "Number of new confirmed COVID cases on 6/30/2020 per 1,000,000 population";
 
 const num_color_divisions = 13;
  
 // Gets the desired data value from a row in the CSV dataset.
 function getDataValue(d) {
-    return parseInt(d["6/30/20"]) - parseInt(d["6/29/20"]);
+    const d2 = parseInt(d["confirmed_6/30/20"]);
+    const d1 = parseInt(d["confirmed_6/29/20"]);
+    const population = parseInt(d["population"]);
+
+    if (population === 0) {
+        return 0;
+    }
+
+    return Math.round(1000000 * (d2 - d1) / population);
 }
 
 // Return the minimum value in the color domain.
@@ -36,12 +44,12 @@ function getDomainMax(data) {
     //     return value > maxSoFar ? value : maxSoFar;
     // }, -Number.MAX_VALUE);
     var data_avg = data.reduce((sumSoFar, d) => sumSoFar + getDataValue(d), 0) / data.length;
-    return data_avg * 10;
+    return data_avg * 5;
 }
 
 queue()
     .defer(d3.json, "us.json")
-    .defer(d3.csv, "covid_confirmed_usafacts.csv")
+    .defer(d3.csv, "covid_all.csv")
     .await(ready);
 
 function ready(error, us, data) {
