@@ -1,8 +1,4 @@
 var width = 960, height = 600;
-var color_domain = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000]
-var color = d3.scale.threshold()
-    .domain(color_domain)
-    .range(["#dcdcdc", "#d0d6cd", "#bdc9be", "#aabdaf", "#97b0a0", "#84a491", "#719782", "#5e8b73", "#4b7e64", "#387255", "#256546", "#125937", "#004d28"]);
  
 var div = d3.select("body").append("div")
     .attr("class", "tooltip")
@@ -14,12 +10,40 @@ var svg = d3.select("body").append("svg")
     .style("margin", "-15px auto");
 
 var path = d3.geo.path();
+
+const legend_title = "Number of confirmed COVID cases on 6/30/2020";
+
+const num_color_divisions = 13;
  
+// Gets the desired data value from a row in the CSV dataset.
+function getDataValue(d) {
+    return parseInt(d["6/30/20"]);
+}
+
+// Return the minimum value in the color domain.
+function getDomainMin(data) {
+    // return data.reduce((minSoFar, d) => {
+    //     var value = getDataValue(d);
+    //     return value < minSoFar ? value : minSoFar;
+    // }, Number.MAX_VALUE);
+    return 0;
+}
+
+// Return the maximum value in the color domain.
+function getDomainMax(data) {
+    // return data.reduce((maxSoFar, d) => {
+    //     var value = getDataValue(d);
+    //     return value > maxSoFar ? value : maxSoFar;
+    // }, -Number.MAX_VALUE);
+    var data_avg = data.reduce((sumSoFar, d) => sumSoFar + getDataValue(d), 0) / data.length;
+    return data_avg * 10;
+}
+
 queue()
     .defer(d3.json, "us.json")
     .defer(d3.csv, "covid_confirmed_usafacts.csv")
     .await(ready);
- 
+
 function ready(error, us, data) {
 
     //Moves selction to front
@@ -39,14 +63,32 @@ function ready(error, us, data) {
         }); 
     };
 
+    // Compute color domain
+    var domain_min = getDomainMin(data);
+    var domain_max = getDomainMax(data);
+
+    var color_inc = Math.ceil((domain_max - domain_min) / num_color_divisions);
+
+    var color_domain = [];
+    // Start at 1 so as not to include min. Color domain should be 1 element shorter than range.
+    for (var i = 1; i < num_color_divisions; i++) {
+        color_domain = color_domain.concat([i * color_inc]);
+    }
+
+    var color = d3.scale.threshold()
+        .domain(color_domain)
+        .range(["#dcdcdc", "#d0d6cd", "#bdc9be", "#aabdaf", "#97b0a0", "#84a491", "#719782", "#5e8b73", "#4b7e64", "#387255", "#256546", "#125937", "#004d28"]);
+
+    // Pre-process data
     var idToValueMap = {};
     var idToNameMap = {};
     
     data.forEach(function(d) {
-        idToValueMap[d.countyFIPS] = d["6/30/20"];
+        idToValueMap[d.countyFIPS] = getDataValue(d);
         idToNameMap[d.countyFIPS] = d["County Name"];
     });
 
+    // Display map
     svg.append("g")
         .attr("class", "county")
         .selectAll("path")
@@ -76,34 +118,34 @@ function ready(error, us, data) {
             div.transition().duration(300)
                 .style("opacity", 0);
         });
+    
+    // Create legend
+    var ext_color_domain = [domain_min].concat(color_domain);
+
+    var legend = svg.selectAll("g.legend")
+        .data(ext_color_domain)
+        .enter().append("g")
+        .attr("class", "legend");
+        
+    var ls_w = 73, ls_h = 20;
+        
+    legend.append("rect")
+        .attr("x", function(d, i){ return width - (i*ls_w) - ls_w;})
+        .attr("y", 550)
+        .attr("width", ls_w)
+        .attr("height", ls_h)
+        .style("fill", function(d, i) { return color(d); })
+        .style("opacity", 0.8);
+        
+    var legend_labels = ext_color_domain.map(x => x + "+");
+    legend.append("text")
+        .attr("x", function(d, i){ return width - (i*ls_w) - ls_w;})
+        .attr("y", 590)
+        .text(function(d, i){ return legend_labels[i]; });
+    
+    svg.append("text")
+        .attr("x", 10)
+        .attr("y", 540)
+        .attr("class", "legend_title")
+        .text(function(){return legend_title});
 };
- 
-var ext_color_domain = [0].concat(color_domain);
-
-var legend = svg.selectAll("g.legend")
-    .data(ext_color_domain)
-    .enter().append("g")
-    .attr("class", "legend");
- 
-var ls_w = 73, ls_h = 20;
- 
-legend.append("rect")
-    .attr("x", function(d, i){ return width - (i*ls_w) - ls_w;})
-    .attr("y", 550)
-    .attr("width", ls_w)
-    .attr("height", ls_h)
-    .style("fill", function(d, i) { return color(d); })
-    .style("opacity", 0.8);
- 
-var legend_labels = ext_color_domain.map(x => x + "+");
-legend.append("text")
-    .attr("x", function(d, i){ return width - (i*ls_w) - ls_w;})
-    .attr("y", 590)
-    .text(function(d, i){ return legend_labels[i]; });
-
-var legend_title = "Number of confirmed COVID cases on 6/30/2020";
-svg.append("text")
-    .attr("x", 10)
-    .attr("y", 540)
-    .attr("class", "legend_title")
-    .text(function(){return legend_title});
