@@ -9,6 +9,21 @@ var svg = d3.select("body").append("svg")
     .attr("height", height)
     .style("margin", "-15px auto");
 
+var defs = svg.append("defs");
+
+var linearGradient = defs.append("linearGradient")
+    .attr("id", "linear-gradient")
+    .attr("x1", "0%")
+    .attr("x2", "100%");
+
+linearGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#dcdcdc");
+
+linearGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#004d28");
+
 var path = d3.geo.path();
 
 const legend_title = "Number of new confirmed COVID cases on 6/30/2020 per 1,000,000 population";
@@ -75,17 +90,10 @@ function ready(error, us, data) {
     var domain_min = getDomainMin(data);
     var domain_max = getDomainMax(data);
 
-    var color_inc = Math.ceil((domain_max - domain_min) / num_color_divisions);
-
-    var color_domain = [];
-    // Start at 1 so as not to include min. Color domain should be 1 element shorter than range.
-    for (var i = 1; i < num_color_divisions; i++) {
-        color_domain = color_domain.concat([i * color_inc]);
-    }
-
-    var color = d3.scale.threshold()
-        .domain(color_domain)
-        .range(["#dcdcdc", "#d0d6cd", "#bdc9be", "#aabdaf", "#97b0a0", "#84a491", "#719782", "#5e8b73", "#4b7e64", "#387255", "#256546", "#125937", "#004d28"]);
+    var color = d3.scaleLinear()
+        .domain([domain_min, domain_max])
+        .range(["#dcdcdc", "#004d28"])
+        .clamp(true);
 
     // Pre-process data
     var idToValueMap = {};
@@ -128,28 +136,27 @@ function ready(error, us, data) {
         });
     
     // Create legend
-    var ext_color_domain = [domain_min].concat(color_domain);
-
-    var legend = svg.selectAll("g.legend")
-        .data(ext_color_domain)
-        .enter().append("g")
+    var legend = svg.append("g")
         .attr("class", "legend");
-        
-    var ls_w = 73, ls_h = 20;
-        
+    
     legend.append("rect")
-        .attr("x", function(d, i){ return width - (i*ls_w) - ls_w;})
+        .attr("x", 0)
         .attr("y", 550)
-        .attr("width", ls_w)
-        .attr("height", ls_h)
-        .style("fill", function(d, i) { return color(d); })
+        .attr("width", width)
+        .attr("height", 20)
+        .style("fill", "url(#linear-gradient)")
         .style("opacity", 0.8);
         
-    var legend_labels = ext_color_domain.map(x => x + "+");
     legend.append("text")
-        .attr("x", function(d, i){ return width - (i*ls_w) - ls_w;})
+        .attr("x", 0)
         .attr("y", 590)
-        .text(function(d, i){ return legend_labels[i]; });
+        .text(domain_min);
+
+    legend.append("text")
+        .attr("x", width)
+        .attr("y", 590)
+        .attr("text-anchor", "end")
+        .text(Math.ceil(domain_max) + "+");
     
     svg.append("text")
         .attr("x", 10)
