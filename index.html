@@ -6,15 +6,18 @@
 <head>
 	<meta charset="utf-8">
 	<title>COVID-19 cases</title>
-	<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
-    <script src="https://d3js.org/d3-scale.v3.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
 	<script type="text/javascript" src="https://d3js.org/queue.v1.min.js"></script>
-	<script type="text/javascript" src="https://d3js.org/topojson.v1.min.js"></script> 
+    <script type="text/javascript" src="https://d3js.org/topojson.v1.min.js"></script> 
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 	<h1>COVID-19 cases in the USA</h1>
     <script src="index.js"></script>
+    <div id="slidecontainer">
+        <h4 id="datetext">Date: </h4>
+        <input type="range" class="slider" id="dateslider"></input>
+    </div>
     <p>Source: usafacts.org</p>
 </body>
 </html>

@@ -26,7 +26,7 @@ linearGradient.append("stop")
 
 var path = d3.geo.path();
 
-const legend_title = "Number of new confirmed COVID cases on 6/30/2020 per 1,000,000 population";
+const legend_title = "Number of new confirmed COVID cases per 1,000,000 population";
 
 const num_color_divisions = 13;
 
@@ -44,7 +44,11 @@ function getDataValue(d, date) {
     
     const prevDate = new Date(date.getTime());
     prevDate.setDate(date.getDate() - 1);
-    const d1 = getConfirmedCasesOnDate(d, prevDate);
+    var d1 = getConfirmedCasesOnDate(d, prevDate);
+
+    if (isNaN(d1)) {
+        d1 = 0;
+    }
 
     const population = parseInt(d["population"]);
 
@@ -101,11 +105,28 @@ function ready(error, us, data) {
         }); 
     };
 
+    // Slider
+    var allDates = [];
+    for (const key in data[0]) {
+        if (key.startsWith("confirmed_")) {
+            allDates.push(key.substring("confirmed_".length));
+        }
+    }
+    
+    var slider = d3.select("#dateslider")
+        .attr("min", 0)
+        .attr("max", allDates.length - 1)
+        .attr("step", 1)
+        .attr("value", allDates.length - 1);
+
+    const latestDate = allDates[allDates.length - 1];
+    d3.select("#datetext").text("Date: " + latestDate);
+
     // Compute color domain
     var domain_min = getDomainMin(data);
     var domain_max = getDomainMax(data);
 
-    var color = d3.scaleLinear()
+    var color = d3.scale.linear()
         .domain([domain_min, domain_max])
         .range(["#dcdcdc", "#004d28"])
         .clamp(true);
@@ -115,7 +136,7 @@ function ready(error, us, data) {
     var idToNameMap = {};
     
     data.forEach(function(d) {
-        idToValueMap[d.countyFIPS] = getDataValue(d, new Date("6/30/2020"));
+        idToValueMap[d.countyFIPS] = getDataValue(d, new Date(latestDate));
         idToNameMap[d.countyFIPS] = d["County Name"];
     });
 
@@ -127,7 +148,7 @@ function ready(error, us, data) {
         .enter().append("path")
         .attr("d", path)
         .style ( "fill" , function (d) {
-            return color (idToValueMap[d.id], new Date("6/30/2020"));
+            return color (idToValueMap[d.id], new Date(latestDate));
         })
         .style("opacity", 0.8)
         .on("mouseover", function(d) {
@@ -179,17 +200,24 @@ function ready(error, us, data) {
         .attr("class", "legend_title")
         .text(function(){return legend_title});
 
-    function update(date) {
-        var updateIdToValueMap = {};
+    // Update slider
+    slider.on("input", function() {
+        var slideNum = this.value;
+        var slideDate = allDates[slideNum];
+        d3.select("#datetext")
+            .text("Date: " + slideDate);
+        update(new Date(slideDate));
+    });
 
+    function update(date) {
         data.forEach(function(d) {
-            updateIdToValueMap[d.countyFIPS] = getDataValue(d, date);
+            idToValueMap[d.countyFIPS] = getDataValue(d, date);
         });
 
         svg.select(".county")
             .selectAll("path")
             .style("fill", function(d) {
-                return color (updateIdToValueMap[d.id], date);
+                return color (idToValueMap[d.id], date);
             });
     }
 };
