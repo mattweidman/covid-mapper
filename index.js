@@ -63,8 +63,8 @@ function getDomainMax(data) {
 }
 
 queue()
-    .defer(d3.json, "us.json")
-    .defer(d3.csv, "covid_all.csv")
+    .defer(d3.json, "./data/us.json")
+    .defer(d3.csv, "./data/covid_all.csv")
     .await(ready);
 
 function ready(error, us, data) {
