@@ -1,4 +1,5 @@
-var width = 960, height = 600;
+const width = 960, height = 600;
+const lowColor = "#dcdcdc", highColor = "#8b0000"
  
 var div = d3.select("body").append("div")
     .attr("class", "tooltip")
@@ -18,15 +19,15 @@ var linearGradient = defs.append("linearGradient")
 
 linearGradient.append("stop")
     .attr("offset", "0%")
-    .attr("stop-color", "#dcdcdc");
+    .attr("stop-color", lowColor);
 
 linearGradient.append("stop")
     .attr("offset", "100%")
-    .attr("stop-color", "#004d28");
+    .attr("stop-color", highColor);
 
 var path = d3.geo.path();
 
-const legend_title = "Number of new confirmed COVID cases per 1,000,000 population";
+const legend_title = "7-day average of new confirmed COVID cases per 1,000,000 population";
 
 const num_color_divisions = 13;
 
@@ -43,7 +44,7 @@ function getDataValue(d, date) {
     const d2 = getConfirmedCasesOnDate(d, date);
     
     const prevDate = new Date(date.getTime());
-    prevDate.setDate(date.getDate() - 1);
+    prevDate.setDate(date.getDate() - 7);
     var d1 = getConfirmedCasesOnDate(d, prevDate);
 
     if (isNaN(d1)) {
@@ -56,7 +57,7 @@ function getDataValue(d, date) {
         return 0;
     }
 
-    return Math.round(1000000 * (d2 - d1) / population);
+    return Math.round(1000000 * (d2 - d1) / 7 / population);
 }
 
 // Return the minimum value in the color domain.
@@ -128,7 +129,7 @@ function ready(error, us, data) {
 
     var color = d3.scale.linear()
         .domain([domain_min, domain_max])
-        .range(["#dcdcdc", "#004d28"])
+        .range([lowColor, highColor])
         .clamp(true);
 
     // Pre-process data
