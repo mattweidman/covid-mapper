@@ -29,11 +29,23 @@ var path = d3.geo.path();
 const legend_title = "Number of new confirmed COVID cases on 6/30/2020 per 1,000,000 population";
 
 const num_color_divisions = 13;
+
+function getConfirmedCasesOnDate(d, date) {
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getYear() - 100;
+    const key = "confirmed_" + month + "/" + day + "/" + year;
+    return parseInt(d[key]);
+}
  
 // Gets the desired data value from a row in the CSV dataset.
-function getDataValue(d) {
-    const d2 = parseInt(d["confirmed_6/30/20"]);
-    const d1 = parseInt(d["confirmed_6/29/20"]);
+function getDataValue(d, date) {
+    const d2 = getConfirmedCasesOnDate(d, date);
+    
+    const prevDate = new Date(date.getTime());
+    prevDate.setDate(date.getDate() - 1);
+    const d1 = getConfirmedCasesOnDate(d, prevDate);
+
     const population = parseInt(d["population"]);
 
     if (population === 0) {
@@ -58,8 +70,11 @@ function getDomainMax(data) {
     //     var value = getDataValue(d);
     //     return value > maxSoFar ? value : maxSoFar;
     // }, -Number.MAX_VALUE);
-    var data_avg = data.reduce((sumSoFar, d) => sumSoFar + getDataValue(d), 0) / data.length;
-    return data_avg * 5;
+    
+    // var data_avg = data.reduce((sumSoFar, d) => sumSoFar + getDataValue(d), 0) / data.length;
+    // return data_avg * 5;
+
+    return 1000;
 }
 
 queue()
@@ -100,7 +115,7 @@ function ready(error, us, data) {
     var idToNameMap = {};
     
     data.forEach(function(d) {
-        idToValueMap[d.countyFIPS] = getDataValue(d);
+        idToValueMap[d.countyFIPS] = getDataValue(d, new Date("6/30/2020"));
         idToNameMap[d.countyFIPS] = d["County Name"];
     });
 
@@ -112,7 +127,7 @@ function ready(error, us, data) {
         .enter().append("path")
         .attr("d", path)
         .style ( "fill" , function (d) {
-            return color (idToValueMap[d.id]);
+            return color (idToValueMap[d.id], new Date("6/30/2020"));
         })
         .style("opacity", 0.8)
         .on("mouseover", function(d) {
@@ -163,4 +178,18 @@ function ready(error, us, data) {
         .attr("y", 540)
         .attr("class", "legend_title")
         .text(function(){return legend_title});
+
+    function update(date) {
+        var updateIdToValueMap = {};
+
+        data.forEach(function(d) {
+            updateIdToValueMap[d.countyFIPS] = getDataValue(d, date);
+        });
+
+        svg.select(".county")
+            .selectAll("path")
+            .style("fill", function(d) {
+                return color (updateIdToValueMap[d.id], date);
+            });
+    }
 };
