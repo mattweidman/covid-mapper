@@ -1,0 +1,26 @@
+{
+  "name": "covid-mapper",
+  "version": "1.0.0",
+  "description": "Create maps using COVID-19 data.",
+  "main": "index.js",
+  "scripts": {
+    "test": "http-server ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattweidman/covid-mapper.git"
+  },
+  "keywords": [
+    "covid",
+    "map",
+    "d3",
+    "visualization",
+    "parser"
+  ],
+  "author": "Matthew Weidman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattweidman/covid-mapper/issues"
+  },
+  "homepage": "https://github.com/mattweidman/covid-mapper#readme"
+}
