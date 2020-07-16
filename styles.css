@@ -69,3 +69,11 @@ p {
 .slider:hover {
     opacity: 1;
 }
+
+#expressioncontainer {
+    width: 960px;
+}
+
+input {
+    width: 100%;
+}

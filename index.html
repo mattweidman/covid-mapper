@@ -9,14 +9,23 @@
     <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
 	<script type="text/javascript" src="https://d3js.org/queue.v1.min.js"></script>
     <script type="text/javascript" src="https://d3js.org/topojson.v1.min.js"></script> 
+    <script src="ast.js"></script>
+    <script src="parser.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<h1>COVID-19 cases in the USA</h1>
     <script src="index.js"></script>
+	<h1>COVID-19 cases in the USA</h1>
     <div id="slidecontainer">
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>
+    </div>
+    <h4>Make your own graph by entering an expression:</h4>
+    <div id="expressioncontainer">
+        <input type="text" id="expressioninput" 
+            oninput="onExprChanged(this.value)"
+            onchange="onExprSubmitted(this.value)"></input><br></br>
+        <div id="parseroutput"></div>
     </div>
     <p>Source: usafacts.org</p>
 </body>

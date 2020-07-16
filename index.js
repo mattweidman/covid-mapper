@@ -221,4 +221,31 @@ function ready(error, us, data) {
                 return color (idToValueMap[d.id], date);
             });
     }
+
+    // Updates to expression textbox
+    function onExprChanged(inputText) {
+        if (inputText === "") {
+            d3.select("#parseroutput")
+                .text("Enter an expression.")
+                .style("color", "black");
+        }
+        
+        try {
+            peg$parse(inputText);
+
+            d3.select("#parseroutput")
+                .text("Valid expression. Press enter to use.")
+                .style("color", "black");
+        } catch (err) {
+            result = err;
+
+            d3.select("#parseroutput")
+                .text(result)
+                .style("color", "darkred");
+        }
+    }
+
+    function onExprSubmitted(inputText) {
+        // TODO
+    }
 };
