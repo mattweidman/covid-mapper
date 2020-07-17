@@ -118,7 +118,7 @@ function preprocess(rawData, allDates) {
     return data;
 }
 
-// Not totally sure what this does, but it's from the code I copied
+// Makes it so hovering works properly
 function moveSelectionsToBackOrFront() {
     //Moves selction to front
     d3.selection.prototype.moveToFront = function() {
@@ -148,6 +148,15 @@ function createSlider(allDates) {
     // Set date text
     setSliderDate(allDates, allDates.length - 1);
 
+    // Update slider
+    slider.on("input", function() {
+        var slideNum = this.value;
+        var slideDate = allDates[slideNum];
+        d3.select("#datetext")
+            .text("Date: " + slideDate);
+        // update(new Date(slideDate));
+    });
+
     return slider;
 }
 
@@ -164,6 +173,7 @@ function createGeoMap(geomap) {
         .data(topojson.feature(geomap, geomap.objects.counties).features)
         .enter().append("path")
         .attr("d", path)
+        .style("fill", lowColor)
         // .style ( "fill" , function (d) {
         //     return color (idToValueMap[d.id], new Date(latestDate));
         // })
@@ -172,9 +182,9 @@ function createGeoMap(geomap) {
             var sel = d3.select(this);
             sel.moveToFront();
             d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
-            tooltipDiv.transition().duration(300)
-                .style("opacity", 1);
-            // tooltipDiv.text(idToNameMap[d.id] + ": " + idToValueMap[d.id])
+            // tooltipDiv.transition().duration(300)
+            //     .style("opacity", 1);
+            // tooltipDiv //.text(idToNameMap[d.id] + ": " + idToValueMap[d.id])
             //     .style("left", (d3.event.pageX) + "px")
             //     .style("top", (d3.event.pageY -30) + "px");
         })
@@ -184,8 +194,8 @@ function createGeoMap(geomap) {
             d3.select(this)
                 .transition().duration(300)
                 .style({'opacity': 0.8, 'stroke': 'white', 'stroke-width': 1});
-            tooltipDiv.transition().duration(300)
-                .style("opacity", 0);
+            // tooltipDiv.transition().duration(300)
+            //     .style("opacity", 0);
         });
 }
 
@@ -223,13 +233,13 @@ queue()
 
 function dataLoaded(error, geomap, rawData) {
     const allDates = getDateList(rawData);
-    const baseData = preprocess(rawData, allDates);
 
     moveSelectionsToBackOrFront();
-    
     createSlider(allDates);
     createGeoMap(geomap);
     createLegend();
+
+    const baseData = preprocess(rawData, allDates);
 
     // Compute color domain - need to do this later
     // var domain_min = getDomainMin(data);
@@ -309,15 +319,6 @@ function dataLoaded(error, geomap, rawData) {
     //     .attr("class", "legend_title")
     //     .text(function(){return legend_title});
 
-    // Update slider
-    // slider.on("input", function() {
-    //     var slideNum = this.value;
-    //     var slideDate = allDates[slideNum];
-    //     d3.select("#datetext")
-    //         .text("Date: " + slideDate);
-    //     update(new Date(slideDate));
-    // });
-
     // function update(date) {
     //     data.forEach(function(d) {
     //         idToValueMap[d.countyFIPS] = getDataValue(d, date);
@@ -329,31 +330,39 @@ function dataLoaded(error, geomap, rawData) {
     //             return color (idToValueMap[d.id], date);
     //         });
     // }
+};
 
-    // Updates to expression textbox
-    function onExprChanged(inputText) {
-        if (inputText === "") {
+// Updates to expression textbox
+function updateExpressionInput(inputText) {
+    if (inputText === "") {
+        d3.select("#parseroutput")
+            .text("Enter an expression.")
+            .style("color", "black");
+    }
+    
+    try {
+        peg$parse(inputText);
+
+        if (d3.event && d3.event.keyCode === 13) {
             d3.select("#parseroutput")
-                .text("Enter an expression.")
+                .text("Enter pressed.")
                 .style("color", "black");
-        }
-        
-        try {
-            peg$parse(inputText);
-
+        } else {
             d3.select("#parseroutput")
                 .text("Valid expression. Press enter to use.")
                 .style("color", "black");
-        } catch (err) {
-            result = err;
-
-            d3.select("#parseroutput")
-                .text(result)
-                .style("color", "darkred");
         }
-    }
+    } catch (err) {
+        result = err;
 
-    function onExprSubmitted(inputText) {
-        // TODO
+        d3.select("#parseroutput")
+            .text(result)
+            .style("color", "darkred");
     }
-};
+}
+
+const inputElement = d3.select("#expressioninput");
+inputElement.on("keyup", function () { updateExpressionInput(this.value); });
+const defaultExpression = "cases(day)";
+inputElement.text(defaultExpression);
+updateExpressionInput(defaultExpression);

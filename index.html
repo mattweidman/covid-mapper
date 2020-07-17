@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <script src="index.js"></script>
 	<h1>COVID-19 cases in the USA</h1>
     <div id="slidecontainer">
         <h4 id="datetext">Date: </h4>
@@ -22,11 +21,10 @@
     </div>
     <h4>Make your own graph by entering an expression:</h4>
     <div id="expressioncontainer">
-        <input type="text" id="expressioninput" 
-            oninput="onExprChanged(this.value)"
-            onchange="onExprSubmitted(this.value)"></input><br></br>
+        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
         <div id="parseroutput"></div>
     </div>
     <p>Source: usafacts.org</p>
+    <script src="index.js"></script>
 </body>
 </html>

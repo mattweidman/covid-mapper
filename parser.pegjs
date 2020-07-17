@@ -4,7 +4,7 @@
 // Accepts expressions like "2 * (3 + 4)" and computes their value.
 
 Expression
-  = head:Term tail:(_ ("+" / "-") _ Term)* {
+  = _ head:Term tail:(_ ("+" / "-") _ Term)* _ {
       return tail.reduce(function(result, element) {
         return new BinopNode(element[1], result, element[3]);
       }, head);
@@ -22,7 +22,7 @@ Factor
   / Integer / Constant / DataAccess / DataRange / Aggregate
 
 Integer "integer"
-  = _ [0-9]+ { 
+  = [0-9]+ { 
       return new NumberNode(text());
     }
 
