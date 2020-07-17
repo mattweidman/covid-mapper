@@ -94,9 +94,9 @@ function getDateList(rawData) {
 // Convert raw data to new format.
 // rawData: list of {CSV header -> value} dictionaries for location
 // allDates: list of date strings from CSV headers
-// returns list of CovidData objects for each location (see CovidData in ast.ts)
+// returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
 function preprocess(rawData, allDates) {
-    const data = [];
+    const data = {};
 
     rawData.forEach(rawDatum => {
 
@@ -106,13 +106,15 @@ function preprocess(rawData, allDates) {
             deaths.push(rawDatum["deaths_" + dateStr]);
         });
 
-        data.push({
+        const newDatum = {
             id: rawDatum["countyFIPS"],
             name: rawDatum["County Name"],
             population: rawDatum["population"],
             cases: cases,
             deaths: deaths
-        });
+        };
+
+        data[newDatum.id] = newDatum;
     });
 
     return data;
@@ -165,7 +167,7 @@ function setSliderDate(allDates, dateIndex) {
     d3.select("#datetext").text("Date: " + latestDate);
 }
 
-function createGeoMap(geomap) {
+function createGeoMap(geomap, baseData) {
     // Display map
     svg.append("g")
         .attr("class", "county")
@@ -182,11 +184,12 @@ function createGeoMap(geomap) {
             var sel = d3.select(this);
             sel.moveToFront();
             d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
-            // tooltipDiv.transition().duration(300)
-            //     .style("opacity", 1);
-            // tooltipDiv //.text(idToNameMap[d.id] + ": " + idToValueMap[d.id])
-            //     .style("left", (d3.event.pageX) + "px")
-            //     .style("top", (d3.event.pageY -30) + "px");
+            tooltipDiv.transition().duration(300)
+                .style("opacity", 1);
+            tooltipDiv //.text(idToNameMap[d.id] + ": " + idToValueMap[d.id])
+                .text(baseData[d.id].name)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY -30) + "px");
         })
         .on("mouseout", function() {
             var sel = d3.select(this);
@@ -194,8 +197,8 @@ function createGeoMap(geomap) {
             d3.select(this)
                 .transition().duration(300)
                 .style({'opacity': 0.8, 'stroke': 'white', 'stroke-width': 1});
-            // tooltipDiv.transition().duration(300)
-            //     .style("opacity", 0);
+            tooltipDiv.transition().duration(300)
+                .style("opacity", 0);
         });
 }
 
@@ -236,10 +239,11 @@ function dataLoaded(error, geomap, rawData) {
 
     moveSelectionsToBackOrFront();
     createSlider(allDates);
-    createGeoMap(geomap);
     createLegend();
 
     const baseData = preprocess(rawData, allDates);
+
+    createGeoMap(geomap, baseData);
 
     // Compute color domain - need to do this later
     // var domain_min = getDomainMin(data);
