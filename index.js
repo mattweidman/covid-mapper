@@ -96,7 +96,7 @@ function getDateList(rawData) {
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
 function preprocess(rawData, allDates) {
-    const data = {};
+    const baseData = {};
 
     rawData.forEach(rawDatum => {
 
@@ -114,10 +114,18 @@ function preprocess(rawData, allDates) {
             deaths: deaths
         };
 
-        data[newDatum.id] = newDatum;
+        baseData[newDatum.id] = newDatum;
     });
 
-    return data;
+    return baseData;
+}
+
+function getLocationNameDict(baseData) {
+    const locationNames = {};
+    Object.keys(baseData).forEach(key => {
+        locationNames[key] = baseData[key].name;
+    });
+    return locationNames;
 }
 
 // Makes it so hovering works properly
@@ -167,7 +175,7 @@ function setSliderDate(allDates, dateIndex) {
     d3.select("#datetext").text("Date: " + latestDate);
 }
 
-function createGeoMap(geomap, baseData) {
+function createGeoMap(geomap, locationNames) {
     // Display map
     svg.append("g")
         .attr("class", "county")
@@ -187,7 +195,7 @@ function createGeoMap(geomap, baseData) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv //.text(idToNameMap[d.id] + ": " + idToValueMap[d.id])
-                .text(baseData[d.id].name)
+                .text(locationNames[d.id])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         })
@@ -242,8 +250,9 @@ function dataLoaded(error, geomap, rawData) {
     createLegend();
 
     const baseData = preprocess(rawData, allDates);
+    const locationNames = getLocationNameDict(baseData);
 
-    createGeoMap(geomap, baseData);
+    createGeoMap(geomap, locationNames);
 
     // Compute color domain - need to do this later
     // var domain_min = getDomainMin(data);
