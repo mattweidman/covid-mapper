@@ -1,19 +1,17 @@
 interface CovidData {
-    countyFIPS: string;
-    countyName: string;
-    state: string;
-    stateFIPS: string;
+    id: string;
+    name: string;
     population: number;
     cases: number[];
     deaths: number[];
 }
 
 abstract class ScalarExpr {
-    public abstract evaluate(data: CovidData): number;
+    public abstract evaluate(data: CovidData, currentDay: number): number;
 }
 
 abstract class ArrayExpr {
-    public abstract evaluate(data: CovidData): number[];
+    public abstract evaluate(data: CovidData, currentDay: number): number[];
 }
 
 class NumberNode extends ScalarExpr {
@@ -34,12 +32,12 @@ class ConstantNode extends ScalarExpr {
         super();
     }
 
-    public evaluate(data: CovidData): number {
+    public evaluate(data: CovidData, currentDay: number): number {
         switch(this.name) {
             case "population": 
                 return data.population;
             case "day": 
-                return data.cases.length - 1;
+                return currentDay;
             case "first": 
                 return 0;
             case "last": 
@@ -55,8 +53,8 @@ class DataAccessNode extends ScalarExpr {
         super();
     }
 
-    public evaluate(data: CovidData): number {
-        const index = this.indexExpr.evaluate(data);
+    public evaluate(data: CovidData, currentDay: number): number {
+        const index = this.indexExpr.evaluate(data, currentDay);
 
         switch(this.name) {
             case "cases":
@@ -74,9 +72,9 @@ class DataRangeNode extends ArrayExpr {
         super();
     }
 
-    public evaluate(data: CovidData): number[] {
-        const startIndex = this.startExpr.evaluate(data);
-        const endIndex = this.endExpr.evaluate(data);
+    public evaluate(data: CovidData, currentDay: number): number[] {
+        const startIndex = this.startExpr.evaluate(data, currentDay);
+        const endIndex = this.endExpr.evaluate(data, currentDay);
 
         switch(this.name) {
             case "cases":
@@ -94,8 +92,8 @@ class AggregateNode extends ScalarExpr {
         super();
     }
 
-    public evaluate(data: CovidData): number {
-        const range = this.rangeExpr.evaluate(data);
+    public evaluate(data: CovidData, currentDay: number): number {
+        const range = this.rangeExpr.evaluate(data, currentDay);
 
         if (this.name === "max") {
             return range.reduce((acc, x) => acc > x ? acc : x, range[0]);
@@ -116,9 +114,9 @@ class BinopNode extends ScalarExpr {
         super();
     }
 
-    public evaluate(data: CovidData): number {
-        const val1 = this.expr1.evaluate(data);
-        const val2 = this.expr2.evaluate(data);
+    public evaluate(data: CovidData, currentDay: number): number {
+        const val1 = this.expr1.evaluate(data, currentDay);
+        const val2 = this.expr2.evaluate(data, currentDay);
 
         if (this.operator === "+") {
             return val1 + val2;
