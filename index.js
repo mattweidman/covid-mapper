@@ -128,6 +128,23 @@ function getLocationNameDict(baseData) {
     return locationNames;
 }
 
+// Compute the dates x locations matrix using the AST to evaluate.
+function computeCustomData(baseData, ast) {
+    const geoIdToValueDictList = [];
+
+    for (const covidData of Object.values(baseData)) {
+        for (var i = 0; i < covidData.cases.length; i++) {
+            if (geoIdToValueDictList[i] == undefined) {
+                geoIdToValueDictList[i] = {};
+            }
+
+            geoIdToValueDictList[i][covidData.id] = ast.evaluate(covidData, i);
+        }
+    }
+
+    return geoIdToValueDictList;
+}
+
 // Makes it so hovering works properly
 function moveSelectionsToBackOrFront() {
     //Moves selction to front
@@ -148,6 +165,7 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
+var slideValue = 0; // The value of the slider
 function createSlider(allDates) {
     var slider = d3.select("#dateslider")
         .attr("min", 0)
@@ -160,8 +178,8 @@ function createSlider(allDates) {
 
     // Update slider
     slider.on("input", function() {
-        var slideNum = this.value;
-        var slideDate = allDates[slideNum];
+        slideValue = this.value;
+        var slideDate = allDates[slideValue];
         d3.select("#datetext")
             .text("Date: " + slideDate);
         // update(new Date(slideDate));
@@ -171,6 +189,7 @@ function createSlider(allDates) {
 }
 
 function setSliderDate(allDates, dateIndex) {
+    slideValue = dateIndex;
     const latestDate = allDates[dateIndex];
     d3.select("#datetext").text("Date: " + latestDate);
 }
@@ -194,7 +213,7 @@ function createGeoMap(geomap, locationNames) {
             d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
-            tooltipDiv //.text(idToNameMap[d.id] + ": " + idToValueMap[d.id])
+            tooltipDiv
                 .text(locationNames[d.id])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
@@ -207,6 +226,21 @@ function createGeoMap(geomap, locationNames) {
                 .style({'opacity': 0.8, 'stroke': 'white', 'stroke-width': 1});
             tooltipDiv.transition().duration(300)
                 .style("opacity", 0);
+        });
+}
+
+function updateGeoMap(locationNames, locationValues) {
+    svg.selectAll(".county path")
+        .on("mouseover", function(d) {
+            var sel = d3.select(this);
+            sel.moveToFront();
+            d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
+            tooltipDiv.transition().duration(300)
+                .style("opacity", 1);
+            tooltipDiv
+                .text(locationNames[d.id] + ":" + locationValues[d.id])
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY -30) + "px");
         });
 }
 
@@ -253,6 +287,45 @@ function dataLoaded(error, geomap, rawData) {
     const locationNames = getLocationNameDict(baseData);
 
     createGeoMap(geomap, locationNames);
+
+    // Updates to expression textbox
+    function updateExpressionInput(inputText) {
+        if (inputText === "") {
+            d3.select("#parseroutput")
+                .text("Enter an expression.")
+                .style("color", "black");
+        }
+        
+        try {
+            const ast = peg$parse(inputText);
+    
+            if (d3.event && d3.event.keyCode === 13) {
+                const customData = computeCustomData(baseData, ast);
+
+                updateGeoMap(locationNames, customData[slideValue]);
+    
+                d3.select("#parseroutput")
+                    .text("Enter pressed.")
+                    .style("color", "black");
+            } else {
+                d3.select("#parseroutput")
+                    .text("Valid expression. Press enter to use.")
+                    .style("color", "black");
+            }
+        } catch (err) {
+            d3.select("#parseroutput")
+                .text(err)
+                .style("color", "darkred");
+
+            throw err;
+        }
+    }
+    
+    const inputElement = d3.select("#expressioninput");
+    inputElement.on("keyup", function () { updateExpressionInput(this.value); });
+    const defaultExpression = "cases(day)";
+    inputElement.text(defaultExpression);
+    updateExpressionInput(defaultExpression);
 
     // Compute color domain - need to do this later
     // var domain_min = getDomainMin(data);
@@ -344,38 +417,3 @@ function dataLoaded(error, geomap, rawData) {
     //         });
     // }
 };
-
-// Updates to expression textbox
-function updateExpressionInput(inputText) {
-    if (inputText === "") {
-        d3.select("#parseroutput")
-            .text("Enter an expression.")
-            .style("color", "black");
-    }
-    
-    try {
-        peg$parse(inputText);
-
-        if (d3.event && d3.event.keyCode === 13) {
-            d3.select("#parseroutput")
-                .text("Enter pressed.")
-                .style("color", "black");
-        } else {
-            d3.select("#parseroutput")
-                .text("Valid expression. Press enter to use.")
-                .style("color", "black");
-        }
-    } catch (err) {
-        result = err;
-
-        d3.select("#parseroutput")
-            .text(result)
-            .style("color", "darkred");
-    }
-}
-
-const inputElement = d3.select("#expressioninput");
-inputElement.on("keyup", function () { updateExpressionInput(this.value); });
-const defaultExpression = "cases(day)";
-inputElement.text(defaultExpression);
-updateExpressionInput(defaultExpression);
