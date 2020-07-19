@@ -297,6 +297,7 @@ function dataLoaded(error, geomap, rawData) {
                     d3.select("#parseroutput")
                         .text(err)
                         .style("color", "darkred");
+                    console.error(err);
                 }
 
                 if (customData != undefined) {

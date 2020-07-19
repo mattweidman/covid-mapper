@@ -10,6 +10,12 @@ Data: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
 
 ## Getting started
 
+First, you need to install the necessary NPM libaries:
+
+`npm install -g http-server`
+
+`npm install -g pegjs`
+
 To download and merge data into one CSV:
 
 `cd data`
@@ -20,7 +26,7 @@ To build code:
 
 `build.cmd`
 
-To run (requires installing http-server with npm install -g http-server):
+To run:
 
 `http-server .`
 
