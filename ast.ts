@@ -54,15 +54,24 @@ class DataAccessNode extends ScalarExpr {
     }
 
     public evaluate(data: CovidData, currentDay: number): number {
-        const index = this.indexExpr.evaluate(data, currentDay);
+        var index = this.indexExpr.evaluate(data, currentDay);
 
-        switch(this.name) {
-            case "cases":
+        if (this.name === "cases") {
+            if (index < 0) {
+                return 0;
+            } else if (index >= data.cases.length) {
+                return data.cases[data.cases.length - 1];
+            } else {
                 return data.cases[index];
-            case "deaths":
+            }
+        } else if (this.name === "deaths") {
+            if (index < 0) {
+                return 0;
+            } else if (index >= data.cases.length) {
+                return data.deaths[data.cases.length - 1];
+            } else {
                 return data.deaths[index];
-            default:
-                throw "Invalid dataset in DataAccessNode";
+            }
         }
     }
 }
@@ -125,7 +134,7 @@ class BinopNode extends ScalarExpr {
         } else if (this.operator === "*") {
             return val1 * val2;
         } else if (this.operator === "/") {
-            return val1 / val2;
+            return val1 === 0 ? 0 : val1 / val2;
         } else {
             throw "Unsupported binary operation"
         }

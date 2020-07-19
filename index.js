@@ -102,8 +102,8 @@ function preprocess(rawData, allDates) {
 
         const cases = [], deaths = [];
         allDates.forEach(dateStr => {
-            cases.push(rawDatum["confirmed_" + dateStr]);
-            deaths.push(rawDatum["deaths_" + dateStr]);
+            cases.push(parseInt(rawDatum["confirmed_" + dateStr]));
+            deaths.push(parseInt(rawDatum["deaths_" + dateStr]));
         });
 
         const newDatum = {
@@ -122,9 +122,9 @@ function preprocess(rawData, allDates) {
 
 function getLocationNameDict(baseData) {
     const locationNames = {};
-    Object.keys(baseData).forEach(key => {
+    for (const key in baseData) {
         locationNames[key] = baseData[key].name;
-    });
+    }
     return locationNames;
 }
 
@@ -143,6 +143,33 @@ function computeCustomData(baseData, ast) {
     }
 
     return geoIdToValueDictList;
+}
+
+// Percentiles come from entire customData matrix, not just one row or column.
+// customData: dates x locations matrix
+// percentiles: list of percentiles to get (0 to 100)
+function getPercentiles(customData, percentiles) {
+    const allValues = [];
+    for (const geoIdToValueDict of customData) {
+        for (const value of Object.values(geoIdToValueDict)) {
+            allValues.push(value);
+        }
+    }
+
+    allValues.sort((a, b) => a < b ? -1 : 1);
+
+    const percentileValues = [];
+    for (const percentile of percentiles) {
+        if (percentile >= 100) {
+            percentileValues.push(allValues[allValues.length - 1]);
+        } else if (percentile < 0) {
+            percentileValues.push(allValues[0]);
+        } else {
+            percentileValues.push(allValues[Math.floor(percentile * allValues.length / 100)]);
+        }
+    }
+
+    return percentileValues;
 }
 
 // Makes it so hovering works properly
@@ -174,24 +201,21 @@ function createSlider(allDates) {
         .attr("value", allDates.length - 1);
 
     // Set date text
-    setSliderDate(allDates, allDates.length - 1);
+    slideValue = allDates.length - 1;
+    const latestDate = allDates[slideValue];
+    d3.select("#datetext").text("Date: " + latestDate);
 
-    // Update slider
-    slider.on("input", function() {
-        slideValue = this.value;
-        var slideDate = allDates[slideValue];
-        d3.select("#datetext")
-            .text("Date: " + slideDate);
-        // update(new Date(slideDate));
-    });
+    // Updates slider
+    slider.on("input", function() { updateSlider(allDates, this.value); });
 
     return slider;
 }
 
-function setSliderDate(allDates, dateIndex) {
+function updateSlider(allDates, dateIndex) {
     slideValue = dateIndex;
-    const latestDate = allDates[dateIndex];
-    d3.select("#datetext").text("Date: " + latestDate);
+    var slideDate = allDates[slideValue];
+    d3.select("#datetext")
+        .text("Date: " + slideDate);
 }
 
 function createGeoMap(geomap, locationNames) {
@@ -203,9 +227,6 @@ function createGeoMap(geomap, locationNames) {
         .enter().append("path")
         .attr("d", path)
         .style("fill", lowColor)
-        // .style ( "fill" , function (d) {
-        //     return color (idToValueMap[d.id], new Date(latestDate));
-        // })
         .style("opacity", 0.8)
         .on("mouseover", function(d) {
             var sel = d3.select(this);
@@ -229,8 +250,14 @@ function createGeoMap(geomap, locationNames) {
         });
 }
 
-function updateGeoMap(locationNames, locationValues) {
+// locationNames: map geo id -> name
+// locationValues: map geo id -> value
+// color: d3 coloring function
+function updateGeoMap(locationNames, locationValues, color) {
     svg.selectAll(".county path")
+        .style ( "fill" , function (d) {
+            return color(locationValues[d.id]);
+        })
         .on("mouseover", function(d) {
             var sel = d3.select(this);
             sel.moveToFront();
@@ -245,30 +272,35 @@ function updateGeoMap(locationNames, locationValues) {
 }
 
 function createLegend() {
-    svg.append("g")
-        .attr("class", "legend")
-        .append("rect")
-            .attr("x", 0)
-            .attr("y", 550)
-            .attr("width", width)
-            .attr("height", 20)
-            .style("fill", "url(#linear-gradient)")
-            .style("opacity", 0.8);
-}
+    const legend = svg.append("g")
+        .attr("class", "legend");
 
-function updateLegendLimits() {
-    const legend = svg.select(".legend");
-
-    legend.append("text")
+    legend.append("rect")
         .attr("x", 0)
-        .attr("y", 590)
-        .text(domain_min);
+        .attr("y", 550)
+        .attr("width", width)
+        .attr("height", 20)
+        .style("fill", "url(#linear-gradient)")
+        .style("opacity", 0.8);
 
     legend.append("text")
+        .attr("class", "legendmin")
+        .attr("x", 0)
+        .attr("y", 590);
+
+    legend.append("text")
+        .attr("class", "legendmax")
         .attr("x", width)
         .attr("y", 590)
-        .attr("text-anchor", "end")
-        .text(Math.ceil(domain_max) + "+");
+        .attr("text-anchor", "end");
+}
+
+function updateLegendLimits(domain) {
+    svg.select(".legendmin")
+        .text(domain[0]);
+
+    svg.select(".legendmax")
+        .text(domain[1]);
 }
 
 queue()
@@ -280,7 +312,7 @@ function dataLoaded(error, geomap, rawData) {
     const allDates = getDateList(rawData);
 
     moveSelectionsToBackOrFront();
-    createSlider(allDates);
+    const slider = createSlider(allDates);
     createLegend();
 
     const baseData = preprocess(rawData, allDates);
@@ -296,13 +328,33 @@ function dataLoaded(error, geomap, rawData) {
                 .style("color", "black");
         }
         
+        var ast;
         try {
-            const ast = peg$parse(inputText);
-    
+            ast = peg$parse(inputText);
+        } catch (err) {
+            d3.select("#parseroutput")
+                .text(err)
+                .style("color", "darkred");
+        }
+
+        if (ast != undefined) {
             if (d3.event && d3.event.keyCode === 13) {
                 const customData = computeCustomData(baseData, ast);
 
-                updateGeoMap(locationNames, customData[slideValue]);
+                const domain = getPercentiles(customData, [1, 99]);
+                var color = d3.scale.linear()
+                    .domain(domain)
+                    .range([lowColor, highColor])
+                    .clamp(true);
+
+                updateLegendLimits(domain);
+                updateGeoMap(locationNames, customData[slideValue], color);
+                
+                // Updates slider
+                slider.on("input", function() {
+                    updateSlider(allDates, this.value);
+                    updateGeoMap(locationNames, customData[slideValue], color);
+                });
     
                 d3.select("#parseroutput")
                     .text("Enter pressed.")
@@ -312,12 +364,6 @@ function dataLoaded(error, geomap, rawData) {
                     .text("Valid expression. Press enter to use.")
                     .style("color", "black");
             }
-        } catch (err) {
-            d3.select("#parseroutput")
-                .text(err)
-                .style("color", "darkred");
-
-            throw err;
         }
     }
     
