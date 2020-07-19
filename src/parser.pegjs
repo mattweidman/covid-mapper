@@ -1,7 +1,9 @@
-// Simple Arithmetics Grammar
+// Covid-mapper Grammar
 // ==========================
 //
-// Accepts expressions like "2 * (3 + 4)" and computes their value.
+// Accepts expressions like "(cases(day) - cases(day - 7)) / population / 7 * 1000000" and 
+// creates abstract syntax tress that can be used to evaluate their expressions over
+// Covid-19 datasets.
 
 Expression
   = _ head:Term tail:(_ ("+" / "-") _ Term)* _ {
@@ -20,19 +22,6 @@ Term
 Factor
   = "(" _ expr:Expression _ ")" { return expr; }
   / Integer / Constant / DataAccess / Aggregate
-
-Integer "integer"
-  = [0-9]+ { 
-      return new NumberNode(text());
-    }
-
-_ "whitespace"
-  = [ \t\n\r]*
-  
-Constant "constant"
-  = name:("population" / "day" / "first" / "last") {
-  	return new ConstantNode(name);
-  }
   
 DataAccess
   = name:("cases" / "deaths" / "newcases" / "newdeaths") _ "(" _ expr:Expression _ ")" {
@@ -48,3 +37,16 @@ Aggregate
   = name:("max" / "min" / "sum" / "average") _ "(" _ range:DataRange _ ")" { 
       return new AggregateNode(name, range); 
     }
+  
+Constant "constant"
+  = name:("population" / "day" / "first" / "last") {
+  	return new ConstantNode(name);
+  }
+
+Integer "integer"
+  = [0-9]+ { 
+      return new NumberNode(text());
+    }
+
+_ "whitespace"
+  = [ \t\n\r]*
