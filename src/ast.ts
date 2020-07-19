@@ -45,7 +45,7 @@ class ConstantNode extends ScalarExpr {
             case "last": 
                 return data.cases.length;
             default: 
-                throw "Invalid constant in ConstantNode";
+                throw "Invalid constant: " + this.name;
         }
     }
 }
@@ -67,6 +67,8 @@ class DataAccessNode extends ScalarExpr {
                 return this.accessDataSet(data.newCases, index);
             case "newdeaths":
                 return this.accessDataSet(data.newDeaths, index);
+            default:
+                throw "Invalid dataset in DataAccessNode: " + this.name;
         }
     }
 
@@ -100,7 +102,7 @@ class DataRangeNode extends ArrayExpr {
             case "newdeaths":
                 return this.accessDataSetRange(data.newDeaths, startIndex, endIndex);
             default:
-                throw "Invalid dataset in DataAccessNode";
+                throw "Invalid dataset in DataRangeNode: " + this.name;
         }
     }
 
