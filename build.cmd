@@ -1,2 +1,2 @@
-call tsc ast.ts
-call pegjs parser.pegjs
+call tsc src/ast.ts
+call pegjs src/parser.pegjs
