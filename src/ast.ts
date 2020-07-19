@@ -159,7 +159,7 @@ class AggregateNode extends ScalarExpr {
         } else if (this.name === "average") {
             return range.reduce((acc, x) => acc + x, 0) / range.length;
         } else {
-            throw "Unsupported aggregate function";
+            throw "Unsupported aggregate function: " + this.name;
         }
     }
 }
@@ -182,7 +182,7 @@ class BinopNode extends ScalarExpr {
         } else if (this.operator === "/") {
             return val1 === 0 ? 0 : val1 / val2;
         } else {
-            throw "Unsupported binary operation"
+            throw "Unsupported binary operation: " + this.operator
         }
     }
 }

@@ -1,5 +1,5 @@
 const width = 960, height = 600;
-const lowColor = "#dcdcdc", highColor = "#8b0000"
+const lowColor = "#dcdcdc", highColor = "#8b0000";
  
 const tooltipDiv = d3.select("body").append("div")
     .attr("class", "tooltip")
