@@ -66,6 +66,10 @@ The following aggregate operations can be used over a range of data:
 * Floating point numbers in expressions.
 * Show world map, and allow clicking on countries to zoom in.
 * Show time chart for currently selected region under the map.
+* For people who don't want to think of their own expressions, have a menu with some sample options.
+* Let users change the minimum/maximum values of the legend.
+* Let users change map colors.
+* Zooming and dragging.
 
 ### Bugs
 * DataRangeNode does not yet do range checking like DataAccessNode does. Add similar checks so that something like cases(day, day - 7) doesn't create undefined values.

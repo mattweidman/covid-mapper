@@ -1,18 +1,18 @@
 const width = 960, height = 600;
 const lowColor = "#dcdcdc", highColor = "#8b0000"
  
-var tooltipDiv = d3.select("body").append("div")
+const tooltipDiv = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
  
-var svg = d3.select("body").append("svg")
+const svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height)
     .style("margin", "-15px auto");
 
-var defs = svg.append("defs");
+const defs = svg.append("defs");
 
-var linearGradient = defs.append("linearGradient")
+const linearGradient = defs.append("linearGradient")
     .attr("id", "linear-gradient")
     .attr("x1", "0%")
     .attr("x2", "100%");
@@ -25,7 +25,7 @@ linearGradient.append("stop")
     .attr("offset", "100%")
     .attr("stop-color", highColor);
 
-var path = d3.geo.path();
+const path = d3.geo.path();
 
 queue()
     .defer(d3.json, "./data/us.json")
@@ -34,7 +34,7 @@ queue()
 
 // return list of date strings extracted from CSV headers
 function getDateList(rawData) {
-    var allDates = [];
+    const allDates = [];
     for (const key in rawData[0]) {
         if (key.startsWith("confirmed_")) {
             allDates.push(key.substring("confirmed_".length));
@@ -136,7 +136,7 @@ function moveSelectionsToBackOrFront() {
     //Moves selction to back
     d3.selection.prototype.moveToBack = function() { 
         return this.each(function() { 
-        var firstChild = this.parentNode.firstChild; 
+        const firstChild = this.parentNode.firstChild; 
         if (firstChild) { 
             this.parentNode.insertBefore(this, firstChild); 
         } 
@@ -146,7 +146,7 @@ function moveSelectionsToBackOrFront() {
 
 var slideValue = 0; // The value of the slider
 function createSlider(allDates) {
-    var slider = d3.select("#dateslider")
+    const slider = d3.select("#dateslider")
         .attr("min", 0)
         .attr("max", allDates.length - 1)
         .attr("step", 1)
@@ -165,7 +165,7 @@ function createSlider(allDates) {
 
 function updateSlider(allDates, dateIndex) {
     slideValue = dateIndex;
-    var slideDate = allDates[slideValue];
+    const slideDate = allDates[slideValue];
     d3.select("#datetext")
         .text("Date: " + slideDate);
 }
@@ -181,7 +181,7 @@ function createGeoMap(geomap, locationNames) {
         .style("fill", lowColor)
         .style("opacity", 0.8)
         .on("mouseover", function(d) {
-            var sel = d3.select(this);
+            const sel = d3.select(this);
             sel.moveToFront();
             d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
             tooltipDiv.transition().duration(300)
@@ -192,7 +192,7 @@ function createGeoMap(geomap, locationNames) {
                 .style("top", (d3.event.pageY -30) + "px");
         })
         .on("mouseout", function() {
-            var sel = d3.select(this);
+            const sel = d3.select(this);
             sel.moveToBack();
             d3.select(this)
                 .transition().duration(300)
@@ -211,7 +211,7 @@ function updateGeoMap(locationNames, locationValues, color) {
             return color(locationValues[d.id]);
         })
         .on("mouseover", function(d) {
-            var sel = d3.select(this);
+            const sel = d3.select(this);
             sel.moveToFront();
             d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
             tooltipDiv.transition().duration(300)
@@ -289,7 +289,7 @@ function dataLoaded(error, geomap, rawData) {
                 const customData = computeCustomData(baseData, ast);
 
                 const domain = getPercentiles(customData, [1, 99]);
-                var color = d3.scale.linear()
+                const color = d3.scale.linear()
                     .domain(domain)
                     .range([lowColor, highColor])
                     .clamp(true);
