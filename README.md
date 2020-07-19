@@ -38,9 +38,9 @@ To see the number of new cases in the past week, enter *cases(day) - cases(day -
 
 If you would like to see the number of deaths instead of the number of confirmed cases, use the dataset *deaths*.
 
-The following arithmetic operators are allowed (all are binary operators):
+The following arithmetic operators are allowed:
 * Addition: +
-* Subtraction: -
+* Subtraction: - (currently only works as a binary operator)
 * Multiplication: *
 * Division: / (Note: Dividing 0 by 0 will always give 0. If the numerator is ever not 0 but the denominator is, there could be issues with coloring.)
 * Parentheses: ( )
