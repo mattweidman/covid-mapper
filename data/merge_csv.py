@@ -19,13 +19,26 @@ def processRow(confirmedRow, populationRow, deathsRow, isTopRow):
     population = populationRow[3]
     singleStats = [countyFIPS, countyName, state, stateFIPS, population]
 
-    confirmedCases = confirmedRow[4:]
-    deaths = deathsRow[4:]
     if isTopRow:
-        confirmedCases = list(map(lambda x: "confirmed_" + x, confirmedCases))
-        deaths = list(map(lambda x: "deaths_" + x, deaths))
+        dates = confirmedRow[4:]
+        confirmedCases = list(map(lambda x: "confirmed_" + x, dates))
+        deaths = list(map(lambda x: "deaths_" + x, dates))
+        newCases = list(map(lambda x: "newconfirmed_" + x, dates))
+        newDeaths = list(map(lambda x: "newdeaths_" + x, dates))
+    else:
+        confirmedCases = confirmedRow[4:]
+        deaths = deathsRow[4:]
+        newCases = []
+        newDeaths = []
+        for i in range(0, len(confirmedCases)):
+            if i == 0:
+                newCases.append(confirmedCases[0])
+                newDeaths.append(deaths[0])
+            else:
+                newCases.append(int(confirmedCases[i]) - int(confirmedCases[i - 1]))
+                newDeaths.append(int(deaths[i]) - int(deaths[i - 1]))
 
-    return singleStats + confirmedCases + deaths
+    return singleStats + confirmedCases + deaths + newCases + newDeaths
 
 downloadData()
 
@@ -38,6 +51,8 @@ with open('covid_confirmed_usafacts.csv') as confirmedFile:
                 populationReader = csv.reader(populationFile)
                 deathsReader = csv.reader(deathsFile)
                 allDataWriter = csv.writer(allDataFile)
+
+                print("merging CSVs")
 
                 try:
                     confirmedRow = confirmedReader.__next__()

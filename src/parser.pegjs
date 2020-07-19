@@ -19,7 +19,7 @@ Term
 
 Factor
   = "(" _ expr:Expression _ ")" { return expr; }
-  / Integer / Constant / DataAccess / DataRange / Aggregate
+  / Integer / Constant / DataAccess / Aggregate
 
 Integer "integer"
   = [0-9]+ { 
@@ -35,12 +35,12 @@ Constant "constant"
   }
   
 DataAccess
-  = name:("cases" / "deaths") _ "(" _ expr:Expression _ ")" {
+  = name:("cases" / "deaths" / "newcases" / "newdeaths") _ "(" _ expr:Expression _ ")" {
     return new DataAccessNode(name, expr);
   }
 
 DataRange
-  = name:("cases" / "deaths") _ "(" _ expr1:Expression _ "," _ expr2:Expression _ ")" {
+  = name:("cases" / "deaths" / "newcases" / "newdeaths") _ "(" _ expr1:Expression _ "," _ expr2:Expression _ ")" {
     return new DataRangeNode(name, expr1, expr2);
   }
   

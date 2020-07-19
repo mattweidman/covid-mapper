@@ -4,6 +4,8 @@ interface CovidData {
     population: number;
     cases: number[];
     deaths: number[];
+    newCases: number[];
+    newDeaths: number[];
 }
 
 abstract class ScalarExpr {
@@ -56,22 +58,25 @@ class DataAccessNode extends ScalarExpr {
     public evaluate(data: CovidData, currentDay: number): number {
         var index = this.indexExpr.evaluate(data, currentDay);
 
-        if (this.name === "cases") {
-            if (index < 0) {
-                return 0;
-            } else if (index >= data.cases.length) {
-                return data.cases[data.cases.length - 1];
-            } else {
-                return data.cases[index];
-            }
-        } else if (this.name === "deaths") {
-            if (index < 0) {
-                return 0;
-            } else if (index >= data.cases.length) {
-                return data.deaths[data.cases.length - 1];
-            } else {
-                return data.deaths[index];
-            }
+        switch(this.name) {
+            case "cases":
+                return this.accessDataSet(data.cases, index);
+            case "deaths":
+                return this.accessDataSet(data.deaths, index);
+            case "newcases":
+                return this.accessDataSet(data.newCases, index);
+            case "newdeaths":
+                return this.accessDataSet(data.newDeaths, index);
+        }
+    }
+
+    private accessDataSet(dataSet: number[], index: number): number {
+        if (index < 0) {
+            return 0;
+        } else if (index >= dataSet.length) {
+            throw "Cannot access future data.";
+        } else {
+            return dataSet[index];
         }
     }
 }
@@ -87,12 +92,51 @@ class DataRangeNode extends ArrayExpr {
 
         switch(this.name) {
             case "cases":
-                return data.cases.slice(startIndex, endIndex);
+                return this.accessDataSetRange(data.cases, startIndex, endIndex);
             case "deaths":
-                return data.deaths.slice(startIndex, endIndex);
+                return this.accessDataSetRange(data.deaths, startIndex, endIndex);
+            case "newcases":
+                return this.accessDataSetRange(data.newCases, startIndex, endIndex);
+            case "newdeaths":
+                return this.accessDataSetRange(data.newDeaths, startIndex, endIndex);
             default:
                 throw "Invalid dataset in DataAccessNode";
         }
+    }
+
+    private accessDataSetRange(dataSet: number[], startIndex: number, endIndex: number): number[] {
+        if (startIndex > endIndex) {
+            // swap startIndex and endIndex
+            const temp = startIndex;
+            startIndex = endIndex;
+            endIndex = temp;
+        }
+
+        if (endIndex > dataSet.length) {
+            throw "Cannot access future data in range.";
+        }
+
+        if (startIndex < 0 && endIndex < 0) {
+            return this.zerosArray(endIndex - startIndex);
+        }
+
+        if (startIndex < 0 && endIndex >= 0) {
+            const arrayStart = this.zerosArray(-startIndex);
+            const arrayEnd = dataSet.slice(0, endIndex);
+            return arrayStart.concat(arrayEnd);
+        }
+
+        return dataSet.slice(startIndex, endIndex);
+    }
+
+    private zerosArray(len: number): number[] {
+        const arr = new Array(len);
+
+        for (var i = 0; i < len; i++) {
+            arr[i] = 0;
+        }
+
+        return arr;
     }
 }
 

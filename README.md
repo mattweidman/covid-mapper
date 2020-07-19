@@ -36,7 +36,11 @@ For example, to see the number of confirmed cases by county, write *cases(day)*.
 
 To see the number of new cases in the past week, enter *cases(day) - cases(day - 7)*. The expression *cases(day - 7)* means, "find the number of confirmed cases 7 days before the day indicated by the slider."
 
-If you would like to see the number of deaths instead of the number of confirmed cases, use the dataset *deaths*.
+The following datasets can be accessed:
+* *cases*: The total number of confirmed cases up to the given day.
+* *deaths*: The total number of deaths up to the given day.
+* *newcases*: The number of new confirmed cases on the given day.
+* *newdeaths*: The number of new deaths on the given day.
 
 The following arithmetic operators are allowed:
 * Addition: +
@@ -62,7 +66,6 @@ The following aggregate operations can be used over a range of data:
 ## TODO 
 
 ### Features
-* Allow accessing newCases and newDeaths.
 * Floating point numbers in expressions.
 * Show world map, and allow clicking on countries to zoom in.
 * Show time chart for currently selected region under the map.
@@ -70,9 +73,9 @@ The following aggregate operations can be used over a range of data:
 * Let users change the minimum/maximum values of the legend.
 * Let users change map colors.
 * Zooming and dragging.
+* Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars.
 
 ### Bugs
-* DataRangeNode does not yet do range checking like DataAccessNode does. Add similar checks so that something like cases(day, day - 7) doesn't create undefined values.
 * Fix undefined counties (examples in South Dakota and Alaska).
 
 ### Non-feature work items

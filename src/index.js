@@ -52,10 +52,12 @@ function preprocess(rawData, allDates) {
 
     rawData.forEach(rawDatum => {
 
-        const cases = [], deaths = [];
+        const cases = [], deaths = [], newCases = [], newDeaths = [];
         allDates.forEach(dateStr => {
             cases.push(parseInt(rawDatum["confirmed_" + dateStr]));
             deaths.push(parseInt(rawDatum["deaths_" + dateStr]));
+            newCases.push(parseInt(rawDatum["newconfirmed_" + dateStr]));
+            newDeaths.push(parseInt(rawDatum["newdeaths_" + dateStr]));
         });
 
         const newDatum = {
@@ -63,7 +65,9 @@ function preprocess(rawData, allDates) {
             name: rawDatum["County Name"],
             population: rawDatum["population"],
             cases: cases,
-            deaths: deaths
+            deaths: deaths,
+            newCases: newCases,
+            newDeaths: newDeaths
         };
 
         baseData[newDatum.id] = newDatum;
@@ -286,26 +290,35 @@ function dataLoaded(error, geomap, rawData) {
 
         if (ast != undefined) {
             if (d3.event && d3.event.keyCode === 13) {
-                const customData = computeCustomData(baseData, ast);
+                var customData;
+                try {
+                    customData = computeCustomData(baseData, ast);
+                } catch (err) {
+                    d3.select("#parseroutput")
+                        .text(err)
+                        .style("color", "darkred");
+                }
 
-                const domain = getPercentiles(customData, [1, 99]);
-                const color = d3.scale.linear()
-                    .domain(domain)
-                    .range([lowColor, highColor])
-                    .clamp(true);
-
-                updateLegendLimits(domain);
-                updateGeoMap(locationNames, customData[slideValue], color);
-                
-                // Updates slider
-                slider.on("input", function() {
-                    updateSlider(allDates, this.value);
-                    updateGeoMap(locationNames, customData[slideValue], color);
-                });
+                if (customData != undefined) {
+                    const domain = getPercentiles(customData, [1, 99]);
+                    const color = d3.scale.linear()
+                        .domain(domain)
+                        .range([lowColor, highColor])
+                        .clamp(true);
     
-                d3.select("#parseroutput")
-                    .text("Entered.")
-                    .style("color", "black");
+                    updateLegendLimits(domain);
+                    updateGeoMap(locationNames, customData[slideValue], color);
+                    
+                    // Updates slider
+                    slider.on("input", function() {
+                        updateSlider(allDates, this.value);
+                        updateGeoMap(locationNames, customData[slideValue], color);
+                    });
+        
+                    d3.select("#parseroutput")
+                        .text("Entered.")
+                        .style("color", "black");
+                }
             } else {
                 d3.select("#parseroutput")
                     .text("Valid expression. Press enter to use.")
