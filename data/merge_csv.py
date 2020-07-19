@@ -1,4 +1,14 @@
 import csv
+import urllib.request as request
+
+# Download data.
+def downloadData():
+    print("downloading covid_confirmed_usafacts.csv")
+    request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv', 'covid_confirmed_usafacts.csv')
+    print("downloading covid_deaths_usafacts.csv")
+    request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv', 'covid_deaths_usafacts.csv')
+    print("downloading covid_county_population_usafacts.csv")
+    request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv', 'covid_county_population_usafacts.csv')
 
 # Create a row of data containing info about confirmed cases, deaths, and population.
 def processRow(confirmedRow, populationRow, deathsRow, isTopRow):
@@ -16,6 +26,8 @@ def processRow(confirmedRow, populationRow, deathsRow, isTopRow):
         deaths = list(map(lambda x: "deaths_" + x, deaths))
 
     return singleStats + confirmedCases + deaths
+
+downloadData()
 
 with open('covid_confirmed_usafacts.csv') as confirmedFile:
     with open('covid_county_population_usafacts.csv') as populationFile:
