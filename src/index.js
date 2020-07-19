@@ -27,6 +27,11 @@ linearGradient.append("stop")
 
 var path = d3.geo.path();
 
+queue()
+    .defer(d3.json, "./data/us.json")
+    .defer(d3.csv, "./data/covid_all.csv")
+    .await(dataLoaded);
+
 // return list of date strings extracted from CSV headers
 function getDateList(rawData) {
     var allDates = [];
@@ -250,11 +255,6 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
-queue()
-    .defer(d3.json, "./data/us.json")
-    .defer(d3.csv, "./data/covid_all.csv")
-    .await(dataLoaded);
-
 function dataLoaded(error, geomap, rawData) {
     const allDates = getDateList(rawData);
 
@@ -304,7 +304,7 @@ function dataLoaded(error, geomap, rawData) {
                 });
     
                 d3.select("#parseroutput")
-                    .text("Enter pressed.")
+                    .text("Entered.")
                     .style("color", "black");
             } else {
                 d3.select("#parseroutput")
