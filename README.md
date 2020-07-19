@@ -43,7 +43,7 @@ The following arithmetic operators are allowed (all are binary operators):
 * Subtraction: -
 * Multiplication: *
 * Division: / (Note: Dividing 0 by 0 will always give 0. If the numerator is ever not 0 but the denominator is, there could be issues with coloring.)
-* Parenthesis: ( )
+* Parentheses: ( )
 
 The *population* variable refers to the population of the region in question. To see the number of confirmed cases per 1000000 people, try *cases(day) / population * 1000000*. 
 
