@@ -83,8 +83,16 @@ The following aggregate operations can be used over a range of data:
 * Shareable maps - maybe could generate a link that you can send to others.
 * Download map as PNG.
 
+* Show states instead of counties (or countries, etc.)
+* 3D map!
+* Different types of data - age groups, symptoms(?), hospitalizations, ICU use
+* Show suggestions as you're typing or clickable options (including documentation)
+* Documentation on the site
+* List top 5 for give query
+
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
+* Make color contrast accessible.
 
 ### Non-feature work items
 * Migrate more to TypeScript.
