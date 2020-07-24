@@ -72,23 +72,24 @@ The following aggregate operations can be used over a range of data:
 ## TODO 
 
 ### Features
-* Floating point numbers in expressions.
-* Show world map, and allow clicking on countries to zoom in.
+* Floating point numbers in expressions. - Matt
+* Show world map, and allow clicking on countries to zoom in. - Matt
 * Show time chart for currently selected region under the map.
 * For people who don't want to think of their own expressions, have a menu with some sample options.
 * Let users change the minimum/maximum values of the legend.
 * Let users change map colors.
 * Zooming and dragging.
 * Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
-* Shareable maps - maybe could generate a link that you can send to others.
-* Download map as PNG.
+* Shareable maps - maybe could generate a link that you can send to others. - Aman
+* Download map as PNG. - Aman
 
 * Show states instead of counties (or countries, etc.)
 * 3D map!
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
-* Show suggestions as you're typing or clickable options (including documentation)
-* Documentation on the site
-* List top 5 for give query
+* Show suggestions as you're typing or clickable options (including documentation) - Sahana
+* Documentation on the site - Sunny
+* List top 5 for give query - Aman
+* Most popular options - Sahana
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
