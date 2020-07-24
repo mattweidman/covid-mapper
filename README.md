@@ -75,7 +75,7 @@ The following aggregate operations can be used over a range of data:
 * Floating point numbers in expressions. - Matt
 * Show world map, and allow clicking on countries to zoom in. - Matt
 * Show time chart for currently selected region under the map.
-* For people who don't want to think of their own expressions, have a menu with some sample options.
+* For people who don't want to think of their own expressions, have a menu with some sample options. - Sahana
 * Let users change the minimum/maximum values of the legend.
 * Let users change map colors.
 * Zooming and dragging.
@@ -89,7 +89,7 @@ The following aggregate operations can be used over a range of data:
 * Show suggestions as you're typing or clickable options (including documentation) - Sahana
 * Documentation on the site - Sunny
 * List top 5 for give query - Aman
-* Most popular options - Sahana
+* Most popular options
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
