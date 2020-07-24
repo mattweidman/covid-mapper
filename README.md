@@ -79,7 +79,9 @@ The following aggregate operations can be used over a range of data:
 * Let users change the minimum/maximum values of the legend.
 * Let users change map colors.
 * Zooming and dragging.
-* Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars.
+* Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
+* Shareable maps - maybe could generate a link that you can send to others.
+* Download map as PNG.
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
@@ -88,3 +90,4 @@ The following aggregate operations can be used over a range of data:
 * Migrate more to TypeScript.
 * Set up npm.
 * Use grunt or some kind of build system.
+* Use BI or Bing infrastructure instead of D3?
