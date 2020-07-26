@@ -26,9 +26,11 @@ linearGradient.append("stop")
     .attr("stop-color", highColor);
 
 const path = d3.geo.path();
+path.projection(d3.geoWinkel3());
 
 queue()
-    .defer(d3.json, "./data/us.json")
+    // .defer(d3.json, "./data/us.json")
+    .defer(d3.json, "./data/countries.json")
     .defer(d3.csv, "./data/covid_all.csv")
     .await(dataLoaded);
 
@@ -179,7 +181,8 @@ function createGeoMap(geomap, locationNames) {
     svg.append("g")
         .attr("class", "county")
         .selectAll("path")
-        .data(topojson.feature(geomap, geomap.objects.counties).features)
+        // .data(topojson.feature(geomap, geomap.objects.counties).features)
+        .data(geomap.features)
         .enter().append("path")
         .attr("d", path)
         .style("fill", lowColor)

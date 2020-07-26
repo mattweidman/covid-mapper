@@ -9,6 +9,8 @@ def downloadData():
     request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv', 'covid_deaths_usafacts.csv')
     print("downloading covid_county_population_usafacts.csv")
     request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv', 'covid_county_population_usafacts.csv')
+    print("downloading WHO-COVID-19-global-data.csv")
+    request.urlretrieve('https://covid19.who.int/WHO-COVID-19-global-data.csv', 'WHO-COVID-19-global-data.csv')
 
 # Create a row of data containing info about confirmed cases, deaths, and population.
 def processRow(confirmedRow, populationRow, deathsRow, isTopRow):
