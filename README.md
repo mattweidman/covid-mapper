@@ -100,3 +100,4 @@ The following aggregate operations can be used over a range of data:
 * Set up npm.
 * Use grunt or some kind of build system.
 * Use BI or Bing infrastructure instead of D3?
+* Automatically download CSV files to browser without python.
