@@ -133,14 +133,6 @@ function preprocessWorldData(rawData, allDates) {
     return baseData;
 }
 
-function getLocationNameDict(baseData) {
-    const locationNames = {};
-    for (const key in baseData) {
-        locationNames[key] = baseData[key].name;
-    }
-    return locationNames;
-}
-
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
@@ -236,7 +228,7 @@ function updateSlider(allDates, dateIndex) {
         .text("Date: " + slideDate);
 }
 
-function createGeoMap(geomap, locationNames) {
+function createGeoMap(geomap) {
     // Display map
     svg.append("g")
         .attr("class", "county")
@@ -254,7 +246,7 @@ function createGeoMap(geomap, locationNames) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(locationNames[d.properties["ISO_A2"]])
+                .text(d.properties["ADMIN"])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         })
@@ -269,10 +261,9 @@ function createGeoMap(geomap, locationNames) {
         });
 }
 
-// locationNames: map geo id -> name
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(locationNames, locationValues, color) {
+function updateGeoMap(locationValues, color) {
     svg.selectAll(".county path")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties["ISO_A2"]]);
@@ -284,7 +275,7 @@ function updateGeoMap(locationNames, locationValues, color) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(locationNames[d.properties["ISO_A2"]] + ":" + locationValues[d.properties["ISO_A2"]])
+                .text(d.properties["ADMIN"] + ":" + locationValues[d.properties["ISO_A2"]])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
@@ -330,9 +321,8 @@ function dataLoaded(error, geomap, rawData) {
     createLegend();
 
     const baseData = preprocessWorldData(rawData, allDates);
-    const locationNames = getLocationNameDict(baseData);
 
-    createGeoMap(geomap, locationNames);
+    createGeoMap(geomap);
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -371,12 +361,12 @@ function dataLoaded(error, geomap, rawData) {
                         .clamp(true);
     
                     updateLegendLimits(domain);
-                    updateGeoMap(locationNames, customData[slideValue], color);
+                    updateGeoMap(customData[slideValue], color);
                     
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(locationNames, customData[slideValue], color);
+                        updateGeoMap(customData[slideValue], color);
                     });
         
                     d3.select("#parseroutput")
