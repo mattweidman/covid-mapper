@@ -31,11 +31,12 @@ path.projection(d3.geoWinkel3());
 queue()
     // .defer(d3.json, "./data/us.json")
     .defer(d3.json, "./data/countries.json")
-    .defer(d3.csv, "./data/covid_all.csv")
+    // .defer(d3.csv, "./data/covid_all.csv")
+    .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
     .await(dataLoaded);
 
 // return list of date strings extracted from CSV headers
-function getDateList(rawData) {
+function getDateListFromUsaData(rawData) {
     const allDates = [];
     for (const key in rawData[0]) {
         if (key.startsWith("confirmed_")) {
@@ -45,11 +46,11 @@ function getDateList(rawData) {
     return allDates;
 }
 
-// Convert raw data to new format.
+// Convert raw USA data to new format.
 // rawData: list of {CSV header -> value} dictionaries for location
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
-function preprocess(rawData, allDates) {
+function preprocessUsaData(rawData, allDates) {
     const baseData = {};
 
     rawData.forEach(rawDatum => {
@@ -78,6 +79,60 @@ function preprocess(rawData, allDates) {
     return baseData;
 }
 
+// return list of date strings extracted from CSV headers
+function getDateListFromWorldData(rawData) {
+    const datesSet = new Set();
+
+    for (const row of rawData) {
+        datesSet.add(row["Date_reported"]);
+    }
+
+    const allDates = Array.from(datesSet);
+    allDates.sort();
+
+    return allDates;
+}
+
+// Convert raw world data to new format.
+// rawData: list of objects containing {date, countryId, country, WHO region, new cases, cases, new deaths, deaths}
+// allDates: list of date strings from CSV headers
+// returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
+function preprocessWorldData(rawData, allDates) {
+    const baseData = {};
+
+    // Invert allDates (map date string -> index)
+    const allDatesInv = {};
+    for (var i = 0; i < allDates.length; i++) {
+        allDatesInv[allDates[i]] = i;
+    }
+
+    for (const row of rawData) {
+        // If baseData doesn't contain Country_code as a key, add it and initialize arrays
+        // TODO: set population
+        const countryCode = row[" Country_code"];
+        if (!(countryCode in baseData)) {
+            baseData[countryCode] = {
+                id: countryCode,
+                name: row[" Country"],
+                cases: Array.from(Array(allDates.length), () => 0),
+                deaths: Array.from(Array(allDates.length), () => 0),
+                newCases: Array.from(Array(allDates.length), () => 0),
+                newDeaths: Array.from(Array(allDates.length), () => 0)
+            };
+        }
+
+        // Set date-specific properties
+        const covidData = baseData[countryCode];
+        const dateIndex = allDatesInv[row["Date_reported"]];
+        covidData.cases[dateIndex] = row[" Cumulative_cases"];
+        covidData.deaths[dateIndex] = row[" Cumulative_deaths"];
+        covidData.newCases[dateIndex] = row[" New_cases"];
+        covidData.newDeaths[dateIndex] = row[" New_deaths"];
+    }
+
+    return baseData;
+}
+
 function getLocationNameDict(baseData) {
     const locationNames = {};
     for (const key in baseData) {
@@ -90,12 +145,17 @@ function getLocationNameDict(baseData) {
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
 
+    // Initialize each index with an empty object
     for (const covidData of Object.values(baseData)) {
         for (var i = 0; i < covidData.cases.length; i++) {
-            if (geoIdToValueDictList[i] == undefined) {
-                geoIdToValueDictList[i] = {};
-            }
+            geoIdToValueDictList.push({});
+        }
+        break;
+    }
 
+    // Populate data
+    for (const covidData of Object.values(baseData)) {
+        for (var i = 0; i < covidData.cases.length; i++) {
             geoIdToValueDictList[i][covidData.id] = ast.evaluate(covidData, i);
         }
     }
@@ -194,7 +254,7 @@ function createGeoMap(geomap, locationNames) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(locationNames[d.id])
+                .text(locationNames[d.properties["ISO_A2"]])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         })
@@ -215,7 +275,7 @@ function createGeoMap(geomap, locationNames) {
 function updateGeoMap(locationNames, locationValues, color) {
     svg.selectAll(".county path")
         .style ( "fill" , function (d) {
-            return color(locationValues[d.id]);
+            return color(locationValues[d.properties["ISO_A2"]]);
         })
         .on("mouseover", function(d) {
             const sel = d3.select(this);
@@ -224,7 +284,7 @@ function updateGeoMap(locationNames, locationValues, color) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(locationNames[d.id] + ":" + locationValues[d.id])
+                .text(locationNames[d.properties["ISO_A2"]] + ":" + locationValues[d.properties["ISO_A2"]])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
@@ -263,13 +323,13 @@ function updateLegendLimits(domain) {
 }
 
 function dataLoaded(error, geomap, rawData) {
-    const allDates = getDateList(rawData);
+    const allDates = getDateListFromWorldData(rawData);
 
     moveSelectionsToBackOrFront();
     const slider = createSlider(allDates);
     createLegend();
 
-    const baseData = preprocess(rawData, allDates);
+    const baseData = preprocessWorldData(rawData, allDates);
     const locationNames = getLocationNameDict(baseData);
 
     createGeoMap(geomap, locationNames);
