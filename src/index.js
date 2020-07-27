@@ -290,26 +290,29 @@ function autocomplete(input, suggestions) {
         a = document.createElement("DIV");
         a.setAttribute("id", this.id + "autcomplete-list");
         a.setAttribute("class", "autocomplete-items");
-        console.log("before");
         this.parentNode.appendChild(a);
-        console.log("after");
 
         for (i = 0; i < suggestions.length; i++) {
-            console.log(suggestions[i]);
-            console.log(val);
-            if (suggestions[i].substring(0, val.length).toLowerCase() === val.toLowerCase()) {
-                console.log("element");
-                console.log(suggestions[i].substr(0, val.length).toLowerCase());
+            var starter = Math.max(
+                0, 
+                val.lastIndexOf("(") + 1, 
+                val.lastIndexOf(" ") + 1, 
+                val.lastIndexOf("+") + 1,
+                val.lastIndexOf("*") + 1,
+                val.lastIndexOf("/") + 1,
+                val.lastIndexOf("-") + 1
+            );
+            var currentWord = val.substring(starter);
+            if (suggestions[i].substring(0, currentWord.length).toLowerCase() === currentWord.toLowerCase()) {
                 b = document.createElement("DIV");
-                b.innerHTML = "<strong>" + suggestions[i].substr(0, val.length) + "</strong>";
-                b.innerHTML += suggestions[i].substr(val.length);
+                b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
+                b.innerHTML += suggestions[i].substring(currentWord.length);
                 b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
 
                 b.addEventListener("click", function(e) {
-                    input.value = this.getElementsByTagName("input")[0].value;
+                    input.value = input.value.substring(0, starter) + this.getElementsByTagName("input")[0].value;
                     closeAutocomplete();
                 });
-                console.log(typeof(b))
                 a.appendChild(b); 
             };
         };
@@ -341,7 +344,6 @@ function dataLoaded(error, geomap, rawData) {
                 .style("color", "black");
         }
 
-        console.log("hi");
         // auto-complete suggestions here
         // referencing https://www.w3schools.com/howto/howto_js_autocomplete.asp
         autocomplete(document.getElementById("expressioninput"), options);
