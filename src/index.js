@@ -40,6 +40,19 @@ d3.select("#mapoptions").on("change", (a, b, c) => {
     updateMapType(optionSelected);
 });
 
+// Set properties.id and properties.name for every region
+function preprocessUsaMap(geomapFeatures, baseData) {
+    for (const d of geomapFeatures) {
+        d.properties.id = d.id;
+
+        if (d.id in baseData) {
+            d.properties.name = baseData[d.id].name;
+        } else {
+            d.properties.name = "Unrecognized county";
+        }
+    }
+}
+
 // return list of date strings extracted from CSV headers
 function getDateListFromUsaData(rawData) {
     const allDates = [];
@@ -82,6 +95,14 @@ function preprocessUsaData(rawData, allDates) {
     });
 
     return baseData;
+}
+
+// Set properties.id and properties.name for every region
+function preprocessWorldMap(geomapFeatures) {
+    for (const d of geomapFeatures) {
+        d.properties.id = d.properties["ISO_A2"];
+        d.properties.name = d.properties["ADMIN"];
+    }
 }
 
 // return list of date strings extracted from CSV headers
@@ -236,6 +257,7 @@ function showWorldMap() {
             const allDates = getDateListFromWorldData(rawData);
             const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
             const geomapFeatures = geomap.features;
+            preprocessWorldMap(geomapFeatures);
             dataLoaded(geomapFeatures, allDates, baseData);
         });
 }
@@ -250,6 +272,7 @@ function showUsaCounties() {
             const allDates = getDateListFromUsaData(rawData);
             const baseData = preprocessUsaData(rawData, allDates);
             const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
+            preprocessUsaMap(geomapFeatures, baseData);
             dataLoaded(geomapFeatures, allDates, baseData);
         });
 }
@@ -276,6 +299,9 @@ function resetSlider(allDates) {
     slideValue = allDates.length - 1;
     const latestDate = allDates[slideValue];
     d3.select("#datetext").text("Date: " + latestDate);
+
+    // Set slider value
+    slider.property('value', slideValue);
 
     // Updates slider
     slider.on("input", function() { updateSlider(allDates, this.value); });
@@ -310,7 +336,7 @@ function resetGeoMap(geomapFeatures) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(d.properties["ADMIN"])
+                .text(d.properties.name)
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         })
@@ -331,7 +357,7 @@ function resetGeoMap(geomapFeatures) {
 function updateGeoMap(locationValues, color) {
     svg.selectAll(".mapg path")
         .style ( "fill" , function (d) {
-            return color(locationValues[d.properties["ISO_A2"]]);
+            return color(locationValues[d.properties.id]);
         })
         .on("mouseover", function(d) {
             const sel = d3.select(this);
@@ -340,7 +366,7 @@ function updateGeoMap(locationValues, color) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(d.properties["ADMIN"] + ":" + locationValues[d.properties["ISO_A2"]])
+                .text(d.properties.name + ":" + locationValues[d.properties.id])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
