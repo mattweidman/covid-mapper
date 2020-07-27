@@ -94,6 +94,7 @@ The following aggregate operations can be used over a range of data:
 * Documentation on the site - Sunny
 * List top 5 for give query - Aman
 * Most popular options
+* Expanding circles option on maps
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
@@ -104,4 +105,5 @@ The following aggregate operations can be used over a range of data:
 * Set up npm.
 * Use grunt or some kind of build system.
 * Use BI or Bing infrastructure instead of D3?
+* Automatically download CSV files to browser without python.
 * Get a domain name and host on Azure.
