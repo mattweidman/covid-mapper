@@ -22,6 +22,8 @@ To download and merge data into one CSV:
 
 `python merge_csv.py`
 
+Make sure you have Python 3 installed.
+
 To build code:
 
 `build.cmd`
