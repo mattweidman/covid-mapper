@@ -12,6 +12,8 @@ Data: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
 
 First, you need to install the necessary NPM libaries:
 
+`npm install -g typescript`
+
 `npm install -g http-server`
 
 `npm install -g pegjs`
