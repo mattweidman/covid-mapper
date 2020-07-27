@@ -27,13 +27,14 @@ linearGradient.append("stop")
 const path = d3.geo.path();
 path.projection(d3.geoRobinson());
 
-queue()
-    // .defer(d3.json, "./data/us.json")
-    .defer(d3.json, "./data/countries.json")
-    // .defer(d3.csv, "./data/covid_all.csv")
-    .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
-    .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
-    .await(dataLoaded);
+moveSelectionsToBackOrFront();
+
+svg.append("g")
+    .attr("class", "mapg");
+createLegend();
+
+// Show the map.
+showWorldMap();
 
 // return list of date strings extracted from CSV headers
 function getDateListFromUsaData(rawData) {
@@ -218,8 +219,23 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
+function showWorldMap() {
+    queue()
+        // .defer(d3.json, "./data/us.json")
+        .defer(d3.json, "./data/countries.json")
+        // .defer(d3.csv, "./data/covid_all.csv")
+        .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
+        .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
+        .await((error, geomap, rawData, rawPopulationData) => {
+            const allDates = getDateListFromWorldData(rawData);
+            const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
+            dataLoaded(geomap, allDates, baseData);
+        });
+}
+
 var slideValue = 0; // The value of the slider
-function createSlider(allDates) {
+// Set the min and max values of the slider and subscribe to changed events.
+function resetSlider(allDates) {
     const slider = d3.select("#dateslider")
         .attr("min", 0)
         .attr("max", allDates.length - 1)
@@ -237,6 +253,7 @@ function createSlider(allDates) {
     return slider;
 }
 
+// Respond to user changing the slider.
 function updateSlider(allDates, dateIndex) {
     slideValue = dateIndex;
     const slideDate = allDates[slideValue];
@@ -244,10 +261,10 @@ function updateSlider(allDates, dateIndex) {
         .text("Date: " + slideDate);
 }
 
-function createGeoMap(geomap) {
+// Create blank map from geographical data.
+function resetGeoMap(geomap) {
     // Display map
-    svg.append("g")
-        .attr("class", "county")
+    svg.select("g.mapg")
         .selectAll("path")
         // .data(topojson.feature(geomap, geomap.objects.counties).features)
         .data(geomap.features)
@@ -277,10 +294,11 @@ function createGeoMap(geomap) {
         });
 }
 
+// Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
 function updateGeoMap(locationValues, color) {
-    svg.selectAll(".county path")
+    svg.selectAll(".mapg path")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties["ISO_A2"]]);
         })
@@ -329,16 +347,10 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
-function dataLoaded(error, geomap, rawData, rawPopulationData) {
-    const allDates = getDateListFromWorldData(rawData);
-
-    moveSelectionsToBackOrFront();
-    const slider = createSlider(allDates);
-    createLegend();
-
-    const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-
-    createGeoMap(geomap);
+// Called when data is initially loaded.
+function dataLoaded(geomap, allDates, baseData) {
+    const slider = resetSlider(allDates);
+    resetGeoMap(geomap);
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
