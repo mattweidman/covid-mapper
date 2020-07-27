@@ -33,6 +33,7 @@ queue()
     .defer(d3.json, "./data/countries.json")
     // .defer(d3.csv, "./data/covid_all.csv")
     .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
+    .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
     .await(dataLoaded);
 
 // return list of date strings extracted from CSV headers
@@ -95,9 +96,10 @@ function getDateListFromWorldData(rawData) {
 
 // Convert raw world data to new format.
 // rawData: list of objects containing {date, countryId, country, WHO region, new cases, cases, new deaths, deaths}
+// rawPopulationData: list of objects containig {country, countryId, population}
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
-function preprocessWorldData(rawData, allDates) {
+function preprocessWorldData(rawData, rawPopulationData, allDates) {
     const baseData = {};
 
     // Invert allDates (map date string -> index)
@@ -124,13 +126,26 @@ function preprocessWorldData(rawData, allDates) {
         // Set date-specific properties
         const covidData = baseData[countryCode];
         const dateIndex = allDatesInv[row["Date_reported"]];
-        covidData.cases[dateIndex] = row[" Cumulative_cases"];
-        covidData.deaths[dateIndex] = row[" Cumulative_deaths"];
-        covidData.newCases[dateIndex] = row[" New_cases"];
-        covidData.newDeaths[dateIndex] = row[" New_deaths"];
+        covidData.cases[dateIndex] = parseInt(row[" Cumulative_cases"]);
+        covidData.deaths[dateIndex] = parseInt(row[" Cumulative_deaths"]);
+        covidData.newCases[dateIndex] = parseInt(row[" New_cases"]);
+        covidData.newDeaths[dateIndex] = parseInt(row[" New_deaths"]);
     }
 
+    setPopulationData(baseData, rawPopulationData);
+
     return baseData;
+}
+
+function setPopulationData(baseData, rawPopulationData) {
+    for (const populationRow of rawPopulationData) {
+        const countryCode = populationRow["Country Code"];
+        const population = parseInt(populationRow["Population"]);
+
+        if (countryCode in baseData) {
+            baseData[countryCode].population = population;
+        }
+    }
 }
 
 // Compute the dates x locations matrix using the AST to evaluate.
@@ -162,7 +177,9 @@ function getPercentiles(customData, percentiles) {
     const allValues = [];
     for (const geoIdToValueDict of customData) {
         for (const value of Object.values(geoIdToValueDict)) {
-            allValues.push(value);
+            if (!isNaN(value)) {
+                allValues.push(value);
+            }
         }
     }
 
@@ -313,14 +330,14 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
-function dataLoaded(error, geomap, rawData) {
+function dataLoaded(error, geomap, rawData, rawPopulationData) {
     const allDates = getDateListFromWorldData(rawData);
 
     moveSelectionsToBackOrFront();
     const slider = createSlider(allDates);
     createLegend();
 
-    const baseData = preprocessWorldData(rawData, allDates);
+    const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
 
     createGeoMap(geomap);
 

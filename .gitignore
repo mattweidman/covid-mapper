@@ -1,3 +1,4 @@
 ast.js
 parser.js
-data/*.csv
+data/covid*.csv
+data/WHO*.csv
