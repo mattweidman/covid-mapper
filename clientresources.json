@@ -1,4 +1,18 @@
 {
     "siteTitle": "Covid-19 Mapper",
-    "siteSubTitle": "Make your own graph by entering an expression:"
+    "siteSubTitle": "Make your own graph by entering an expression:",
+    "expressions": {
+        "average": "aggregate average operation to be used over a range of data",
+        "cases": "dataset for the total number of confirmed cases up to the given day",
+        "day": "indicates you would like to access data for the current day on the slider",
+        "deaths": "dataset for the total number of deaths up to the given day",
+        "first": "indicates you would like to access data for the first day in the dataset",
+        "last": "indicates you would like to access data for the last day in the dataset",
+        "population": "population of the region (county)",
+        "max": "aggregate max operation to be used over a range of data",
+        "min": "aggregate min operation to be used over a range of data",
+        "newcases": "dataset for the number of new cases on the given day",
+        "newdeaths": "dataset for the number of new deaths on the given day",
+        "sum": "aggregate sum operation to be used over a range of data"
+    }
 }
