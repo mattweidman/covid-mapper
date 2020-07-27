@@ -27,6 +27,18 @@ linearGradient.append("stop")
 
 const path = d3.geo.path();
 
+const options = [
+    "average",
+    "cases",
+    "day",
+    "deaths",
+    "max",
+    "min",
+    "newcases",
+    "newdeaths",
+    "sum"
+]
+
 queue()
     .defer(d3.json, "./data/us.json")
     .defer(d3.csv, "./data/covid_all.csv")
@@ -259,6 +271,56 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
+function closeAutocomplete() {
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+        x[i].parentNode.removeChild(x[i]);
+    }
+}
+
+function autocomplete(input, suggestions) {
+    input.addEventListener("input", function(e) {
+        var a, b, i, val = this.value;
+
+        closeAutocomplete();
+        if (!val) {
+            return false;
+        }
+        var a, b, i;
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autcomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        console.log("before");
+        this.parentNode.appendChild(a);
+        console.log("after");
+
+        for (i = 0; i < suggestions.length; i++) {
+            console.log(suggestions[i]);
+            console.log(val);
+            if (suggestions[i].substring(0, val.length).toLowerCase() === val.toLowerCase()) {
+                console.log("element");
+                console.log(suggestions[i].substr(0, val.length).toLowerCase());
+                b = document.createElement("DIV");
+                b.innerHTML = "<strong>" + suggestions[i].substr(0, val.length) + "</strong>";
+                b.innerHTML += suggestions[i].substr(val.length);
+                b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
+
+                b.addEventListener("click", function(e) {
+                    input.value = this.getElementsByTagName("input")[0].value;
+                    closeAutocomplete();
+                });
+                console.log(typeof(b))
+                a.appendChild(b); 
+            };
+        };
+    });
+};
+
+
+document.addEventListener("click", function(e) {
+    closeAutocomplete();
+})
+
 function dataLoaded(error, geomap, rawData) {
     const allDates = getDateList(rawData);
 
@@ -278,6 +340,11 @@ function dataLoaded(error, geomap, rawData) {
                 .text("Enter an expression.")
                 .style("color", "black");
         }
+
+        console.log("hi");
+        // auto-complete suggestions here
+        // referencing https://www.w3schools.com/howto/howto_js_autocomplete.asp
+        autocomplete(document.getElementById("expressioninput"), options);
         
         var ast;
         try {
