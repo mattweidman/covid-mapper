@@ -22,6 +22,7 @@
 	<h1>COVID-19 Map Maker</h1>
     <div id="expressioncontainer">
         <h4>Make your own graph by entering an expression:</h4>
+        <a href="#suggestions" id="jumpLink">Check out our suggested expressions</a>
         <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
         <div id="parseroutput"></div>
     </div>
@@ -37,7 +38,7 @@
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>
     </div>
-    <p>Source: usafacts.org, covid19.who.int, data.worldbank.org</p>
+    <p>Sources: usafacts.org, covid19.who.int, data.worldbank.org</p>
     <script src="src/index.js"></script>
     <div id="suggestions">
         <h4>Suggested expressions:</h4>
@@ -51,6 +52,13 @@
                 button.setAttribute("class", "sample-buttons");
                 button.setAttribute("content", samples[key]);
                 button.textContent = key;
+                console.log(button)
+                button.addEventListener("click", function(e) {
+                    var input = document.getElementById("expressioninput");
+                    input.value = e.target.getAttribute("content");
+                    var top = $('#expressioninput').position().top;
+                    $(window).scrollTop( top );
+                });
                 var wrapper = document.getElementById("suggestions");
                 wrapper.appendChild(button);
             }
