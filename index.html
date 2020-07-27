@@ -19,14 +19,22 @@
 </head>
 <body>
 	<h1>COVID-19 Map Maker</h1>
+    <div id="expressioncontainer">
+        <h4>Make your own graph by entering an expression:</h4>
+        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
+        <div id="parseroutput"></div>
+    </div>
+    <div id="mapoptionscontainer">
+        <label for="mapoptions">Select map type:</label>
+        <select name="mapoptions" id="mapoptions">
+            <option value="worldcountries">World - countries</option>
+            <option value="usacounties">USA - counties</option>
+        </select>
+    </div>
+    <div id="mapcontainer"></div>
     <div id="slidecontainer">
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>
-    </div>
-    <h4>Make your own graph by entering an expression:</h4>
-    <div id="expressioncontainer">
-        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
-        <div id="parseroutput"></div>
     </div>
     <p>Source: usafacts.org, covid19.who.int, data.worldbank.org</p>
     <script src="src/index.js"></script>

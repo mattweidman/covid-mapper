@@ -5,10 +5,9 @@ const tooltipDiv = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
  
-const svg = d3.select("body").append("svg")
+const svg = d3.select("#mapcontainer").append("svg")
     .attr("width", width)
-    .attr("height", height)
-    .style("margin", "-15px auto");
+    .attr("height", height);
 
 const defs = svg.append("defs");
 
@@ -26,7 +25,7 @@ linearGradient.append("stop")
     .attr("stop-color", highColor);
 
 const path = d3.geo.path();
-path.projection(d3.geoWinkel3());
+path.projection(d3.geoRobinson());
 
 queue()
     // .defer(d3.json, "./data/us.json")
