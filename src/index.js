@@ -5,10 +5,9 @@ const tooltipDiv = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
  
-const svg = d3.select("body").append("svg")
+const svg = d3.select("#mapcontainer").append("svg")
     .attr("width", width)
-    .attr("height", height)
-    .style("margin", "-15px auto");
+    .attr("height", height);
 
 const defs = svg.append("defs");
 
@@ -27,13 +26,35 @@ linearGradient.append("stop")
 
 const path = d3.geo.path();
 
-queue()
-    .defer(d3.json, "./data/us.json")
-    .defer(d3.csv, "./data/covid_all.csv")
-    .await(dataLoaded);
+moveSelectionsToBackOrFront();
+
+svg.append("g")
+    .attr("class", "mapg");
+createLegend();
+
+// Show the map.
+showWorldMap();
+
+d3.select("#mapoptions").on("change", (a, b, c) => {
+    const optionSelected = d3.select("#mapoptions").node().value;
+    updateMapType(optionSelected);
+});
+
+// Set properties.id and properties.name for every region
+function preprocessUsaMap(geomapFeatures, baseData) {
+    for (const d of geomapFeatures) {
+        d.properties.id = d.id;
+
+        if (d.id in baseData) {
+            d.properties.name = baseData[d.id].name;
+        } else {
+            d.properties.name = "Unrecognized county";
+        }
+    }
+}
 
 // return list of date strings extracted from CSV headers
-function getDateList(rawData) {
+function getDateListFromUsaData(rawData) {
     const allDates = [];
     for (const key in rawData[0]) {
         if (key.startsWith("confirmed_")) {
@@ -43,11 +64,11 @@ function getDateList(rawData) {
     return allDates;
 }
 
-// Convert raw data to new format.
+// Convert raw USA data to new format.
 // rawData: list of {CSV header -> value} dictionaries for location
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
-function preprocess(rawData, allDates) {
+function preprocessUsaData(rawData, allDates) {
     const baseData = {};
 
     rawData.forEach(rawDatum => {
@@ -76,24 +97,97 @@ function preprocess(rawData, allDates) {
     return baseData;
 }
 
-function getLocationNameDict(baseData) {
-    const locationNames = {};
-    for (const key in baseData) {
-        locationNames[key] = baseData[key].name;
+// Set properties.id and properties.name for every region
+function preprocessWorldMap(geomapFeatures) {
+    for (const d of geomapFeatures) {
+        d.properties.id = d.properties["ISO_A2"];
+        d.properties.name = d.properties["ADMIN"];
     }
-    return locationNames;
+}
+
+// return list of date strings extracted from CSV headers
+function getDateListFromWorldData(rawData) {
+    const datesSet = new Set();
+
+    for (const row of rawData) {
+        datesSet.add(row["Date_reported"]);
+    }
+
+    const allDates = Array.from(datesSet);
+    allDates.sort();
+
+    return allDates;
+}
+
+// Convert raw world data to new format.
+// rawData: list of objects containing {date, countryId, country, WHO region, new cases, cases, new deaths, deaths}
+// rawPopulationData: list of objects containig {country, countryId, population}
+// allDates: list of date strings from CSV headers
+// returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
+function preprocessWorldData(rawData, rawPopulationData, allDates) {
+    const baseData = {};
+
+    // Invert allDates (map date string -> index)
+    const allDatesInv = {};
+    for (var i = 0; i < allDates.length; i++) {
+        allDatesInv[allDates[i]] = i;
+    }
+
+    for (const row of rawData) {
+        // If baseData doesn't contain Country_code as a key, add it and initialize arrays
+        // TODO: set population
+        const countryCode = row[" Country_code"];
+        if (!(countryCode in baseData)) {
+            baseData[countryCode] = {
+                id: countryCode,
+                name: row[" Country"],
+                cases: Array.from(Array(allDates.length), () => 0),
+                deaths: Array.from(Array(allDates.length), () => 0),
+                newCases: Array.from(Array(allDates.length), () => 0),
+                newDeaths: Array.from(Array(allDates.length), () => 0)
+            };
+        }
+
+        // Set date-specific properties
+        const covidData = baseData[countryCode];
+        const dateIndex = allDatesInv[row["Date_reported"]];
+        covidData.cases[dateIndex] = parseInt(row[" Cumulative_cases"]);
+        covidData.deaths[dateIndex] = parseInt(row[" Cumulative_deaths"]);
+        covidData.newCases[dateIndex] = parseInt(row[" New_cases"]);
+        covidData.newDeaths[dateIndex] = parseInt(row[" New_deaths"]);
+    }
+
+    setPopulationData(baseData, rawPopulationData);
+
+    return baseData;
+}
+
+function setPopulationData(baseData, rawPopulationData) {
+    for (const populationRow of rawPopulationData) {
+        const countryCode = populationRow["Country Code"];
+        const population = parseInt(populationRow["Population"]);
+
+        if (countryCode in baseData) {
+            baseData[countryCode].population = population;
+        }
+    }
 }
 
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
 
+    // Initialize each index with an empty object
     for (const covidData of Object.values(baseData)) {
         for (var i = 0; i < covidData.cases.length; i++) {
-            if (geoIdToValueDictList[i] == undefined) {
-                geoIdToValueDictList[i] = {};
-            }
+            geoIdToValueDictList.push({});
+        }
+        break;
+    }
 
+    // Populate data
+    for (const covidData of Object.values(baseData)) {
+        for (var i = 0; i < covidData.cases.length; i++) {
             geoIdToValueDictList[i][covidData.id] = ast.evaluate(covidData, i);
         }
     }
@@ -108,7 +202,9 @@ function getPercentiles(customData, percentiles) {
     const allValues = [];
     for (const geoIdToValueDict of customData) {
         for (const value of Object.values(geoIdToValueDict)) {
-            allValues.push(value);
+            if (!isNaN(value)) {
+                allValues.push(value);
+            }
         }
     }
 
@@ -148,8 +244,51 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
+function showWorldMap() {
+    path.projection(d3.geoRobinson());
+
+    queue()
+        // .defer(d3.json, "./data/us.json")
+        .defer(d3.json, "./data/countries.json")
+        // .defer(d3.csv, "./data/covid_all.csv")
+        .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
+        .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
+        .await((error, geomap, rawData, rawPopulationData) => {
+            const allDates = getDateListFromWorldData(rawData);
+            const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
+            const geomapFeatures = geomap.features;
+            preprocessWorldMap(geomapFeatures);
+            dataLoaded(geomapFeatures, allDates, baseData);
+        });
+}
+
+function showUsaCounties() {
+    path.projection(d3.geo.albersUsa());
+
+    queue()
+        .defer(d3.json, "./data/us.json")
+        .defer(d3.csv, "./data/covid_all.csv")
+        .await((error, geomap, rawData) => {
+            const allDates = getDateListFromUsaData(rawData);
+            const baseData = preprocessUsaData(rawData, allDates);
+            const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
+            preprocessUsaMap(geomapFeatures, baseData);
+            dataLoaded(geomapFeatures, allDates, baseData);
+        });
+}
+
+// Respond to event where user changes map type.
+function updateMapType(mapType) {
+    if (mapType === "worldcountries") {
+        showWorldMap();
+    } else if (mapType === "usacounties") {
+        showUsaCounties();
+    }
+}
+
 var slideValue = 0; // The value of the slider
-function createSlider(allDates) {
+// Set the min and max values of the slider and subscribe to changed events.
+function resetSlider(allDates) {
     const slider = d3.select("#dateslider")
         .attr("min", 0)
         .attr("max", allDates.length - 1)
@@ -161,12 +300,16 @@ function createSlider(allDates) {
     const latestDate = allDates[slideValue];
     d3.select("#datetext").text("Date: " + latestDate);
 
+    // Set slider value
+    slider.property('value', slideValue);
+
     // Updates slider
     slider.on("input", function() { updateSlider(allDates, this.value); });
 
     return slider;
 }
 
+// Respond to user changing the slider.
 function updateSlider(allDates, dateIndex) {
     slideValue = dateIndex;
     const slideDate = allDates[slideValue];
@@ -174,12 +317,14 @@ function updateSlider(allDates, dateIndex) {
         .text("Date: " + slideDate);
 }
 
-function createGeoMap(geomap, locationNames) {
-    // Display map
-    svg.append("g")
-        .attr("class", "county")
+// Create blank map from geographical data.
+function resetGeoMap(geomapFeatures) {
+    // clear map
+    svg.selectAll("g.mapg > path").remove();
+    
+    const data = svg.select("g.mapg")
         .selectAll("path")
-        .data(topojson.feature(geomap, geomap.objects.counties).features)
+        .data(geomapFeatures)
         .enter().append("path")
         .attr("d", path)
         .style("fill", lowColor)
@@ -191,7 +336,7 @@ function createGeoMap(geomap, locationNames) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(locationNames[d.id])
+                .text(d.properties.name)
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         })
@@ -206,13 +351,13 @@ function createGeoMap(geomap, locationNames) {
         });
 }
 
-// locationNames: map geo id -> name
+// Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(locationNames, locationValues, color) {
-    svg.selectAll(".county path")
+function updateGeoMap(locationValues, color) {
+    svg.selectAll(".mapg path")
         .style ( "fill" , function (d) {
-            return color(locationValues[d.id]);
+            return color(locationValues[d.properties.id]);
         })
         .on("mouseover", function(d) {
             const sel = d3.select(this);
@@ -221,7 +366,7 @@ function updateGeoMap(locationNames, locationValues, color) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(locationNames[d.id] + ":" + locationValues[d.id])
+                .text(d.properties.name + ":" + locationValues[d.properties.id])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
@@ -259,17 +404,10 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
-function dataLoaded(error, geomap, rawData) {
-    const allDates = getDateList(rawData);
-
-    moveSelectionsToBackOrFront();
-    const slider = createSlider(allDates);
-    createLegend();
-
-    const baseData = preprocess(rawData, allDates);
-    const locationNames = getLocationNameDict(baseData);
-
-    createGeoMap(geomap, locationNames);
+// Called when data is initially loaded.
+function dataLoaded(geomapFeatures, allDates, baseData) {
+    const slider = resetSlider(allDates);
+    resetGeoMap(geomapFeatures);
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -308,12 +446,12 @@ function dataLoaded(error, geomap, rawData) {
                         .clamp(true);
     
                     updateLegendLimits(domain);
-                    updateGeoMap(locationNames, customData[slideValue], color);
+                    updateGeoMap(customData[slideValue], color);
                     
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(locationNames, customData[slideValue], color);
+                        updateGeoMap(customData[slideValue], color);
                     });
         
                     d3.select("#parseroutput")
