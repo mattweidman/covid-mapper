@@ -25,7 +25,6 @@ linearGradient.append("stop")
     .attr("stop-color", highColor);
 
 const path = d3.geo.path();
-path.projection(d3.geoRobinson());
 
 moveSelectionsToBackOrFront();
 
@@ -35,6 +34,11 @@ createLegend();
 
 // Show the map.
 showWorldMap();
+
+d3.select("#mapoptions").on("change", (a, b, c) => {
+    const optionSelected = d3.select("#mapoptions").node().value;
+    updateMapType(optionSelected);
+});
 
 // return list of date strings extracted from CSV headers
 function getDateListFromUsaData(rawData) {
@@ -220,6 +224,8 @@ function moveSelectionsToBackOrFront() {
 }
 
 function showWorldMap() {
+    path.projection(d3.geoRobinson());
+
     queue()
         // .defer(d3.json, "./data/us.json")
         .defer(d3.json, "./data/countries.json")
@@ -229,8 +235,32 @@ function showWorldMap() {
         .await((error, geomap, rawData, rawPopulationData) => {
             const allDates = getDateListFromWorldData(rawData);
             const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-            dataLoaded(geomap, allDates, baseData);
+            const geomapFeatures = geomap.features;
+            dataLoaded(geomapFeatures, allDates, baseData);
         });
+}
+
+function showUsaCounties() {
+    path.projection(d3.geo.albersUsa());
+
+    queue()
+        .defer(d3.json, "./data/us.json")
+        .defer(d3.csv, "./data/covid_all.csv")
+        .await((error, geomap, rawData) => {
+            const allDates = getDateListFromUsaData(rawData);
+            const baseData = preprocessUsaData(rawData, allDates);
+            const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
+            dataLoaded(geomapFeatures, allDates, baseData);
+        });
+}
+
+// Respond to event where user changes map type.
+function updateMapType(mapType) {
+    if (mapType === "worldcountries") {
+        showWorldMap();
+    } else if (mapType === "usacounties") {
+        showUsaCounties();
+    }
 }
 
 var slideValue = 0; // The value of the slider
@@ -262,12 +292,13 @@ function updateSlider(allDates, dateIndex) {
 }
 
 // Create blank map from geographical data.
-function resetGeoMap(geomap) {
-    // Display map
-    svg.select("g.mapg")
+function resetGeoMap(geomapFeatures) {
+    // clear map
+    svg.selectAll("g.mapg > path").remove();
+    
+    const data = svg.select("g.mapg")
         .selectAll("path")
-        // .data(topojson.feature(geomap, geomap.objects.counties).features)
-        .data(geomap.features)
+        .data(geomapFeatures)
         .enter().append("path")
         .attr("d", path)
         .style("fill", lowColor)
@@ -348,9 +379,9 @@ function updateLegendLimits(domain) {
 }
 
 // Called when data is initially loaded.
-function dataLoaded(geomap, allDates, baseData) {
+function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
-    resetGeoMap(geomap);
+    resetGeoMap(geomapFeatures);
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
