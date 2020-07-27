@@ -5,7 +5,8 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>COVID-19 cases</title>
+    <title>COVID-19 cases</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
 	<script type="text/javascript" src="https://d3js.org/queue.v1.min.js"></script>
     <script type="text/javascript" src="https://d3js.org/topojson.v1.min.js"></script> 
@@ -20,11 +21,30 @@
         <input type="range" class="slider" id="dateslider"></input>
     </div>
     <h4>Make your own graph by entering an expression:</h4>
+    <a href="#suggestions" id="jumpLink">Check out our suggested expressions</a>
     <div id="expressioncontainer">
         <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
         <div id="parseroutput"></div>
     </div>
     <p>Source: usafacts.org</p>
     <script src="src/index.js"></script>
+    <div id="suggestions">
+        <h4>Suggested expressions:</h4>
+    </div>
+    <script>
+        $.getJSON('../../clientresources.json', function(data) {
+            //do stuff with your data here
+            var samples = data.samples;
+            for (var key in samples) {
+                var button = document.createElement("BUTTON");
+                button.setAttribute("id", key + "button");
+                button.setAttribute("class", "sample-buttons");
+                button.setAttribute("content", samples[key]);
+                button.textContent = key;
+                var wrapper = document.getElementById("suggestions");
+                wrapper.appendChild(button);
+            }
+        });
+    </script>
 </body>
 </html>

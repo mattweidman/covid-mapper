@@ -14,5 +14,22 @@
         "newcases": "dataset for the number of new cases on the given day",
         "newdeaths": "dataset for the number of new deaths on the given day",
         "sum": "aggregate sum operation to be used over a range of data"
+    },
+    "samples": {
+        "New cases on a day": "newcases(day)",
+        "New deaths on a day": "newdeaths(day)",
+        "Total cases on a day": "cases(day)",
+        "Total deaths on a day": "deaths(day)",
+        "Last 7 days average cases": "average(cases(day-7,day))",
+        "Last 7 days average deaths": "average(deaths(day-7,day))",
+        "Last 30 days average cases": "average(cases(day-30,day))",
+        "Last 30 days average deaths": "average(deaths(day-30,day))",
+        "Max new cases per day so far": "max(newcases(first,last))",
+        "Max new deaths per day so far": "max(newdeaths(first,last))",
+        "Average deaths per day": "average(deaths(first,last))",
+        "Total new cases in last 7 days": "cases(day)-cases(day-7)",
+        "Total new cases in last 30 days": "cases(day)-cases(day-30)",
+        "Total new deaths in last 7 days": "deaths(day)-cases(day-7)",
+        "Total new deaths in last 30 days": "deaths(day)-cases(day-30)"
     }
 }

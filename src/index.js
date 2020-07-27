@@ -25,6 +25,24 @@ linearGradient.append("stop")
     .attr("offset", "100%")
     .attr("stop-color", highColor);
 
+
+// TODO figure out how to read from local json
+const docs = {
+    "average": "aggregate average operation to be used over a range of data",
+    "cases": "dataset for the total number of confirmed cases up to the given day",
+    "day": "indicates you would like to access data for the current day on the slider",
+    "deaths": "dataset for the total number of deaths up to the given day",
+    "first": "indicates you would like to access data for the first day in the dataset",
+    "last": "indicates you would like to access data for the last day in the dataset",
+    "population": "population of the region (county)",
+    "max": "aggregate max operation to be used over a range of data",
+    "min": "aggregate min operation to be used over a range of data",
+    "newcases": "dataset for the number of new cases on the given day",
+    "newdeaths": "dataset for the number of new deaths on the given day",
+    "sum": "aggregate sum operation to be used over a range of data"
+};
+
+
 const path = d3.geo.path();
 
 const options = [
@@ -310,6 +328,7 @@ function autocomplete(input, suggestions) {
                 b = document.createElement("DIV");
                 b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
                 b.innerHTML += suggestions[i].substring(currentWord.length);
+                b.innerHTML += ": " + docs[suggestions[i]];
                 b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
 
                 b.addEventListener("click", function(e) {
