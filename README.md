@@ -12,6 +12,8 @@ Data: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
 
 First, you need to install the necessary NPM libaries:
 
+`npm install -g typescript`
+
 `npm install -g http-server`
 
 `npm install -g pegjs`
@@ -21,6 +23,8 @@ To download and merge data into one CSV:
 `cd data`
 
 `python merge_csv.py`
+
+Make sure you have Python 3 installed.
 
 To build code:
 
@@ -90,6 +94,7 @@ The following aggregate operations can be used over a range of data:
 * Documentation on the site - Sunny
 * List top 5 for give query - Aman
 * Most popular options
+* Expanding circles option on maps
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
@@ -101,3 +106,4 @@ The following aggregate operations can be used over a range of data:
 * Use grunt or some kind of build system.
 * Use BI or Bing infrastructure instead of D3?
 * Automatically download CSV files to browser without python.
+* Get a domain name and host on Azure.
