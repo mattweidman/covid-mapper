@@ -26,6 +26,10 @@ linearGradient.append("stop")
 
 const path = d3.geoPath();
 
+var options = [];
+
+var docs = {};
+
 moveSelectionsToBackOrFront();
 
 const mapg = svg.append("g")
@@ -40,9 +44,13 @@ svg.call(zoom);
 
 showWorldMap();
 
+loadDocs();
+loadSuggestions();
+
 createLegend();
 
-d3.select("#mapoptions").on("change", (a, b, c) => {
+
+d3.select("#mapoptions").on("change", () => {
     const optionSelected = d3.select("#mapoptions").node().value;
     updateMapType(optionSelected);
 });
@@ -349,6 +357,7 @@ function showUsaStates() {
 
 // Respond to event where user changes map type.
 function updateMapType(mapType) {
+    console.log("maptypechanged")
     if (mapType === "worldcountries") {
         showWorldMap();
     } else if (mapType === "usacounties") {
@@ -482,6 +491,77 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
+function loadDocs() {
+    $.getJSON('../../clientresources.json', function(data) {
+        docs = data.docs;
+        options = Object.keys(docs);
+    });
+}
+function closeAutocomplete() {
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+        x[i].parentNode.removeChild(x[i]);
+    }
+}
+
+function autocomplete(input, suggestions) {
+    input.addEventListener("input", function(e) {
+        var a, b, i, val = this.value;
+
+        closeAutocomplete();
+        if (!val) {
+            return false;
+        }
+        var a, b, i;
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autcomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        this.parentNode.appendChild(a);
+
+        var starter = Math.max(
+            0, 
+            val.lastIndexOf("(") + 1, 
+            val.lastIndexOf(" ") + 1, 
+            val.lastIndexOf("+") + 1,
+            val.lastIndexOf("*") + 1,
+            val.lastIndexOf("/") + 1,
+            val.lastIndexOf("-") + 1
+        );
+        var currentWord = val.substring(starter);
+
+        for (i = 0; i < suggestions.length; i++) {
+            if (suggestions[i].substring(0, currentWord.length).toLowerCase() === currentWord.toLowerCase()) {
+                b = document.createElement("DIV");
+                b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
+                b.innerHTML += suggestions[i].substring(currentWord.length);
+                b.innerHTML += ": " + docs[suggestions[i]];
+                b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
+
+                b.addEventListener("click", function(e) {
+                    input.value = input.value.substring(0, starter) + this.getElementsByTagName("input")[0].value;
+                    closeAutocomplete();
+                    try {
+                        ast = peg$parse(input.value);
+                        d3.select("#parseroutput")
+                                    .text("Valid expression. Press enter to use.")
+                                    .style("color", "black");
+                    } catch (err) {
+                        d3.select("#parseroutput")
+                            .text(err)
+                            .style("color", "darkred");
+                    }
+                });
+                a.appendChild(b); 
+            };
+        };
+    });
+};
+
+
+document.addEventListener("click", function(e) {
+    closeAutocomplete();
+})
+
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
@@ -489,11 +569,16 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
+        console.log("hi")
         if (inputText === "") {
             d3.select("#parseroutput")
                 .text("Enter an expression.")
                 .style("color", "black");
         }
+
+        // auto-complete suggestions here
+        // referencing https://www.w3schools.com/howto/howto_js_autocomplete.asp
+        autocomplete(document.getElementById("expressioninput"), options);
         
         var ast;
         try {
@@ -552,6 +637,39 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     updateExpressionInput(defaultExpression);
 };
 
+function inputSuggestion() {
+    console.log("hi2");
+    var input = document.getElementById("expressioninput");
+    var dropdown = document.getElementById("suggestions");
+    input.value = dropdown.value;
+    document.getElementById("expressioninput").focus();
+    var ast;
+    try {
+        ast = peg$parse(dropdown.value);
+        d3.select("#parseroutput")
+                    .text("Valid expression. Press enter to use.")
+                    .style("color", "black");
+    } catch (err) {
+        d3.select("#parseroutput")
+            .text(err)
+            .style("color", "darkred");
+    }
+}
+
+function loadSuggestions(){ 
+    $.getJSON('../../clientresources.json', function(data) {
+        var samples = data.expressions;
+        for (var key in samples) {
+            var dropdown = document.getElementById("suggestions");
+            var option = document.createElement("OPTION");
+            option.innerHTML = key;
+            option.value = samples[key];
+            dropdown.options.add(option);
+            console.log(option);
+        }
+        document.getElementById("suggestions").onchange = inputSuggestion;
+    });
+}
 function downloadAsPng() {
     var svg = d3.select("svg").node(),
         img = new Image(),

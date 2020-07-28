@@ -1,6 +1,20 @@
 {
   "siteTitle": "Covid-19 Mapper",
   "siteSubTitle": "Make your own graph by entering an expression:",
+  "docs": {
+      "average": "aggregate average operation to be used over a range of data",
+      "cases": "dataset for the total number of confirmed cases up to the given day",
+      "day": "indicates you would like to access data for the current day on the slider",
+      "deaths": "dataset for the total number of deaths up to the given day",
+      "first": "indicates you would like to access data for the first day in the dataset",
+      "last": "indicates you would like to access data for the last day in the dataset",
+      "population": "population of the region (county)",
+      "max": "aggregate max operation to be used over a range of data",
+      "min": "aggregate min operation to be used over a range of data",
+      "newcases": "dataset for the number of new cases on the given day",
+      "newdeaths": "dataset for the number of new deaths on the given day",
+      "sum": "aggregate sum operation to be used over a range of data"
+  },
   "expressions": {
     "NewCasesOnaDay": "newcases(day)",
     "NewDeathsOnaDay": "newdeaths(day)",
@@ -8,10 +22,10 @@
     "TotalCasesOnaDayPer1M": "cases(day)/population*1000000",
     "TotalDeathsOnaDay": "deaths(day)",
     "TotalDeathsOnaDayPer1M": "deaths(day)/population*1000000",
-    "Last7DaysAverageCases": "average(cases(day-7,day))",
-    "Last7DaysAverageDeaths": "average(deaths(day-7,day))",
-    "Last30DaysAverageCases": "average(cases(day-30,day))",
-    "Last30DaysAverageDeaths": "average(deaths(day-30,day))",
+    "Last7DaysAverageCasesPerDay": "average(cases(day-7,day))",
+    "Last7DaysAverageDeathsPerDay": "average(deaths(day-7,day))",
+    "Last30DaysAverageCasesPerDay": "average(cases(day-30,day))",
+    "Last30DaysAverageDeathsPerDay": "average(deaths(day-30,day))",
     "MaxNewCasesPerDaysoFar": "max(newcases(first,last))",
     "MaxNewDeathsPerDaysoFar": "max(newdeaths(first,last))",
     "AverageDeathsPerDay": "average(deaths(first,last))",
@@ -23,7 +37,7 @@
     "MaxNewCasesinLast30Days": "max(newcases(day-30,day))",
     "MinNewCasesinLast7Days": "min(newcases(day-7,day))",
     "MinNewCasesinLast30Days": "min(newcases(day-30,day))",
-    "TotalRecoveredCasesSoFar": "sum(newcases(first,last))- sum(cases(first,last))"
+    "TotalRecoveredCasesSoFar": "sum(newcases(first,last))- cases(last)"
   }
 }
  
