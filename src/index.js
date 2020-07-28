@@ -24,16 +24,24 @@ linearGradient.append("stop")
     .attr("offset", "100%")
     .attr("stop-color", highColor);
 
-const path = d3.geo.path();
+const path = d3.geoPath();
 
 moveSelectionsToBackOrFront();
 
-svg.append("g")
+const mapg = svg.append("g")
     .attr("class", "mapg");
-createLegend();
 
-// Show the map.
+const zoom = d3.zoom()
+    .scaleExtent([1, 8])
+    .on("zoom", function () {
+        mapg.selectAll("path")
+            .attr("transform", d3.event.transform);
+    });
+svg.call(zoom);
+
 showWorldMap();
+
+createLegend();
 
 d3.select("#mapoptions").on("change", (a, b, c) => {
     const optionSelected = d3.select("#mapoptions").node().value;
@@ -284,47 +292,60 @@ function moveSelectionsToBackOrFront() {
 function showWorldMap() {
     path.projection(d3.geoRobinson());
 
-    queue()
-        .defer(d3.json, "./data/countries.json")
-        .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
-        .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
-        .await((error, geomap, rawData, rawPopulationData) => {
-            const allDates = getDateListFromWorldData(rawData);
-            const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-            const geomapFeatures = geomap.features;
-            preprocessWorldMap(geomapFeatures);
-            dataLoaded(geomapFeatures, allDates, baseData);
-        });
+    Promise.all([
+        d3.json("./data/countries.json"),
+        d3.csv("./data/WHO-COVID-19-global-data.csv"),
+        d3.csv("./data/world-bank-population-isoa2.csv")
+    ]).then(function (data) {
+        const geomap = data[0];
+        const rawData = data[1];
+        const rawPopulationData = data[2];
+
+        const allDates = getDateListFromWorldData(rawData);
+        const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
+        const geomapFeatures = geomap.features;
+        preprocessWorldMap(geomapFeatures);
+
+        dataLoaded(geomapFeatures, allDates, baseData);
+    });
 }
 
 function showUsaCounties() {
-    path.projection(d3.geo.albersUsa());
+    path.projection(d3.geoAlbersUsa());
 
-    queue()
-        .defer(d3.json, "./data/us.json")
-        .defer(d3.csv, "./data/covid_usa.csv")
-        .await((error, geomap, rawData) => {
-            const allDates = getDateListFromUsaData(rawData);
-            const baseData = preprocessUsaData(rawData, allDates);
-            const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
-            preprocessUsaMap(geomapFeatures, baseData);
-            dataLoaded(geomapFeatures, allDates, baseData);
-        });
+    Promise.all([
+        d3.json("./data/us.json"),
+        d3.csv("./data/covid_usa.csv")
+    ]).then(function (data) {
+        const geomap = data[0];
+        const rawData = data[1];
+
+        const allDates = getDateListFromUsaData(rawData);
+        const baseData = preprocessUsaData(rawData, allDates);
+        const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
+        preprocessUsaMap(geomapFeatures, baseData);
+
+        dataLoaded(geomapFeatures, allDates, baseData);
+    });
 }
 
 function showUsaStates() {
-    path.projection(d3.geo.albersUsa());
+    path.projection(d3.geoAlbersUsa());
 
-    queue()
-        .defer(d3.json, "./data/us.json")
-        .defer(d3.csv, "./data/covid_usa.csv")
-        .await((error, geomap, rawData) => {
-            const allDates = getDateListFromUsaData(rawData);
-            const baseData = preprocessUsaStatesData(rawData, allDates);
-            const geomapFeatures = topojson.feature(geomap, geomap.objects.states).features;
-            preprocessUsaMap(geomapFeatures, baseData);
-            dataLoaded(geomapFeatures, allDates, baseData);
-        });
+    Promise.all([
+        d3.json("./data/us.json"),
+        d3.csv("./data/covid_usa.csv")
+    ]).then(function (data) {
+        const geomap = data[0];
+        const rawData = data[1];
+
+        const allDates = getDateListFromUsaData(rawData);
+        const baseData = preprocessUsaStatesData(rawData, allDates);
+        const geomapFeatures = topojson.feature(geomap, geomap.objects.states).features;
+        preprocessUsaMap(geomapFeatures, baseData);
+
+        dataLoaded(geomapFeatures, allDates, baseData);
+    });
 }
 
 // Respond to event where user changes map type.
@@ -384,7 +405,12 @@ function resetGeoMap(geomapFeatures) {
         .on("mouseover", function(d) {
             const sel = d3.select(this);
             sel.moveToFront();
-            d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
+            d3.select(this)
+                .transition().duration(300)
+                .style("opacity", 1)
+                .style("stroke", "black")
+                .style("stroke-width", 1.5);
+                // .style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
@@ -397,7 +423,10 @@ function resetGeoMap(geomapFeatures) {
             sel.moveToBack();
             d3.select(this)
                 .transition().duration(300)
-                .style({'opacity': 0.8, 'stroke': 'white', 'stroke-width': 1});
+                .style("opacity", 0.8)
+                .style("stroke", "white")
+                .style("stroke-width", 1);
+                // .style({'opacity': 0.8, 'stroke': 'white', 'stroke-width': 1});
             tooltipDiv.transition().duration(300)
                 .style("opacity", 0);
         });
@@ -414,7 +443,12 @@ function updateGeoMap(locationValues, color) {
         .on("mouseover", function(d) {
             const sel = d3.select(this);
             sel.moveToFront();
-            d3.select(this).transition().duration(300).style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
+            d3.select(this)
+                .transition().duration(300)
+                .style("opacity", 1)
+                .style("stroke", "black")
+                .style("stroke-width", 1.5);
+                // .style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
@@ -492,7 +526,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 
                 if (customData != undefined) {
                     const domain = getPercentiles(customData, [1, 99]);
-                    const color = d3.scale.linear()
+                    const color = d3.scaleLinear()
                         .domain(domain)
                         .range([lowColor, highColor])
                         .clamp(true);
