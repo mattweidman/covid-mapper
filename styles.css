@@ -138,3 +138,7 @@ label {
     background-color: white;
     color: black;
 }
+
+#suggestions {
+    width: 960px;
+}

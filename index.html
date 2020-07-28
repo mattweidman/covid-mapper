@@ -57,6 +57,8 @@
                     input.value = e.target.getAttribute("content");
                     var top = $('#expressioninput').position().top;
                     $(window).scrollTop( top );
+                    document.getElementById("expressioninput").focus();
+                    //document.getElementById("expressioninput").select();
                 });
                 var wrapper = document.getElementById("suggestions");
                 wrapper.appendChild(button);

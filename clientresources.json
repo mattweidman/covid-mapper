@@ -29,7 +29,7 @@
         "Average deaths per day": "average(deaths(first,last))",
         "Total new cases in last 7 days": "cases(day)-cases(day-7)",
         "Total new cases in last 30 days": "cases(day)-cases(day-30)",
-        "Total new deaths in last 7 days": "deaths(day)-cases(day-7)",
-        "Total new deaths in last 30 days": "deaths(day)-cases(day-30)"
+        "Total new deaths in last 7 days": "deaths(day)-deaths(day-7)",
+        "Total new deaths in last 30 days": "deaths(day)-deaths(day-30)"
     }
 }
