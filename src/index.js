@@ -32,10 +32,9 @@ const mapg = svg.append("g")
     .attr("class", "mapg");
 
 const zoom = d3.zoom()
-    .scaleExtent([1, 8])
+    .scaleExtent([1, 32])
     .on("zoom", function () {
-        mapg.selectAll("path")
-            .attr("transform", d3.event.transform);
+        mapg.attr("transform", d3.event.transform);
     });
 svg.call(zoom);
 
