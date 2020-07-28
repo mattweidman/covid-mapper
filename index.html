@@ -19,7 +19,7 @@
 <body>
     <h1>COVID-19 Map Maker</h1>
     <div id="expressioncontainer">
-        <h4>Make your own graph by entering an expression:</h4>
+        <h4>Make your own graph by entering an expression: <a href="./#documentation">Learn More.</a></h4>
         <div id="parseroutput"></div>
         <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
     </div>
@@ -69,5 +69,9 @@
     <script src="src/index.js"></script>
     <br>
     <button onclick=downloadAsPng()>Download map as PNG</button>
+    <div id="documentation">
+        <h3>Keywords & Definitions :)</h3>
+        <script id="doc" type='text/javascript' src="src/index.js"></script>
+    </div>
 </body>
 </html>
