@@ -85,3 +85,7 @@ input {
 label {
     font-weight: bold;
 }
+
+.mapg > path {
+    vector-effect: non-scaling-stroke;
+}
