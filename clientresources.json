@@ -22,10 +22,10 @@
     "TotalCasesOnaDayPer1M": "cases(day)/population*1000000",
     "TotalDeathsOnaDay": "deaths(day)",
     "TotalDeathsOnaDayPer1M": "deaths(day)/population*1000000",
-    "Last7DaysAverageCases": "average(cases(day-7,day))",
-    "Last7DaysAverageDeaths": "average(deaths(day-7,day))",
-    "Last30DaysAverageCases": "average(cases(day-30,day))",
-    "Last30DaysAverageDeaths": "average(deaths(day-30,day))",
+    "Last7DaysAverageCasesPerDay": "average(cases(day-7,day))",
+    "Last7DaysAverageDeathsPerDay": "average(deaths(day-7,day))",
+    "Last30DaysAverageCasesPerDay": "average(cases(day-30,day))",
+    "Last30DaysAverageDeathsPerDay": "average(deaths(day-30,day))",
     "MaxNewCasesPerDaysoFar": "max(newcases(first,last))",
     "MaxNewDeathsPerDaysoFar": "max(newdeaths(first,last))",
     "AverageDeathsPerDay": "average(deaths(first,last))",
@@ -37,7 +37,7 @@
     "MaxNewCasesinLast30Days": "max(newcases(day-30,day))",
     "MinNewCasesinLast7Days": "min(newcases(day-7,day))",
     "MinNewCasesinLast30Days": "min(newcases(day-30,day))",
-    "TotalRecoveredCasesSoFar": "sum(newcases(first,last))- sum(cases(first,last))"
+    "TotalRecoveredCasesSoFar": "sum(newcases(first,last))- cases(last)"
   }
 }
  

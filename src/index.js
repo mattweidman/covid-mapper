@@ -49,7 +49,8 @@ loadSuggestions();
 
 createLegend();
 
-d3.select("#mapoptions").on("change", (a, b, c) => {
+
+d3.select("#mapoptions").on("change", () => {
     const optionSelected = d3.select("#mapoptions").node().value;
     updateMapType(optionSelected);
 });
@@ -356,6 +357,7 @@ function showUsaStates() {
 
 // Respond to event where user changes map type.
 function updateMapType(mapType) {
+    console.log("maptypechanged")
     if (mapType === "worldcountries") {
         showWorldMap();
     } else if (mapType === "usacounties") {
@@ -557,6 +559,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
+        console.log("hi")
         if (inputText === "") {
             d3.select("#parseroutput")
                 .text("Enter an expression.")
@@ -624,25 +627,37 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     updateExpressionInput(defaultExpression);
 };
 
+function inputSuggestion() {
+    console.log("hi2");
+    var input = document.getElementById("expressioninput");
+    var dropdown = document.getElementById("suggestions");
+    input.value = dropdown.value;
+    document.getElementById("expressioninput").focus();
+    var ast;
+    try {
+        ast = peg$parse(dropdown.value);
+        d3.select("#parseroutput")
+                    .text("Valid expression. Press enter to use.")
+                    .style("color", "black");
+    } catch (err) {
+        d3.select("#parseroutput")
+            .text(err)
+            .style("color", "darkred");
+    }
+}
+
 function loadSuggestions(){ 
     $.getJSON('../../clientresources.json', function(data) {
         var samples = data.expressions;
         for (var key in samples) {
-            var button = document.createElement("button");
-            button.setAttribute("id", key + "button");
-            button.setAttribute("class", "sample-buttons");
-            button.setAttribute("content", samples[key]);
-            button.textContent = key;
-            button.addEventListener("click", function(e) {
-                var input = document.getElementById("expressioninput");
-                input.value = e.target.getAttribute("content");
-                var top = $('#expressioninput').position().top;
-                $(window).scrollTop( top );
-                document.getElementById("expressioninput").focus();
-            });
-            var wrapper = document.getElementById("suggestions");
-            wrapper.appendChild(button);
+            var dropdown = document.getElementById("suggestions");
+            var option = document.createElement("OPTION");
+            option.innerHTML = key;
+            option.value = samples[key];
+            dropdown.options.add(option);
+            console.log(option);
         }
+        document.getElementById("suggestions").onchange = inputSuggestion;
     });
 }
 function downloadAsPng() {

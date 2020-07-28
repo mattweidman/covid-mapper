@@ -17,13 +17,19 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<h1>COVID-19 Map Maker</h1>
+    <h1>COVID-19 Map Maker</h1>
     <div id="expressioncontainer">
         <h4>Make your own graph by entering an expression:</h4>
-        <a href="#suggestions" id="jumpLink">Check out our suggested expressions</a>
-        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
         <div id="parseroutput"></div>
+        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
     </div>
+    <div id="suggestionscontainer">
+        <label for="suggestions">Suggested expressions:</label>
+        <select name="suggestions" id="suggestions">
+
+        </select>
+    </div>
+    <p></p>
     <div id="mapoptionscontainer">
         <label for="mapoptions">Select map type:</label>
         <select name="mapoptions" id="mapoptions">
@@ -39,9 +45,7 @@
     </div>
     <p>Sources: usafacts.org, covid19.who.int, data.worldbank.org</p>
     <script src="src/index.js"></script>
-    <div id="suggestions">
-        <h4>Suggested expressions:</h4>
-    </div>
+    <br>
     <button onclick=downloadAsPng()>CLICK TO DOWNLOAD AS PNG</button>
 </body>
 </html>
