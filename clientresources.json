@@ -1,29 +1,186 @@
 {
   "siteTitle": "Covid-19 Mapper",
+  "Path": "The path is ",
   "siteSubTitle": "Make your own graph by entering an expression:",
   "expressions": {
-    "NewCasesOnaDay": "newcases(day)",
-    "NewDeathsOnaDay": "newdeaths(day)",
-    "TotalCasesOnaDay": "cases(day)",
-    "TotalCasesOnaDayPer1M": "cases(day)/population*1000000",
-    "TotalDeathsOnaDay": "deaths(day)",
-    "TotalDeathsOnaDayPer1M": "deaths(day)/population*1000000",
-    "Last7DaysAverageCases": "average(cases(day-7,day))",
-    "Last7DaysAverageDeaths": "average(deaths(day-7,day))",
-    "Last30DaysAverageCases": "average(cases(day-30,day))",
-    "Last30DaysAverageDeaths": "average(deaths(day-30,day))",
-    "MaxNewCasesPerDaysoFar": "max(newcases(first,last))",
-    "MaxNewDeathsPerDaysoFar": "max(newdeaths(first,last))",
-    "AverageDeathsPerDay": "average(deaths(first,last))",
-    "TotalNewCasesInLast7Days": "cases(day)-cases(day-7)",
-    "TotalNewCasesInLast30Days": "cases(day)-cases(day-30)",
-    "TotalNewDeathsInLast7Days": "deaths(day)-cases(day-7)",
-    "TotalNewDeathsInLast30Days": "deaths(day)-cases(day-30)",
-    "MaxNewCasesinLast7Days": "max(newcases(day-7,day))",
-    "MaxNewCasesinLast30Days": "max(newcases(day-30,day))",
-    "MinNewCasesinLast7Days": "min(newcases(day-7,day))",
-    "MinNewCasesinLast30Days": "min(newcases(day-30,day))",
-    "TotalRecoveredCasesSoFar": "sum(newcases(first,last))- sum(cases(first,last))"
+    "NewCasesOnaDay": {
+      "title": "New cases on a particuar day",
+      "expression": "newcases(day)"
+    },
+    "NewDeathsOnaDay": {
+      "title": "New Deaths on a particuar day",
+      "expression": "newdeaths(day)"
+    },
+    "TotalCasesOnaDay": {
+      "title": "Total Confirmed cases on a particuar day",
+      "expression": "cases(day)"
+    },
+    "TotalCasesOnaDayPer1M": {
+      "title": "Total Confirmed cases on a particuar day per million",
+      "expression": "cases(day)/population*1000000"
+    },
+    "TotalDeathsOnaDay": {
+      "title": "Total Deaths cases on a particuar day",
+      "expression": "deaths(day)"
+    },
+    "TotalDeathsOnaDayPer1M": {
+      "title": "Total Deaths cases on a particuar day per million",
+      "expression": "deaths(day)/population*1000000"
+    },
+    "Last7DaysAverageCases": {
+      "title": "Average cases in Last 7 Days",
+      "expression": "average(cases(day-7,day))"
+    },
+    "Last7DaysAverageDeaths": {
+      "title": "Average death cases in Last 7 Days",
+      "expression": "average(deaths(day-7,day))"
+    },
+    "Last30DaysAverageCases": {
+      "title": "Average cases in last 30 days",
+      "expression": "average(cases(day-30,day))"
+    },
+    "Last30DaysAverageDeaths": {
+      "title": "Average Death cases in last 30 days",
+      "expression": "average(deaths(day-30,day))"
+    },
+    "MaxNewCasesPerDaysoFar": {
+      "title": "Max new cases per day so far",
+      "expression": "max(newcases(first,last))"
+    },
+    "MaxNewDeathsPerDaysoFar": {
+      "title": "Max new death cases per day so far",
+      "expression": "max(newdeaths(first,last))"
+    },
+    "AverageDeathsPerDay": {
+      "title": "Average deaths per day",
+      "expression": "average(deaths(first,last))"
+    },
+    "TotalNewCasesInLast7Days": {
+      "title": "Total new cases in last 7 days",
+      "expression": "cases(day)-cases(day-7)"
+    },
+    "TotalNewCasesInLast30Days": {
+      "title": "Total new cases in last 30 days",
+      "expression": "cases(day)-cases(day-30)"
+    },
+    "TotalNewDeathsInLast7Days": {
+      "title": "Total new death casess in last 7 days",
+      "expression": "deaths(day)-cases(day-7)"
+    },
+    "TotalNewDeathsInLast30Days": {
+      "title": "Total new death cases in last 30 days",
+      "expression": "deaths(day)-cases(day-30)"
+    },
+    "MaxNewCasesinLast7Days": {
+      "title": "Max new cases in last 7 days",
+      "expression": "max(newcases(day-7,day)"
+    },
+    "MaxNewCasesinLast30Days": {
+      "title": "Max new cases in last 30 days",
+      "expression": "max(newcases(day-30,day))"
+    },
+    "MinNewCasesinLast7Days": {
+      "title": "Min new cases in last 7 days",
+      "expression": "min(newcases(day-7,day))"
+    },
+    "MinNewCasesinLast30Days": {
+      "title": "Min new cases in last 30 days",
+      "expression": "min(newcases(day-30,day))"
+    },
+    "TotalRecoveredCasesSoFar": {
+      "title": "Total recovered cases so far",
+      "expression": "sum(newcases(first,last))- sum(cases(first,last))"
+    }
+  },
+  "keywords": {
+    "newcases": {
+      "keyword": "newcases",
+      "description": "total new cases on a day"
+    },
+    "newdeaths": {
+      "keyword": "newdeaths",
+      "description": "total new deaths on a day"
+    },
+    "totalcases": {
+      "keyword": "totalcases",
+      "description": "total cases on a day"
+    },
+    "totalcasesper1M": {
+      "keyword": "totalcasesper1M",
+      "description": "total Confirmed cases on a particuar day per million"
+    },
+    "totaldeaths": {
+      "keyword": "totaldeaths",
+      "description": "total Deaths cases on a particuar day"
+    },
+    "totaldeathsper1M": {
+      "keyword": "totaldeathsper1M",
+      "description": "total Deaths cases on a particuar day per million"
+    },
+    "averagecases": {
+      "keyword": "averagecases",
+      "description": "average cases in Last 7 Days"
+    },
+    "averagedeaths": {
+      "keyword": "averagedeaths",
+      "description": "average death cases in Last 7 Days"
+    },
+    "averagecaseslast30days": {
+      "keyword": "averagecaseslast30days",
+      "description": "average cases in last 30 days"
+    },
+    "averagedeathslast30days": {
+      "keyword": "averagedeathslast30days",
+      "description": "average death cases in last 30 days"
+    },
+    "maxnewcases": {
+      "keyword": "maxnewcases",
+      "description": "max new cases per day so far"
+    },
+    "maxnewdeaths": {
+      "keyword": "maxnewdeaths",
+      "description": "max new death cases per day so far"
+    },
+    "averagedeathsperday": {
+      "keyword": "averagedeathsperday",
+      "description": "average deaths per day"
+    },
+    "totalnewCases": {
+      "keyword": "totalnewCases",
+      "description": "total new cases in last 7 days"
+    },
+    "totalnewcasesin30days": {
+      "keyword": "totalnewcasesin30days",
+      "description": "Total new cases in last 30 days"
+    },
+    "totalnewdeaths": {
+      "keyword": "totalnewdeaths",
+      "description": "Total new death casess in last 7 days"
+    },
+    "totalnewdeathsin30days": {
+      "keyword": "totalnewdeathsin30days",
+      "description": "total new death cases in last 30 days"
+    },
+    "maxnewcasesin7Days": {
+      "keyword": "maxnewcasesin7Days",
+      "description": "max new cases in last 7 days"
+    },
+    "maxnewcasesin30Days": {
+      "keyword": "maxnewcasesin30Days",
+      "description": "Max new cases in last 30 days"
+    },
+    "minnewcasesin7Days": {
+      "keyword": "minnewcasesin7Days",
+      "description": "min new cases in last 7 days"
+    },
+    "minnewcasesin30Days": {
+      "keyword": "minnewcasesin30Days",
+      "description": "min new cases in last 30 days"
+    },
+    "totalrecoveredcases": {
+      "keyword": "totalrecoveredcases",
+      "description": "Total recovered cases so far"
+    }
   }
 }
  
