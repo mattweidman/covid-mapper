@@ -1,4 +1,15 @@
 ast.js
 parser.js
+data/*.csv
+build.sh
+.idea/covid-mapper.iml
+.idea/encodings.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/misc.xml
 data/covid*.csv
 data/WHO*.csv
+/.vs/config/applicationhost.config
+/.vs/slnx.sqlite
+/.vs/covid-mapper/v15/.suo

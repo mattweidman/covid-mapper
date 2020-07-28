@@ -142,3 +142,6 @@ label {
 #suggestions {
     width: 960px;
 }
+.mapg > path {
+    vector-effect: non-scaling-stroke;
+}
