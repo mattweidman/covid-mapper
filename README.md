@@ -86,7 +86,6 @@ The following aggregate operations can be used over a range of data:
 * Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
 * Shareable maps - maybe could generate a link that you can send to others. - Aman
 * Download map as PNG. - Aman
-* Show map of states. - Matt
 * 3D map!
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
 * Show suggestions as you're typing or clickable options (including documentation) - Sahana
@@ -95,6 +94,7 @@ The following aggregate operations can be used over a range of data:
 * Most popular options
 * Expanding circles option on maps
 * Show a map of countries and states.
+* Show maps of certain continents.
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
