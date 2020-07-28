@@ -64,7 +64,7 @@ function getDateListFromUsaData(rawData) {
     return allDates;
 }
 
-// Convert raw USA data to new format.
+// Convert raw USA data to new format with data separated by county.
 // rawData: list of {CSV header -> value} dictionaries for location
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
@@ -92,6 +92,43 @@ function preprocessUsaData(rawData, allDates) {
         };
 
         baseData[newDatum.id] = newDatum;
+    });
+
+    return baseData;
+}
+
+// Convert raw USA data to new format with data separated by state.
+// rawData: list of {CSV header -> value} dictionaries for location
+// allDates: list of date strings from CSV headers
+// returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
+function preprocessUsaStatesData(rawData, allDates) {
+    const baseData = {};
+
+    rawData.forEach(rawDatum => {
+        const stateId = rawDatum["stateFIPS"];
+
+        if (!(stateId in baseData)) {
+            baseData[stateId] = {
+                id: stateId,
+                name: rawDatum["stateName"],
+                population: 0,
+                cases: Array.from(Array(allDates.length), () => 0),
+                deaths: Array.from(Array(allDates.length), () => 0),
+                newCases: Array.from(Array(allDates.length), () => 0),
+                newDeaths: Array.from(Array(allDates.length), () => 0)
+            };
+        }
+
+        const currentState = baseData[stateId];
+        currentState.population += parseInt(rawDatum["population"]);
+
+        for (var i = 0; i < allDates.length; i++) {
+            dateStr = allDates[i];
+            currentState.cases[i] += parseInt(rawDatum["confirmed_" + dateStr]);
+            currentState.deaths[i] += parseInt(rawDatum["deaths_" + dateStr]);
+            currentState.newCases[i] += parseInt(rawDatum["newconfirmed_" + dateStr]);
+            currentState.newDeaths[i] += parseInt(rawDatum["newdeaths_" + dateStr]);
+        }
     });
 
     return baseData;
@@ -248,9 +285,7 @@ function showWorldMap() {
     path.projection(d3.geoRobinson());
 
     queue()
-        // .defer(d3.json, "./data/us.json")
         .defer(d3.json, "./data/countries.json")
-        // .defer(d3.csv, "./data/covid_all.csv")
         .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
         .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
         .await((error, geomap, rawData, rawPopulationData) => {
@@ -267,11 +302,26 @@ function showUsaCounties() {
 
     queue()
         .defer(d3.json, "./data/us.json")
-        .defer(d3.csv, "./data/covid_all.csv")
+        .defer(d3.csv, "./data/covid_usa.csv")
         .await((error, geomap, rawData) => {
             const allDates = getDateListFromUsaData(rawData);
             const baseData = preprocessUsaData(rawData, allDates);
             const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
+            preprocessUsaMap(geomapFeatures, baseData);
+            dataLoaded(geomapFeatures, allDates, baseData);
+        });
+}
+
+function showUsaStates() {
+    path.projection(d3.geo.albersUsa());
+
+    queue()
+        .defer(d3.json, "./data/us.json")
+        .defer(d3.csv, "./data/covid_usa.csv")
+        .await((error, geomap, rawData) => {
+            const allDates = getDateListFromUsaData(rawData);
+            const baseData = preprocessUsaStatesData(rawData, allDates);
+            const geomapFeatures = topojson.feature(geomap, geomap.objects.states).features;
             preprocessUsaMap(geomapFeatures, baseData);
             dataLoaded(geomapFeatures, allDates, baseData);
         });
@@ -283,6 +333,8 @@ function updateMapType(mapType) {
         showWorldMap();
     } else if (mapType === "usacounties") {
         showUsaCounties();
+    } else if (mapType === "usastates") {
+        showUsaStates();
     }
 }
 
