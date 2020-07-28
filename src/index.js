@@ -24,24 +24,6 @@ linearGradient.append("stop")
     .attr("offset", "100%")
     .attr("stop-color", highColor);
 
-
-// TODO figure out how to read from local json
-const docs = {
-    "average": "aggregate average operation to be used over a range of data",
-    "cases": "dataset for the total number of confirmed cases up to the given day",
-    "day": "indicates you would like to access data for the current day on the slider",
-    "deaths": "dataset for the total number of deaths up to the given day",
-    "first": "indicates you would like to access data for the first day in the dataset",
-    "last": "indicates you would like to access data for the last day in the dataset",
-    "population": "population of the region (county)",
-    "max": "aggregate max operation to be used over a range of data",
-    "min": "aggregate min operation to be used over a range of data",
-    "newcases": "dataset for the number of new cases on the given day",
-    "newdeaths": "dataset for the number of new deaths on the given day",
-    "sum": "aggregate sum operation to be used over a range of data"
-};
-
-
 const path = d3.geo.path();
 
 const options = [
@@ -59,6 +41,8 @@ const options = [
     "sum"
 ]
 
+var docs = {};
+
 moveSelectionsToBackOrFront();
 
 svg.append("g")
@@ -67,6 +51,10 @@ createLegend();
 
 // Show the map.
 showWorldMap();
+
+loadDocs();
+loadSuggestions();
+
 
 d3.select("#mapoptions").on("change", (a, b, c) => {
     const optionSelected = d3.select("#mapoptions").node().value;
@@ -437,6 +425,11 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
+function loadDocs() {
+    $.getJSON('../../clientresources.json', function(data) {
+        docs = data.expressions;
+    });
+}
 function closeAutocomplete() {
     var x = document.getElementsByClassName("autocomplete-items");
     for (var i = 0; i < x.length; i++) {
@@ -458,17 +451,18 @@ function autocomplete(input, suggestions) {
         a.setAttribute("class", "autocomplete-items");
         this.parentNode.appendChild(a);
 
+        var starter = Math.max(
+            0, 
+            val.lastIndexOf("(") + 1, 
+            val.lastIndexOf(" ") + 1, 
+            val.lastIndexOf("+") + 1,
+            val.lastIndexOf("*") + 1,
+            val.lastIndexOf("/") + 1,
+            val.lastIndexOf("-") + 1
+        );
+        var currentWord = val.substring(starter);
+
         for (i = 0; i < suggestions.length; i++) {
-            var starter = Math.max(
-                0, 
-                val.lastIndexOf("(") + 1, 
-                val.lastIndexOf(" ") + 1, 
-                val.lastIndexOf("+") + 1,
-                val.lastIndexOf("*") + 1,
-                val.lastIndexOf("/") + 1,
-                val.lastIndexOf("-") + 1
-            );
-            var currentWord = val.substring(starter);
             if (suggestions[i].substring(0, currentWord.length).toLowerCase() === currentWord.toLowerCase()) {
                 b = document.createElement("DIV");
                 b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
@@ -563,3 +557,25 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     inputElement.text(defaultExpression);
     updateExpressionInput(defaultExpression);
 };
+
+function loadSuggestions(){ 
+    $.getJSON('../../clientresources.json', function(data) {
+        var samples = data.samples;
+        for (var key in samples) {
+            var button = document.createElement("button");
+            button.setAttribute("id", key + "button");
+            button.setAttribute("class", "sample-buttons");
+            button.setAttribute("content", samples[key]);
+            button.textContent = key;
+            button.addEventListener("click", function(e) {
+                var input = document.getElementById("expressioninput");
+                input.value = e.target.getAttribute("content");
+                var top = $('#expressioninput').position().top;
+                $(window).scrollTop( top );
+                document.getElementById("expressioninput").focus();
+            });
+            var wrapper = document.getElementById("suggestions");
+            wrapper.appendChild(button);
+        }
+    });
+}

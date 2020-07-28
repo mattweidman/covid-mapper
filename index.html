@@ -43,27 +43,5 @@
     <div id="suggestions">
         <h4>Suggested expressions:</h4>
     </div>
-    <script>
-        $.getJSON('../../clientresources.json', function(data) {
-            var samples = data.samples;
-            for (var key in samples) {
-                var button = document.createElement("button");
-                button.setAttribute("id", key + "button");
-                button.setAttribute("class", "sample-buttons");
-                button.setAttribute("content", samples[key]);
-                button.textContent = key;
-                button.addEventListener("click", function(e) {
-                    var input = document.getElementById("expressioninput");
-                    input.value = e.target.getAttribute("content");
-                    var top = $('#expressioninput').position().top;
-                    $(window).scrollTop( top );
-                    document.getElementById("expressioninput").focus();
-                    //document.getElementById("expressioninput").select();
-                });
-                var wrapper = document.getElementById("suggestions");
-                wrapper.appendChild(button);
-            }
-        });
-    </script>
 </body>
 </html>
