@@ -40,6 +40,11 @@ svg.call(zoom);
 
 showWorldMap();
 
+// Sphere shape
+mapg.append("path")
+    .attr("class", "sphereoutline")
+    .style("visibility", "hidden");
+
 createLegend();
 
 d3.select("#mapoptions").on("change", (a, b, c) => {
@@ -291,6 +296,34 @@ function moveSelectionsToBackOrFront() {
 function showWorldMap() {
     path.projection(d3.geoRobinson());
 
+    hideSphere();
+
+    Promise.all([
+        d3.json("./data/countries.json"),
+        d3.csv("./data/WHO-COVID-19-global-data.csv"),
+        d3.csv("./data/world-bank-population-isoa2.csv")
+    ]).then(function (data) {
+        const geomap = data[0];
+        const rawData = data[1];
+        const rawPopulationData = data[2];
+
+        const allDates = getDateListFromWorldData(rawData);
+        const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
+        const geomapFeatures = geomap.features;
+        preprocessWorldMap(geomapFeatures);
+
+        dataLoaded(geomapFeatures, allDates, baseData);
+    });
+}
+
+function showGlobe() {
+    const projection = d3.geoSatellite()
+        .rotate([125, -46]);
+
+    path.projection(projection);
+
+    showSphere();
+
     Promise.all([
         d3.json("./data/countries.json"),
         d3.csv("./data/WHO-COVID-19-global-data.csv"),
@@ -312,6 +345,8 @@ function showWorldMap() {
 function showUsaCounties() {
     path.projection(d3.geoAlbersUsa());
 
+    hideSphere();
+
     Promise.all([
         d3.json("./data/us.json"),
         d3.csv("./data/covid_usa.csv")
@@ -331,6 +366,8 @@ function showUsaCounties() {
 function showUsaStates() {
     path.projection(d3.geoAlbersUsa());
 
+    hideSphere();
+
     Promise.all([
         d3.json("./data/us.json"),
         d3.csv("./data/covid_usa.csv")
@@ -347,10 +384,26 @@ function showUsaStates() {
     });
 }
 
+function hideSphere() {
+    d3.select(".sphereoutline")
+        .style("visibility", "hidden");
+}
+
+function showSphere() {
+    d3.select(".sphereoutline")
+        .attr("d", path({ type: "Sphere" }))
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", 1)
+        .style("visibility", "visible");
+}
+
 // Respond to event where user changes map type.
 function updateMapType(mapType) {
-    if (mapType === "worldcountries") {
+    if (mapType === "worldflat") {
         showWorldMap();
+    } else if (mapType === "worldglobe") {
+        showGlobe();
     } else if (mapType === "usacounties") {
         showUsaCounties();
     } else if (mapType === "usastates") {
@@ -392,12 +445,14 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
-    svg.selectAll("g.mapg > path").remove();
+    svg.selectAll(".geofeatures").remove();
     
     const data = svg.select("g.mapg")
-        .selectAll("path")
+        .selectAll("path.geofeatures")
         .data(geomapFeatures)
         .enter().append("path")
+        .attr("class", "geofeatures")
+        .attr("id", d => "feature" + d.properties.id)
         .attr("d", path)
         .style("fill", lowColor)
         .on("mouseover", function(d) {
@@ -430,7 +485,7 @@ function resetGeoMap(geomapFeatures) {
 // locationValues: map geo id -> value
 // color: d3 coloring function
 function updateGeoMap(locationValues, color) {
-    svg.selectAll(".mapg path")
+    svg.selectAll(".geofeatures")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
         })
