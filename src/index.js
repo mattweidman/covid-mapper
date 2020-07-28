@@ -553,7 +553,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 };
 
 function downloadAsPng() {
-    var svg = d3.select("svg")[0][0],
+    var svg = d3.select("svg").node(),
         img = new Image(),
         serializer = new XMLSerializer(),
         svgStr = serializer.serializeToString(svg);
@@ -561,8 +561,8 @@ function downloadAsPng() {
     data = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
 
     var canvas = document.createElement("canvas");
-    canvas.width = 970;
-    canvas.height = 610;
+    canvas.width = width;
+    canvas.height = height;
     context = canvas.getContext("2d");
     img.src = data;
     img.onload = function() {
