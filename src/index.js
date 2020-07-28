@@ -540,6 +540,16 @@ function autocomplete(input, suggestions) {
                 b.addEventListener("click", function(e) {
                     input.value = input.value.substring(0, starter) + this.getElementsByTagName("input")[0].value;
                     closeAutocomplete();
+                    try {
+                        ast = peg$parse(input.value);
+                        d3.select("#parseroutput")
+                                    .text("Valid expression. Press enter to use.")
+                                    .style("color", "black");
+                    } catch (err) {
+                        d3.select("#parseroutput")
+                            .text(err)
+                            .style("color", "darkred");
+                    }
                 });
                 a.appendChild(b); 
             };
