@@ -8,3 +8,5 @@ build.sh
 .idea/vcs.xml
 .idea/workspace.xml
 .idea/misc.xml
+data/covid*.csv
+data/WHO*.csv

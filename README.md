@@ -76,18 +76,16 @@ The following aggregate operations can be used over a range of data:
 ## TODO 
 
 ### Features
-* Floating point numbers in expressions. - Matt
-* Show world map, and allow clicking on countries to zoom in. - Matt
+* Floating point numbers in expressions.
+* Allow clicking on countries to zoom in.
 * Show time chart for currently selected region under the map.
 * For people who don't want to think of their own expressions, have a menu with some sample options. - Sahana
 * Let users change the minimum/maximum values of the legend.
 * Let users change map colors.
-* Zooming and dragging.
+* Zooming and dragging. - Matt
 * Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
 * Shareable maps - maybe could generate a link that you can send to others. - Aman
 * Download map as PNG. - Aman
-
-* Show states instead of counties (or countries, etc.)
 * 3D map!
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
 * Show suggestions as you're typing or clickable options (including documentation) - Sahana
@@ -95,6 +93,8 @@ The following aggregate operations can be used over a range of data:
 * List top 5 for give query - Aman
 * Most popular options
 * Expanding circles option on maps
+* Show a map of countries and states.
+* Show maps of certain continents.
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
@@ -105,4 +105,5 @@ The following aggregate operations can be used over a range of data:
 * Set up npm.
 * Use grunt or some kind of build system.
 * Use BI or Bing infrastructure instead of D3?
+* Automatically download CSV files to browser without python.
 * Get a domain name and host on Azure.

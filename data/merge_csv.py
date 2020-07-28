@@ -9,15 +9,18 @@ def downloadData():
     request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv', 'covid_deaths_usafacts.csv')
     print("downloading covid_county_population_usafacts.csv")
     request.urlretrieve('https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv', 'covid_county_population_usafacts.csv')
+    print("downloading WHO-COVID-19-global-data.csv")
+    request.urlretrieve('https://covid19.who.int/WHO-COVID-19-global-data.csv', 'WHO-COVID-19-global-data.csv')
 
 # Create a row of data containing info about confirmed cases, deaths, and population.
-def processRow(confirmedRow, populationRow, deathsRow, isTopRow):
+def processRow(confirmedRow, populationRow, deathsRow, namesDict, isTopRow):
     countyFIPS = confirmedRow[0]
     countyName = confirmedRow[1]
     state = confirmedRow[2]
     stateFIPS = confirmedRow[3]
+    stateName = namesDict[state] if not isTopRow else "stateName"
     population = populationRow[3]
-    singleStats = [countyFIPS, countyName, state, stateFIPS, population]
+    singleStats = [countyFIPS, countyName, state, stateFIPS, stateName, population]
 
     if isTopRow:
         dates = confirmedRow[4:]
@@ -40,12 +43,26 @@ def processRow(confirmedRow, populationRow, deathsRow, isTopRow):
 
     return singleStats + confirmedCases + deaths + newCases + newDeaths
 
+def createStateNamesDictionary():
+    print("creating dictionary of state names")
+
+    with open('state_abbrs.csv') as abbrsFile:
+        namesDict = {}
+        abbrsReader = csv.reader(abbrsFile)
+        for line in abbrsReader:
+            abbr = line[1]
+            name = line[0]
+            namesDict[abbr] = name
+        return namesDict
+
 downloadData()
+
+namesDict = createStateNamesDictionary()
 
 with open('covid_confirmed_usafacts.csv') as confirmedFile:
     with open('covid_county_population_usafacts.csv') as populationFile:
         with open('covid_deaths_usafacts.csv') as deathsFile:
-            with open('covid_all.csv', 'w', newline='') as allDataFile:
+            with open('covid_usa.csv', 'w', newline='') as allDataFile:
 
                 confirmedReader = csv.reader(confirmedFile)
                 populationReader = csv.reader(populationFile)
@@ -58,13 +75,13 @@ with open('covid_confirmed_usafacts.csv') as confirmedFile:
                     confirmedRow = confirmedReader.__next__()
                     populationRow = populationReader.__next__()
                     deathsRow = deathsReader.__next__()
-                    allDataWriter.writerow(processRow(confirmedRow, populationRow, deathsRow, True))
+                    allDataWriter.writerow(processRow(confirmedRow, populationRow, deathsRow, namesDict, True))
                     
                     while (True):
                         confirmedRow = confirmedReader.__next__()
                         populationRow = populationReader.__next__()
                         deathsRow = deathsReader.__next__()
-                        allDataWriter.writerow(processRow(confirmedRow, populationRow, deathsRow, False))
+                        allDataWriter.writerow(processRow(confirmedRow, populationRow, deathsRow, namesDict, False))
                 
                 except StopIteration:
                     print("CSV processing complete.")
