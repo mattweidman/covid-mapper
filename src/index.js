@@ -400,16 +400,13 @@ function resetGeoMap(geomapFeatures) {
         .enter().append("path")
         .attr("d", path)
         .style("fill", lowColor)
-        .style("opacity", 0.8)
         .on("mouseover", function(d) {
             const sel = d3.select(this);
             sel.moveToFront();
             d3.select(this)
                 .transition().duration(300)
-                .style("opacity", 1)
                 .style("stroke", "black")
-                .style("stroke-width", 1.5);
-                // .style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
+                .style("stroke-width", 2);
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
@@ -422,10 +419,8 @@ function resetGeoMap(geomapFeatures) {
             sel.moveToBack();
             d3.select(this)
                 .transition().duration(300)
-                .style("opacity", 0.8)
                 .style("stroke", "white")
                 .style("stroke-width", 1);
-                // .style({'opacity': 0.8, 'stroke': 'white', 'stroke-width': 1});
             tooltipDiv.transition().duration(300)
                 .style("opacity", 0);
         });
@@ -444,10 +439,8 @@ function updateGeoMap(locationValues, color) {
             sel.moveToFront();
             d3.select(this)
                 .transition().duration(300)
-                .style("opacity", 1)
                 .style("stroke", "black")
-                .style("stroke-width", 1.5);
-                // .style({'opacity': 1, 'stroke': 'black', 'stroke-width': 1.5});
+                .style("stroke-width", 2);
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
