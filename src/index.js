@@ -334,3 +334,27 @@ function dataLoaded(error, geomap, rawData) {
     inputElement.text(defaultExpression);
     updateExpressionInput(defaultExpression);
 };
+
+function downloadAsPng() {
+    var svg = d3.select("svg")[0][0],
+        img = new Image(),
+        serializer = new XMLSerializer(),
+        svgStr = serializer.serializeToString(svg);
+
+    data = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
+
+    var canvas = document.createElement("canvas");
+    canvas.width = 970;
+    canvas.height = 610;
+    context = canvas.getContext("2d");
+    img.src = data;
+    img.onload = function() {
+        context.drawImage(img, 0, 0);
+        var canvasdata = canvas.toDataURL("image/png");
+        var pngimg = '<img src="'+canvasdata+'">';
+        var a = document.createElement("a");
+        a.download = "covid_data.png";
+        a.href = canvasdata;
+        a.click();
+    };
+}
