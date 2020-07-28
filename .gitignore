@@ -10,3 +10,6 @@ build.sh
 .idea/misc.xml
 data/covid*.csv
 data/WHO*.csv
+/.vs/config/applicationhost.config
+/.vs/slnx.sqlite
+/.vs/covid-mapper/v15/.suo
