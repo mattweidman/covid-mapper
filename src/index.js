@@ -110,7 +110,7 @@ function preprocessUsaStatesData(rawData, allDates) {
         if (!(stateId in baseData)) {
             baseData[stateId] = {
                 id: stateId,
-                name: rawDatum["State"],
+                name: rawDatum["stateName"],
                 population: 0,
                 cases: Array.from(Array(allDates.length), () => 0),
                 deaths: Array.from(Array(allDates.length), () => 0),
@@ -285,9 +285,7 @@ function showWorldMap() {
     path.projection(d3.geoRobinson());
 
     queue()
-        // .defer(d3.json, "./data/us.json")
         .defer(d3.json, "./data/countries.json")
-        // .defer(d3.csv, "./data/covid_all.csv")
         .defer(d3.csv, "./data/WHO-COVID-19-global-data.csv")
         .defer(d3.csv, "./data/world-bank-population-isoa2.csv")
         .await((error, geomap, rawData, rawPopulationData) => {
@@ -304,7 +302,7 @@ function showUsaCounties() {
 
     queue()
         .defer(d3.json, "./data/us.json")
-        .defer(d3.csv, "./data/covid_all.csv")
+        .defer(d3.csv, "./data/covid_usa.csv")
         .await((error, geomap, rawData) => {
             const allDates = getDateListFromUsaData(rawData);
             const baseData = preprocessUsaData(rawData, allDates);
@@ -319,7 +317,7 @@ function showUsaStates() {
 
     queue()
         .defer(d3.json, "./data/us.json")
-        .defer(d3.csv, "./data/covid_all.csv")
+        .defer(d3.csv, "./data/covid_usa.csv")
         .await((error, geomap, rawData) => {
             const allDates = getDateListFromUsaData(rawData);
             const baseData = preprocessUsaStatesData(rawData, allDates);
