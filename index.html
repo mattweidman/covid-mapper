@@ -47,12 +47,11 @@
         $.getJSON('../../clientresources.json', function(data) {
             var samples = data.samples;
             for (var key in samples) {
-                var button = document.createElement("BUTTON");
+                var button = document.createElement("button");
                 button.setAttribute("id", key + "button");
                 button.setAttribute("class", "sample-buttons");
                 button.setAttribute("content", samples[key]);
                 button.textContent = key;
-                console.log(button)
                 button.addEventListener("click", function(e) {
                     var input = document.getElementById("expressioninput");
                     input.value = e.target.getAttribute("content");
