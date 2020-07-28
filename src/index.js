@@ -26,20 +26,7 @@ linearGradient.append("stop")
 
 const path = d3.geo.path();
 
-const options = [
-    "average",
-    "cases",
-    "day",
-    "deaths",
-    "first",
-    "last",
-    "population",
-    "max",
-    "min",
-    "newcases",
-    "newdeaths",
-    "sum"
-]
+var options = [];
 
 var docs = {};
 
@@ -428,6 +415,7 @@ function updateLegendLimits(domain) {
 function loadDocs() {
     $.getJSON('../../clientresources.json', function(data) {
         docs = data.expressions;
+        options = Object.keys(docs);
     });
 }
 function closeAutocomplete() {
