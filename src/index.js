@@ -521,7 +521,8 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     const color = d3.scaleLinear()
                         .domain(domain)
                         .range([lowColor, highColor])
-                        .clamp(true);
+                        .clamp(true)
+                        .unknown(lowColor);
     
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color);
