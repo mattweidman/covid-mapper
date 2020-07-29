@@ -28,6 +28,8 @@ const path = d3.geoPath();
 
 var dates = []
 
+var currast; 
+
 var options = [];
 
 var docs = {};
@@ -247,6 +249,19 @@ function computeCustomData(baseData, ast) {
     return geoIdToValueDictList;
 }
 
+// Compute the dates x locations matrix using the AST to evaluate.
+function computeCustomTimeData(allLocationsallData, locationId) {
+    const singleLocData = [];
+    var maxValue = allLocationsallData[0][locationId];
+    for (var i = 0; i < allLocationsallData.length; i++) {
+        singleLocData.push({date: dates[i], value: allLocationsallData[i][locationId]})
+        if (allLocationsallData[i][locationId] > maxValue) {
+            maxValue = allLocationsallData[i][locationId];
+        }
+    }
+    return [singleLocData, maxValue];
+}
+
 // Percentiles come from entire customData matrix, not just one row or column.
 // customData: dates x locations matrix
 // percentiles: list of percentiles to get (0 to 100)
@@ -437,7 +452,7 @@ function resetGeoMap(geomapFeatures) {
 // Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(locationValues, color) {
+function updateGeoMap(locationValues, color, allDatesallLocations) {
     svg.selectAll(".mapg path")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
@@ -455,35 +470,61 @@ function updateGeoMap(locationValues, color) {
                 .text(d.properties.name + ": " + locationValues[d.properties.id])
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px")
-                .attr("dy", "0em")
         })
         .on("click", function(d) {
+            // TODO remove any timegraphs already displayed
+            // or figure out how to only create the new graph if none has been displayed before and to otherwise just update
             var svg = d3.select("#timechart").append("svg")
-                .attr("width", width/2)
-                .attr("height", height/2)
+                .attr("width", width)
+                .attr("height", 8*height/10)
 
             var titleText = document.getElementById("expressioninput").value + " in " + d.properties.name;
 
+            const timeGraphData = computeCustomTimeData(allDatesallLocations, d.properties.id);
+            const maxValue = timeGraphData[1];
+            const timeValueObjects = timeGraphData[0];
+            console.log(timeValueObjects[3]);
+            console.log(maxValue);
+
             svg.append("text")
                 .attr("x", 20)
-                .attr("y", 20)
+                .attr("y", 30)
                 .text(titleText)
                 .append("g")
 
+            function processDate(date) {
+                // stored as MM-DD-YYYY, we want YYYY-MM-DD
+                return date.substring(6) + "-" + date.substring(0, 5)
+            }
+            var ystart = 65;
             var x = d3.scaleTime()
-                .domain([new Date("2020-01-11"), new Date("2020-07-25")])
-                .range([ 0, width/3 ]);
+                .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
+                .range([ 0, 5*width/6 ]);
+            var xstart = ystart + 6*height/10;
             svg.append("g")
-                .attr("transform", "translate(50, 220)")
+                .attr("transform", "translate(100, " + xstart + ")")
+                .attr("class", "x axis")
                 .call(d3.axisBottom(x));
-            var ystart = 220 - height/3;
             var y = d3.scaleLinear()
-                .domain([0, 1000])
-                .range([height/3, 0]);
+                .domain([0, maxValue])
+                .range([6*height/10, 0]);
             svg.append("g")
-                .attr("transform", "translate(50, " + ystart + ")")
+                .attr("class", "y axis")
+                .attr("transform", "translate(100, " + ystart + ")")
                 .call(d3.axisLeft(y));
-            console.log(x)
+            //console.log(timeValueObjects);
+
+            svg.append("path")
+                .datum(timeValueObjects)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("d", d3.line()
+                  .x(function(d) { 
+                      return 10
+                    })
+                  .y(function(d) { return 11 })
+                )
         })
 }
 
@@ -619,6 +660,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 
         if (ast != undefined) {
             if (d3.event && d3.event.keyCode === 13) {
+                // TODO close any previously created time graphs
                 var customData;
                 try {
                     customData = computeCustomData(baseData, ast);
@@ -630,6 +672,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                 }
 
                 if (customData != undefined) {
+                    currast = ast;
                     const domain = getPercentiles(customData, [1, 99]);
                     const color = d3.scaleLinear()
                         .domain(domain)
@@ -638,12 +681,12 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .unknown(lowColor);
     
                     updateLegendLimits(domain);
-                    updateGeoMap(customData[slideValue], color);
+                    updateGeoMap(customData[slideValue], color, customData);
                     
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData[slideValue], color);
+                        updateGeoMap(customData[slideValue], color, customData);
                     });
         
                     d3.select("#parseroutput")

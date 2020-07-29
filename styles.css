@@ -120,26 +120,6 @@ label {
     font-weight: bold;
 }
 
-.sample-buttons {
-    transition-duration: 0.4s;
-    background-color: #807e7e;
-    border: 2px solid #807e7e;
-    padding: 5px;
-    border-radius: 8px;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    outline: none;
-}
-  
-.sample-buttons:hover {
-    background-color: white;
-    color: black;
-}
-
 .mapg > path {
     vector-effect: non-scaling-stroke;
 }
