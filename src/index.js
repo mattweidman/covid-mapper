@@ -389,14 +389,15 @@ function showUsaStates() {
 
 function set3dProjection(rotation, scale) {
     const projection = d3.geoSatellite()
-        .scale(scale)
         .rotate(rotation);
 
     path.projection(projection);
 
     showSphere();
 
-    mapg.attr("transform", "");
+    svg.call(zoom.transform, d3.zoomIdentity);
+    svg.call(zoom.scaleTo, scale / 432.147);
+
     mapg.selectAll("path.geofeatures")
         .attr("d", path);
 }
@@ -408,7 +409,7 @@ function setFlatProjection() {
 
     hideSphere();
 
-    mapg.attr("transform", "");
+    svg.call(zoom.transform, d3.zoomIdentity);
     mapg.selectAll("path.geofeatures")
         .attr("d", path);
 }
@@ -444,23 +445,23 @@ function updateViewType(viewType) {
     } else if (viewType === "northam") {
         set3dProjection([92, -50], 525);
     } else if (viewType === "carib") {
-        set3dProjection([85, -22], 1150);
+        set3dProjection([85, -27], 1150);
     } else if (viewType === "southam") {
         set3dProjection([59, 15], 550);
     } else if (viewType === "wafrica") {
-        set3dProjection([-4, -20], 800);
+        set3dProjection([-4, -22], 800);
     } else if (viewType === "safrica") {
-        set3dProjection([-28, 10], 900);
+        set3dProjection([-28, 8], 800);
     } else if (viewType === "europe") {
-        set3dProjection([-15, -55], 850);
+        set3dProjection([-15, -58], 850);
     } else if (viewType === "swasia") {
-        set3dProjection([-42, -30], 950);
+        set3dProjection([-42, -30], 900);
     } else if (viewType === "seasia") {
-        set3dProjection([-87, -21], 900);
+        set3dProjection([-87, -24], 850);
     } else if (viewType === "easia") {
-        set3dProjection([-118, -38], 900);
+        set3dProjection([-118, -40], 850);
     } else if (viewType === "wpac") {
-        set3dProjection([-140, 11], 500);
+        set3dProjection([-140, 11], 550);
     }
 }
 
