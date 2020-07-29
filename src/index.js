@@ -506,6 +506,7 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
+    svg.call(zoom.transform, d3.zoomIdentity);
     svg.selectAll(".geofeatures").remove();
     
     const data = svg.select("g.mapg")
