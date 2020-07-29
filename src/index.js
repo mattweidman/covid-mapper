@@ -435,7 +435,7 @@ function updateGeoMap(locationValues, color, names) {
     var i = 0;
     console.log(names);
     var locArray = Object.keys(locationValues).map((key) => {
-        return [names[i++], locationValues[key]] // Store name of location with result in array
+        return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
     });
 
     locArray.sort(function (a,b){return a[1] - b[1]});
@@ -562,16 +562,22 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .unknown(lowColor);
 
                     // Get names for top5 list
+                    console.log("baseData");
+                    console.log(baseData)
+                    console.log("customData:", customData[slideValue]);
                     var names = [];
                     for (const [key, value] of Object.entries(baseData)) {
-                        names.push(value.name);
+                        names.push({
+                            "id": value.id,
+                            "name": value.name
+                        });
                     }
 
                     svg.select(".titleText").text(inputText).style("font-size", "30px").attr("alignment-baseline","middle");
     
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color, names);
-                    
+
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
