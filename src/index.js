@@ -479,8 +479,6 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
-            // TODO remove any timegraphs already displayed
-            // or figure out how to only create the new graph if none has been displayed before and to otherwise just update
             d3.select("#timechart").selectAll("*").remove();
 
             // compute appropriate data for this location
@@ -490,7 +488,6 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
 
             // set margins
             var margin = {top: 20, right: 150, bottom: 50, left: 75};
-            console.log(margin.left);
             var vizWidth = width - margin.left - margin.right;
             var vizHeight = height - margin.top - margin.bottom;
 
@@ -555,6 +552,7 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .style("fill", "none")
                 .attr("stroke", "black")
                 .attr('r', 4)
+                .attr("id", "focus")
                 .style("opacity", 0);
 
             var focusText = svg
@@ -562,7 +560,8 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .append('text')
                   .style("opacity", 0)
                   .attr("text-anchor", "left")
-                  .attr("alignment-baseline", "middle");
+                  .attr("alignment-baseline", "middle")
+                  .attr("id", "focusText");
 
             svg.append('rect')
                 .style("fill", "none")
@@ -583,21 +582,39 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 focusText.style("opacity", 0)
             }
 
+            function updateFocus(data) {
+                if (data) {
+                    focus
+                        .attr("cx", xScale(new Date(data.date)))
+                        .attr("cy", yScale(data.value) + 20);
+                    focusText
+                        .html(data.value)
+                        .attr("x", xScale(new Date(data.date)))
+                        .attr("y", yScale(data.value));
+                };
+            }
+            // TODO update time chart circle when slider is updated!
             function mousemove() {
                 var x0 = xScale.invert(d3.mouse(this)[0])
                 var i = bisect(timeValueObjects, x0, 1);
                 var selectedData = timeValueObjects[i];
-                console.log(x0);
-                console.log(i);
-                console.log(selectedData);
-                focus
-                    .attr("cx", xScale(new Date(selectedData.date)))
-                    .attr("cy", yScale(selectedData.value) + 20)
-                focusText
-                    .html(selectedData.date + ": " + selectedData.value)
-                    .attr("x", xScale(new Date(selectedData.date)))
-                    .attr("y", yScale(selectedData.value))
+                updateFocus(selectedData);
+                updateSlider(dates, i);
+                var slider = d3.select("#dateslider");
+                slider.property('value', i);
+                if (selectedData) {
+                    updateGeoMap(allDatesallLocations[i], color, allDatesallLocations);
+                }
             }
+            var slider = d3.select("#dateslider");
+            slider.on("input", function() {
+                mouseover();
+                var index = this.value;
+                var selectedData = timeValueObjects[index];
+                updateFocus(selectedData);
+                updateSlider(dates, index);
+                updateGeoMap(allDatesallLocations[index], color, allDatesallLocations)
+            });
         })
 }
 
@@ -733,7 +750,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 
         if (ast != undefined) {
             if (d3.event && d3.event.keyCode === 13) {
-                // TODO close any previously created time graphs
                 var customData;
                 try {
                     customData = computeCustomData(baseData, ast);
@@ -753,7 +769,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .clamp(true)
                         .unknown(lowColor);
                     
-                        d3.select("#timechart").selectAll("*").remove();
+                    d3.select("#timechart").selectAll("*").remove();
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color, customData);
                     
