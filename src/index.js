@@ -1,4 +1,4 @@
-const width = 960, height = 600;
+const width = 960, height = 550, legendHeight = 45;
 const lowColor = "#dcdcdc", highColor = "#8b0000";
  
 const tooltipDiv = d3.select("body").append("div")
@@ -10,20 +10,9 @@ const svg = d3.select("#mapcontainer").append("svg")
     .attr("height", height)
     .style("background-color", 'white');
 
-const defs = svg.append("defs");
-
-const linearGradient = defs.append("linearGradient")
-    .attr("id", "linear-gradient")
-    .attr("x1", "0%")
-    .attr("x2", "100%");
-
-linearGradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", lowColor);
-
-linearGradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", highColor);
+const legendsvg = d3.select("#legendcontainer").append("svg")
+    .attr("width", width)
+    .attr("height", legendHeight);
 
 const path = d3.geoPath();
 
@@ -279,7 +268,7 @@ function getPercentiles(customData, percentiles) {
     const allValues = [];
     for (const geoIdToValueDict of customData) {
         for (const value of Object.values(geoIdToValueDict)) {
-            if (!isNaN(value)) {
+            if (!isNaN(value) && isFinite(value)) {
                 allValues.push(value);
             }
         }
@@ -592,35 +581,103 @@ function updateTop5(locationValues, names) {
 }
 
 function createLegend() {
-    const legend = svg.append("g")
+    const defs = legendsvg.append("defs");
+    
+    const linearGradient = defs.append("linearGradient")
+        .attr("id", "linear-gradient")
+        .attr("x1", "0%")
+        .attr("x2", "100%");
+    
+    linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", lowColor);
+    
+    linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", highColor);
+    
+    const legend = legendsvg.append("g")
         .attr("class", "legend");
+
+    const gradientHeight = 20;
 
     legend.append("rect")
         .attr("x", 0)
-        .attr("y", 550)
+        .attr("y", 0)
         .attr("width", width)
-        .attr("height", 20)
+        .attr("height", gradientHeight)
         .style("fill", "url(#linear-gradient)")
         .style("opacity", 0.8);
 
-    legend.append("text")
-        .attr("class", "legendmin")
-        .attr("x", 0)
-        .attr("y", 590);
+    const foreignObjHeight = 20;
+    const foreignObjY = gradientHeight + 5;
+    const foreignObjWidth = width / 2;
 
-    legend.append("text")
-        .attr("class", "legendmax")
-        .attr("x", width)
-        .attr("y", 590)
-        .attr("text-anchor", "end");
+    legend.append("foreignObject")
+            .attr("x", 0)
+            .attr("y", foreignObjY)
+            .attr("width", foreignObjWidth)
+            .attr("height", foreignObjHeight)
+        .append("xhtml:div")
+            .attr("contenteditable", true)
+            .attr("class", "legendmin")
+            .style("float", "left");
+
+    legend.append("foreignObject")
+            .attr("x", width - foreignObjWidth)
+            .attr("y", foreignObjY)
+            .attr("width", foreignObjWidth)
+            .attr("height", foreignObjHeight)
+            .attr("text-anchor", "end")
+        .append("xhtml:div")
+            .attr("contenteditable", true)
+            .attr("class", "legendmax")
+            .style("float", "right");
 }
 
 function updateLegendLimits(domain) {
-    svg.select(".legendmin")
+    d3.select(".legendmin")
         .text(domain[0]);
 
-    svg.select(".legendmax")
+    d3.select(".legendmax")
         .text(domain[1]);
+}
+
+// Responds to event where user changes the legend.
+// event: d3.event
+// isMin: true if editing minimum, false if editing maximum
+// color: d3.color for map. Domain is modified by this function.
+// Returns whether legend domain was successfully updated.
+function userChangesLegend(text, isMin, color) {
+    var domain = color.domain();
+    if (!isNaN(text)) {
+        var newMin;
+        var newMax;
+        if (isMin) {
+            newMin = parseFloat(text);
+            newMax = domain[1];
+        } else {
+            newMin = domain[0];
+            newMax = parseFloat(text);
+        }
+
+        // Don't change domain if max <= min
+        if (newMax > newMin) {
+            domain = [newMin, newMax];
+
+            color.domain(domain);
+
+            successfulChange = true;
+        }
+    }
+
+    if (isMin) {
+        d3.select(".legendmin").text(domain[0]);
+    } else {
+        d3.select(".legendmax").text(domain[1]);
+    }
+
+    return successfulChange;
 }
 
 function loadDocs() {
@@ -795,6 +852,37 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         updateGeoMap(customData[slideValue], color);
                         updateTop5(customData[slideValue], names);
                     });
+
+                    // Updates legend minimum value
+                    d3.select(".legendmin")
+                        .on("keydown", () => {
+                            if (d3.event.keyCode === 13) {
+                                d3.event.preventDefault();
+                                if (userChangesLegend(d3.event.target.textContent, true, color)) {
+                                    updateGeoMap(customData[slideValue], color);
+                                }
+                            }
+                        })
+                        .on("blur", () => {
+                            if (userChangesLegend(d3.event.target.textContent, true, color)) {
+                                updateGeoMap(customData[slideValue], color);
+                            }
+                        });
+
+                    // Updates legend maximum value
+                    d3.select(".legendmax")
+                        .on("keydown", () => {
+                            if (d3.event.keyCode === 13) {
+                                d3.event.preventDefault();
+                                if (userChangesLegend(d3.event.target.textContent, false, color)) {
+                                    updateGeoMap(customData[slideValue], color);
+                                }
+                            }
+                        }).on("blur", () => {
+                            if (userChangesLegend(d3.event.target.textContent, false, color)) {
+                                updateGeoMap(customData[slideValue], color);
+                            }
+                        });
         
                     d3.select("#parseroutput")
                         .text("Entered.")
