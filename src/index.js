@@ -582,15 +582,14 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
+            // TODO close the graph when you click on a new type of map
+            // TODO only allow graph to display if you've entered an expression!
             d3.select("#timechart").selectAll("*").remove();
-            console.log(worldDates);
-            console.log(USAdates);
             // compute appropriate data for this location
             const timeGraphData = computeCustomTimeData(allDatesallLocations, d.properties.id);
             const maxValue = timeGraphData[1];
             const timeValueObjects = timeGraphData[0];
             const dates = timeGraphData[2];
-            console.log(dates);
 
             // set margins
             var margin = {top: 20, right: 150, bottom: 50, left: 75};
@@ -599,6 +598,8 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
 
             var xstart = margin.top + vizHeight;
             // axis scales
+            console.log(dates[0]);
+            console.log(processDate(dates[0]));
             var xScale = d3.scaleTime()
                 .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
                 .range([ 0, vizWidth ]);
@@ -641,7 +642,16 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
 
             function processDate(date) {
                 // stored as MM-DD-YYYY, we want YYYY-MM-DD
-                return date.substring(6) + "-" + date.substring(0, 5)
+                if (d3.select("#mapoptions").node().value === "worldflat") {
+                    return date.substring(5) + "-" + date.substring(0, 5);
+                } else {
+                    var firstSlash = date.indexOf("/");
+                    var lastSlash = date.lastIndexOf("/");
+                    return "20" + date.substring(lastSlash + 1) + "-" 
+                                + date.substring(0, firstSlash) + "-" 
+                                + date.substring(firstSlash + 1, lastSlash);
+                }
+                return date.substring(5) + "-" + date.substring(0, 5)
             }
 
             svg.append("path")
