@@ -26,6 +26,8 @@ linearGradient.append("stop")
 
 const path = d3.geoPath();
 
+var dates = []
+
 var options = [];
 
 var docs = {};
@@ -43,12 +45,9 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 showWorldMap();
-
 loadDocs();
 loadSuggestions();
-
 createLegend();
-
 
 d3.select("#mapoptions").on("change", () => {
     const optionSelected = d3.select("#mapoptions").node().value;
@@ -76,6 +75,7 @@ function getDateListFromUsaData(rawData) {
             allDates.push(key.substring("confirmed_".length));
         }
     }
+    dates = allDates;
     return allDates;
 }
 
@@ -167,7 +167,7 @@ function getDateListFromWorldData(rawData) {
 
     const allDates = Array.from(datesSet);
     allDates.sort();
-
+    dates = allDates;
     return allDates;
 }
 
@@ -452,10 +452,39 @@ function updateGeoMap(locationValues, color) {
             tooltipDiv.transition().duration(300)
                 .style("opacity", 1);
             tooltipDiv
-                .text(d.properties.name + ":" + locationValues[d.properties.id])
+                .text(d.properties.name + ": " + locationValues[d.properties.id])
                 .style("left", (d3.event.pageX) + "px")
-                .style("top", (d3.event.pageY -30) + "px");
-        });
+                .style("top", (d3.event.pageY -30) + "px")
+                .attr("dy", "0em")
+        })
+        .on("click", function(d) {
+            var svg = d3.select("#timechart").append("svg")
+                .attr("width", width/2)
+                .attr("height", height/2)
+
+            var titleText = document.getElementById("expressioninput").value + " in " + d.properties.name;
+
+            svg.append("text")
+                .attr("x", 20)
+                .attr("y", 20)
+                .text(titleText)
+                .append("g")
+
+            var x = d3.scaleTime()
+                .domain([new Date("2020-01-11"), new Date("2020-07-25")])
+                .range([ 0, width/3 ]);
+            svg.append("g")
+                .attr("transform", "translate(50, 220)")
+                .call(d3.axisBottom(x));
+            var ystart = 220 - height/3;
+            var y = d3.scaleLinear()
+                .domain([0, 1000])
+                .range([height/3, 0]);
+            svg.append("g")
+                .attr("transform", "translate(50, " + ystart + ")")
+                .call(d3.axisLeft(y));
+            console.log(x)
+        })
 }
 
 function createLegend() {
