@@ -123,3 +123,9 @@ label {
 .mapg > path {
     vector-effect: non-scaling-stroke;
 }
+
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 3;
+}

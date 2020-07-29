@@ -474,21 +474,57 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
         .on("click", function(d) {
             // TODO remove any timegraphs already displayed
             // or figure out how to only create the new graph if none has been displayed before and to otherwise just update
-            var svg = d3.select("#timechart").append("svg")
-                .attr("width", width)
-                .attr("height", 8*height/10)
-
-            var titleText = document.getElementById("expressioninput").value + " in " + d.properties.name;
-
+            
+            // compute appropriate data for this location
             const timeGraphData = computeCustomTimeData(allDatesallLocations, d.properties.id);
             const maxValue = timeGraphData[1];
             const timeValueObjects = timeGraphData[0];
-            console.log(timeValueObjects[3]);
-            console.log(maxValue);
 
+            // set margins
+            var margin = {top: 50, right: 50, bottom: 50, left: 50};
+            var vizWidth = width - margin.left - margin.right;
+            var vizHeight = height - margin.top - margin.bottom;
+
+            var ystart = 10;
+            var xstart = ystart + vizHeight;
+            // axis scales
+            var xScale = d3.scaleTime()
+                .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
+                .range([ 0, vizWidth ]);
+
+            var yScale = d3.scaleLinear()
+                .domain([0, maxValue])
+                .range([vizHeight, 0]);
+
+
+            // line generator
+            var line = d3.line()
+                .x(function(data) { 
+                    return xScale(new Date(data.date));
+                })
+                .y(function(data) { 
+                    return yScale(data.value); 
+                })
+            
+            var svg = d3.select("#timechart").append("svg")
+                .attr("width", vizWidth + margin.left + margin.right)
+                .attr("height", vizHeight + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            
+            svg.append("g")
+                .attr("transform", "translate(10, " + xstart + ")")
+                .attr("class", "x axis")
+                .call(d3.axisBottom(xScale));
+            svg.append("g")
+                .attr("class", "y axis")
+                .attr("transform", "translate(10, " + ystart + ")")
+                .call(d3.axisLeft(yScale));
+
+            var titleText = document.getElementById("expressioninput").value + " in " + d.properties.name;
             svg.append("text")
-                .attr("x", 20)
-                .attr("y", 30)
+                .attr("x", 0)
+                .attr("y", 0)
                 .text(titleText)
                 .append("g")
 
@@ -496,35 +532,11 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 // stored as MM-DD-YYYY, we want YYYY-MM-DD
                 return date.substring(6) + "-" + date.substring(0, 5)
             }
-            var ystart = 65;
-            var x = d3.scaleTime()
-                .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
-                .range([ 0, 5*width/6 ]);
-            var xstart = ystart + 6*height/10;
-            svg.append("g")
-                .attr("transform", "translate(100, " + xstart + ")")
-                .attr("class", "x axis")
-                .call(d3.axisBottom(x));
-            var y = d3.scaleLinear()
-                .domain([0, maxValue])
-                .range([6*height/10, 0]);
-            svg.append("g")
-                .attr("class", "y axis")
-                .attr("transform", "translate(100, " + ystart + ")")
-                .call(d3.axisLeft(y));
-            //console.log(timeValueObjects);
 
             svg.append("path")
                 .datum(timeValueObjects)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 1.5)
-                .attr("d", d3.line()
-                  .x(function(d) { 
-                      return 10
-                    })
-                  .y(function(d) { return 11 })
-                )
+                .attr("class", "line")
+                .attr("d", line)
         })
 }
 
