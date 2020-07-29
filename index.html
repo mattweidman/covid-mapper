@@ -27,6 +27,13 @@
         <label for="suggestions">Suggested expressions:</label>
         <select name="suggestions" id="suggestions"></select>
     </div>
+    <div id="showtop5container">
+        <label for="top5">Show top 5?</label>
+        <select name="top5" id="top5" onchange="updateTop5Toggle(value)">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
+    </div>
     <p></p>
     <div id="mapoptionscontainer">
         <label for="mapoptions">Select map type:</label>

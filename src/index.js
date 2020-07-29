@@ -53,6 +53,9 @@ d3.select("#viewtype").on("change", () => {
     updateViewType(optionSelected);
 });
 
+var top5 = false; // Using this variable for toggle to decide if top5 queries are currently on screen or not
+var showTop5 = true;
+
 // Set properties.id and properties.name for every region
 function preprocessUsaMap(geomapFeatures, baseData) {
     for (const d of geomapFeatures) {
@@ -509,7 +512,8 @@ function updateSlider(allDates, dateIndex) {
 function resetGeoMap(geomapFeatures) {
     // clear map
     svg.selectAll("g.top5").remove();
-    svg.selectAll("g.title").remove();
+    // svg.selectAll("g.title").remove();
+    svg.selectAll("g.top5Toggle").remove();
     svg.call(zoom.transform, d3.zoomIdentity);
     svg.selectAll(".geofeatures").remove();
     
@@ -728,6 +732,7 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText)
 }
 
 function updateTop5(locationValues, names) {
+    top5 = true;
     var i = 0;
     var nameValuePairs = Object.keys(locationValues).map((key) => {
         return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
@@ -746,6 +751,11 @@ function updateTop5(locationValues, names) {
             .attr("alignment-baseline","middle");
         yVal = yVal + 20;
     });
+
+    if(showTop5 === false){
+        svg.select(".top5")
+            .style("opacity", 0);
+    }
 }
 
 function createLegend() {
@@ -922,11 +932,12 @@ document.addEventListener("click", function(e) {
 
 function createTop5() {
     const top5 = svg.append("g")
-        .attr("class", "top5");
+        .attr("class", "top5")
+        .attr("id", "top5Id");
 
     var xValTop5 = 40;
     var yValTop5 = 360;
-    top5.append("text").attr("x", xValTop5).attr("y", yValTop5 - 20)
+    top5.append("text").attr("class", "top5Text").attr("x", xValTop5).attr("y", yValTop5 - 20)
     for (let i = 0; i < 5; i++) {
         top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
         yValTop5 = yValTop5 + 20;
@@ -951,13 +962,27 @@ function updateMapTitle(inputText) {
         .attr("alignment-baseline","middle");
 }
 
+function createTop5Toggle() {
+    const top5Toggle = svg.append("g")
+        .attr("class", "top5Toggle");
+
+}
+
+function updateTop5Toggle(value) {
+    showTop5 = showTop5 ? false : true;
+    var show = showTop5 ? 1 : 0;
+    svg.select(".top5")
+        .style("opacity", show);
+}
+
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
     resetGeoMap(geomapFeatures);
+    top5 = false;
 
     createTop5();
-    createMapTitle();
+    // createMapTitle();
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -1103,8 +1128,9 @@ function loadSuggestions(){
         document.getElementById("suggestions").onchange = inputSuggestion;
     });
 }
+
 function downloadAsPng() {
-    var svg = d3.select("svg").node(),
+    var svg = d3.select("svg").node(), //d3.select("svg")
         img = new Image(),
         serializer = new XMLSerializer(),
         svgStr = serializer.serializeToString(svg);
