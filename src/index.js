@@ -26,7 +26,9 @@ linearGradient.append("stop")
 
 const path = d3.geoPath();
 
-var dates = []
+var USAdates = []
+
+var wordDates = []
 
 var currast; 
 
@@ -77,7 +79,7 @@ function getDateListFromUsaData(rawData) {
             allDates.push(key.substring("confirmed_".length));
         }
     }
-    dates = allDates;
+    USAdates = allDates;
     return allDates;
 }
 
@@ -169,7 +171,7 @@ function getDateListFromWorldData(rawData) {
 
     const allDates = Array.from(datesSet);
     allDates.sort();
-    dates = allDates;
+    worldDates = allDates;
     return allDates;
 }
 
@@ -252,6 +254,11 @@ function computeCustomData(baseData, ast) {
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomTimeData(allLocationsallData, locationId) {
     const singleLocData = [];
+    if (d3.select("#mapoptions").node().value === "worldcountries") {
+        dates = worldDates;
+    } else {
+        dates = USAdates;
+    }
     var maxValue = allLocationsallData[0][locationId];
     for (var i = 0; i < allLocationsallData.length; i++) {
         singleLocData.push({date: dates[i], value: allLocationsallData[i][locationId]})
@@ -474,26 +481,27 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
         .on("click", function(d) {
             // TODO remove any timegraphs already displayed
             // or figure out how to only create the new graph if none has been displayed before and to otherwise just update
-            
+            d3.select("#timechart").selectAll("*").remove();
+
             // compute appropriate data for this location
             const timeGraphData = computeCustomTimeData(allDatesallLocations, d.properties.id);
             const maxValue = timeGraphData[1];
             const timeValueObjects = timeGraphData[0];
 
             // set margins
-            var margin = {top: 50, right: 50, bottom: 50, left: 50};
+            var margin = {top: 20, right: 150, bottom: 50, left: 75};
+            console.log(margin.left);
             var vizWidth = width - margin.left - margin.right;
             var vizHeight = height - margin.top - margin.bottom;
 
-            var ystart = 10;
-            var xstart = ystart + vizHeight;
+            var xstart = margin.top + vizHeight;
             // axis scales
             var xScale = d3.scaleTime()
                 .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
                 .range([ 0, vizWidth ]);
 
             var yScale = d3.scaleLinear()
-                .domain([0, maxValue])
+                .domain([0, 1.2*maxValue])
                 .range([vizHeight, 0]);
 
 
@@ -513,18 +521,18 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
             
             svg.append("g")
-                .attr("transform", "translate(10, " + xstart + ")")
+                .attr("transform", "translate(0," + xstart + ")")
                 .attr("class", "x axis")
                 .call(d3.axisBottom(xScale));
             svg.append("g")
                 .attr("class", "y axis")
-                .attr("transform", "translate(10, " + ystart + ")")
+                .attr("transform", "translate(0," + margin.top + ")")
                 .call(d3.axisLeft(yScale));
 
             var titleText = document.getElementById("expressioninput").value + " in " + d.properties.name;
             svg.append("text")
                 .attr("x", 0)
-                .attr("y", 0)
+                .attr("y", 10)
                 .text(titleText)
                 .append("g")
 
@@ -537,6 +545,59 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .datum(timeValueObjects)
                 .attr("class", "line")
                 .attr("d", line)
+                .attr("transform", "translate(0," + margin.top + ")")
+
+            // reference: https://www.d3-graph-gallery.com/graph/line_cursor.html
+            var bisect = d3.bisector(function(data) { return new Date(data.date); }).left;
+            var focus = svg
+                .append('g')
+                .append('circle')
+                .style("fill", "none")
+                .attr("stroke", "black")
+                .attr('r', 4)
+                .style("opacity", 0);
+
+            var focusText = svg
+                .append('g')
+                .append('text')
+                  .style("opacity", 0)
+                  .attr("text-anchor", "left")
+                  .attr("alignment-baseline", "middle");
+
+            svg.append('rect')
+                .style("fill", "none")
+                .style("pointer-events", "all")
+                .attr('width', width)
+                .attr('height', height)
+                .on('mouseover', mouseover)
+                .on('mousemove', mousemove)
+                .on('mouseout', mouseout);
+            
+            function mouseover() {
+                focus.style("opacity", 1)
+                focusText.style("opacity", 1)
+            }
+
+            function mouseout() {
+                focus.style("opacity", 0)
+                focusText.style("opacity", 0)
+            }
+
+            function mousemove() {
+                var x0 = xScale.invert(d3.mouse(this)[0])
+                var i = bisect(timeValueObjects, x0, 1);
+                var selectedData = timeValueObjects[i];
+                console.log(x0);
+                console.log(i);
+                console.log(selectedData);
+                focus
+                    .attr("cx", xScale(new Date(selectedData.date)))
+                    .attr("cy", yScale(selectedData.value) + 20)
+                focusText
+                    .html(selectedData.date + ": " + selectedData.value)
+                    .attr("x", xScale(new Date(selectedData.date)))
+                    .attr("y", yScale(selectedData.value))
+            }
         })
 }
 
@@ -691,7 +752,8 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .range([lowColor, highColor])
                         .clamp(true)
                         .unknown(lowColor);
-    
+                    
+                        d3.select("#timechart").selectAll("*").remove();
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color, customData);
                     
