@@ -10,7 +10,7 @@
     "day": "indicates you would like to access data for the current day on the slider",
     "first": "indicates you would like to access data for the first day in the dataset",
     "last": "indicates you would like to access data for the last day in the dataset",
-    "population": "population of the region (county)",
+    "population": "population of the region",
     "sum": "aggregate sum operation to be used over a range of data",
     "average": "aggregate average operation to be used over a range of data",
     "max": "aggregate max operation to be used over a range of data",
