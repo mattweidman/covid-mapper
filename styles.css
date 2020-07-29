@@ -143,3 +143,7 @@ label {
 .mapg > path {
     vector-effect: non-scaling-stroke;
 }
+
+#mapoptionscontainer {
+    margin-bottom: 10px;
+}
