@@ -16,12 +16,6 @@ const legendsvg = d3.select("#legendcontainer").append("svg")
 
 const path = d3.geoPath();
 
-var USAdates = []
-
-var worldDates = []
-
-var currast; 
-
 var options = [];
 
 var docs = {};
@@ -80,7 +74,6 @@ function getDateListFromUsaData(rawData) {
             allDates.push(key.substring("confirmed_".length));
         }
     }
-    USAdates = allDates;
     return allDates;
 }
 
@@ -172,7 +165,6 @@ function getDateListFromWorldData(rawData) {
 
     const allDates = Array.from(datesSet);
     allDates.sort();
-    worldDates = allDates;
     return allDates;
 }
 
@@ -268,13 +260,8 @@ function computeCustomData(baseData, ast) {
 }
 
 // Compute the dates x locations matrix using the AST to evaluate.
-function computeCustomTimeData(allLocationsallData, locationId) {
+function computeCustomTimeData(allLocationsallData, locationId, dates) {
     const singleLocData = [];
-    if (d3.select("#mapoptions").node().value === "worldflat") {
-        dates = worldDates;
-    } else {
-        dates = USAdates;
-    }
     var maxValue = allLocationsallData[0][locationId];
     for (var i = 0; i < allLocationsallData.length; i++) {
         singleLocData.push({date: dates[i], value: allLocationsallData[i][locationId]})
@@ -282,7 +269,7 @@ function computeCustomTimeData(allLocationsallData, locationId) {
             maxValue = allLocationsallData[i][locationId];
         }
     }
-    return [singleLocData, maxValue, dates];
+    return [singleLocData, maxValue];
 }
 
 // Percentiles come from entire customData matrix, not just one row or column.
@@ -560,10 +547,162 @@ function resetGeoMap(geomapFeatures) {
         });
 }
 
+function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
+    d3.select("#timechart").selectAll("*").remove();
+
+    // compute appropriate data for this location
+    const timeGraphData = computeCustomTimeData(allDatesAllLocations, d.properties.id, dates);
+    const maxValue = timeGraphData[1];
+    const timeValueObjects = timeGraphData[0];
+
+    // set margins
+    var margin = {top: 20, right: 75, bottom: 50, left: 75};
+    var vizWidth = width - margin.left - margin.right;
+    var vizHeight = height - margin.top - margin.bottom;
+
+    var xstart = margin.top + vizHeight;
+    // axis scales
+    console.log(dates[0]);
+    console.log(processDate(dates[0]));
+    var xScale = d3.scaleTime()
+        .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
+        .range([ 0, vizWidth ]);
+
+    var yScale = d3.scaleLinear()
+        .domain([0, 1.2*maxValue])
+        .range([vizHeight, 0]);
+
+
+    // line generator
+    var line = d3.line()
+        .x(function(data) { 
+            return xScale(new Date(data.date));
+        })
+        .y(function(data) { 
+            return yScale(data.value); 
+        })
+    
+    var svg = d3.select("#timechart").append("svg")
+        .attr("width", vizWidth + margin.left + margin.right)
+        .attr("height", vizHeight + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    svg.append("g")
+        .attr("transform", "translate(0," + xstart + ")")
+        .attr("class", "x axis")
+        .call(d3.axisBottom(xScale));
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(0," + margin.top + ")")
+        .call(d3.axisLeft(yScale));
+
+    var titleText = inputText + " in " + d.properties.name;
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", 10)
+        .text(titleText)
+        .append("g")
+
+    function processDate(date) {
+        // stored as MM-DD-YYYY, we want YYYY-MM-DD
+        if (d3.select("#mapoptions").node().value === "worldflat") {
+            return date.substring(5) + "-" + date.substring(0, 5);
+        } else {
+            var firstSlash = date.indexOf("/");
+            var lastSlash = date.lastIndexOf("/");
+            return "20" + date.substring(lastSlash + 1) + "-" 
+                        + date.substring(0, firstSlash) + "-" 
+                        + date.substring(firstSlash + 1, lastSlash);
+        }
+        return date.substring(5) + "-" + date.substring(0, 5)
+    }
+
+    svg.append("path")
+        .datum(timeValueObjects)
+        .attr("class", "line")
+        .attr("d", line)
+        .attr("transform", "translate(0," + margin.top + ")")
+
+    // reference: https://www.d3-graph-gallery.com/graph/line_cursor.html
+    var bisect = d3.bisector(function(data) { return new Date(data.date); }).left;
+    var focus = svg
+        .append('g')
+        .append('circle')
+        .style("fill", "none")
+        .attr("stroke", "black")
+        .attr('r', 4)
+        .attr("id", "focus")
+        .style("opacity", 0);
+
+    var focusText = svg
+        .append('g')
+        .append('text')
+            .style("opacity", 0)
+            .attr("text-anchor", "left")
+            .attr("alignment-baseline", "middle")
+            .attr("id", "focusText");
+
+    svg.append('rect')
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .attr('width', width)
+        .attr('height', height)
+        .on('mouseover', mouseover)
+        .on('mousemove', mousemove)
+        .on('mouseout', mouseout);
+    
+    function mouseover() {
+        focus.style("opacity", 1)
+        focusText.style("opacity", 1)
+    }
+
+    function mouseout() {
+        focus.style("opacity", 0)
+        focusText.style("opacity", 0)
+    }
+
+    function updateFocus(data) {
+        if (data) {
+            focus
+                .attr("cx", xScale(new Date(data.date)))
+                .attr("cy", yScale(data.value) + 20);
+            focusText
+                .html(data.value)
+                .attr("x", xScale(new Date(data.date)))
+                .attr("y", yScale(data.value));
+        };
+    }
+    // TODO update time chart circle when slider is updated!
+    function mousemove() {
+        var x0 = xScale.invert(d3.mouse(this)[0])
+        var i = bisect(timeValueObjects, x0, 1);
+        var selectedData = timeValueObjects[i];
+        updateFocus(selectedData);
+        if (selectedData) {
+            updateSlider(dates, i);
+            var slider = d3.select("#dateslider");
+            slider.property('value', i);
+            updateGeoMap(allDatesAllLocations, color, i, dates, inputText);
+        }
+    }
+    var slider = d3.select("#dateslider");
+    slider.on("input", function() {
+        mouseover();
+        var index = this.value;
+        var selectedData = timeValueObjects[index];
+        updateFocus(selectedData);
+        updateSlider(dates, index);
+        updateGeoMap(allDatesAllLocations, color, index, dates, inputText)
+    });
+
+}
+
 // Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(locationValues, color, allDatesallLocations) {
+function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText) {
+    const locationValues = allDatesAllLocations[slideValue];
     svg.selectAll(".geofeatures")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
@@ -583,155 +722,8 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
-            // TODO close the graph when you click on a new type of map
             // TODO only allow graph to display if you've entered an expression!
-            d3.select("#timechart").selectAll("*").remove();
-            // compute appropriate data for this location
-            const timeGraphData = computeCustomTimeData(allDatesallLocations, d.properties.id);
-            const maxValue = timeGraphData[1];
-            const timeValueObjects = timeGraphData[0];
-            const dates = timeGraphData[2];
-
-            // set margins
-            var margin = {top: 20, right: 150, bottom: 50, left: 75};
-            var vizWidth = width - margin.left - margin.right;
-            var vizHeight = height - margin.top - margin.bottom;
-
-            var xstart = margin.top + vizHeight;
-            // axis scales
-            console.log(dates[0]);
-            console.log(processDate(dates[0]));
-            var xScale = d3.scaleTime()
-                .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
-                .range([ 0, vizWidth ]);
-
-            var yScale = d3.scaleLinear()
-                .domain([0, 1.2*maxValue])
-                .range([vizHeight, 0]);
-
-
-            // line generator
-            var line = d3.line()
-                .x(function(data) { 
-                    return xScale(new Date(data.date));
-                })
-                .y(function(data) { 
-                    return yScale(data.value); 
-                })
-            
-            var svg = d3.select("#timechart").append("svg")
-                .attr("width", vizWidth + margin.left + margin.right)
-                .attr("height", vizHeight + margin.top + margin.bottom)
-              .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            
-            svg.append("g")
-                .attr("transform", "translate(0," + xstart + ")")
-                .attr("class", "x axis")
-                .call(d3.axisBottom(xScale));
-            svg.append("g")
-                .attr("class", "y axis")
-                .attr("transform", "translate(0," + margin.top + ")")
-                .call(d3.axisLeft(yScale));
-
-            var titleText = document.getElementById("expressioninput").value + " in " + d.properties.name;
-            svg.append("text")
-                .attr("x", 0)
-                .attr("y", 10)
-                .text(titleText)
-                .append("g")
-
-            function processDate(date) {
-                // stored as MM-DD-YYYY, we want YYYY-MM-DD
-                if (d3.select("#mapoptions").node().value === "worldflat") {
-                    return date.substring(5) + "-" + date.substring(0, 5);
-                } else {
-                    var firstSlash = date.indexOf("/");
-                    var lastSlash = date.lastIndexOf("/");
-                    return "20" + date.substring(lastSlash + 1) + "-" 
-                                + date.substring(0, firstSlash) + "-" 
-                                + date.substring(firstSlash + 1, lastSlash);
-                }
-                return date.substring(5) + "-" + date.substring(0, 5)
-            }
-
-            svg.append("path")
-                .datum(timeValueObjects)
-                .attr("class", "line")
-                .attr("d", line)
-                .attr("transform", "translate(0," + margin.top + ")")
-
-            // reference: https://www.d3-graph-gallery.com/graph/line_cursor.html
-            var bisect = d3.bisector(function(data) { return new Date(data.date); }).left;
-            var focus = svg
-                .append('g')
-                .append('circle')
-                .style("fill", "none")
-                .attr("stroke", "black")
-                .attr('r', 4)
-                .attr("id", "focus")
-                .style("opacity", 0);
-
-            var focusText = svg
-                .append('g')
-                .append('text')
-                  .style("opacity", 0)
-                  .attr("text-anchor", "left")
-                  .attr("alignment-baseline", "middle")
-                  .attr("id", "focusText");
-
-            svg.append('rect')
-                .style("fill", "none")
-                .style("pointer-events", "all")
-                .attr('width', width)
-                .attr('height', height)
-                .on('mouseover', mouseover)
-                .on('mousemove', mousemove)
-                .on('mouseout', mouseout);
-            
-            function mouseover() {
-                focus.style("opacity", 1)
-                focusText.style("opacity", 1)
-            }
-
-            function mouseout() {
-                focus.style("opacity", 0)
-                focusText.style("opacity", 0)
-            }
-
-            function updateFocus(data) {
-                if (data) {
-                    focus
-                        .attr("cx", xScale(new Date(data.date)))
-                        .attr("cy", yScale(data.value) + 20);
-                    focusText
-                        .html(data.value)
-                        .attr("x", xScale(new Date(data.date)))
-                        .attr("y", yScale(data.value));
-                };
-            }
-            // TODO update time chart circle when slider is updated!
-            function mousemove() {
-                var x0 = xScale.invert(d3.mouse(this)[0])
-                var i = bisect(timeValueObjects, x0, 1);
-                var selectedData = timeValueObjects[i];
-                updateFocus(selectedData);
-                updateSlider(dates, i);
-                var slider = d3.select("#dateslider");
-                slider.property('value', i);
-                if (selectedData) {
-                    updateGeoMap(allDatesallLocations[i], color, allDatesallLocations);
-                }
-            }
-            var slider = d3.select("#dateslider");
-            slider.on("input", function() {
-                mouseover();
-                var index = this.value;
-                var selectedData = timeValueObjects[index];
-                updateFocus(selectedData);
-                updateSlider(dates, index);
-                updateGeoMap(allDatesallLocations[index], color, allDatesallLocations)
-            });
+            updateTimeChart(allDatesAllLocations, color, dates, inputText, d);
         })
 }
 
@@ -1001,7 +993,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                 }
 
                 if (customData != undefined) {
-                    currast = ast;
                     const domain = getPercentiles(customData, [1, 99]);
                     const color = d3.scaleLinear()
                         .domain(domain)
@@ -1021,13 +1012,13 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     d3.select("#timechart").selectAll("*").remove();
                     updateMapTitle(inputText);
                     updateLegendLimits(domain);
-                    updateGeoMap(customData[slideValue], color, customData);
+                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                     updateTop5(customData[slideValue], names);
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData[slideValue], color, customData);
+                        updateGeoMap(customData, color, slideValue, allDates, inputText);
                         updateTop5(customData[slideValue], names);
                     });
 
@@ -1037,13 +1028,13 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                    updateGeoMap(customData[slideValue], color, customData);
+                                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                                 }
                             }
                         })
                         .on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                updateGeoMap(customData[slideValue], color, customData);
+                                updateGeoMap(customData, color, slideValue, allDates, inputText);
                             }
                         });
 
@@ -1053,12 +1044,12 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                    updateGeoMap(customData[slideValue], color, customData);
+                                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                                 }
                             }
                         }).on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                updateGeoMap(customData[slideValue], color, customData);
+                                updateGeoMap(customData, color, slideValue, allDates, inputText);
                             }
                         });
         

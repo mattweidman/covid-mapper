@@ -91,7 +91,7 @@
     },
     "MaxNewCasesinLast7Days": {
       "title": "Max new cases in last 7 days",
-      "expression": "max(newcases(day-7,day)"
+      "expression": "max(newcases(day-7,day))"
     },
     "MaxNewCasesinLast30Days": {
       "title": "Max new cases in last 30 days",
@@ -104,10 +104,6 @@
     "MinNewCasesinLast30Days": {
       "title": "Min new cases in last 30 days",
       "expression": "min(newcases(day-30,day))"
-    },
-    "TotalRecoveredCasesSoFar": {
-      "title": "Total recovered cases so far",
-      "expression": "sum(newcases(first,last))- sum(cases(first,last))"
     }
   }
 }
