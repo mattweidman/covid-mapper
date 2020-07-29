@@ -431,16 +431,7 @@ function resetGeoMap(geomapFeatures) {
 // Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(locationValues, color, names) {
-    var i = 0;
-    console.log(names);
-    var locArray = Object.keys(locationValues).map((key) => {
-        return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
-    });
-
-    locArray.sort(function (a,b){return a[1] - b[1]});
-    locArray = locArray.slice(Math.max(locArray.length - 5, 0)).reverse(); // Get top 5
-
+function updateGeoMap(locationValues, color) {
     svg.selectAll(".mapg path")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
@@ -459,6 +450,16 @@ function updateGeoMap(locationValues, color, names) {
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
+}
+
+function updateTop5(locationValues, names) {
+    var i = 0;
+    var locArray = Object.keys(locationValues).map((key) => {
+        return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
+    });
+
+    locArray.sort(function (a,b){return a[1] - b[1]});
+    locArray = locArray.slice(Math.max(locArray.length - 5, 0)).reverse(); // Get top 5
 
     svg.select(".top5Text").text('Top 5:');
     var xVal = 40;
@@ -561,10 +562,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .clamp(true)
                         .unknown(lowColor);
 
-                    // Get names for top5 list
-                    console.log("baseData");
-                    console.log(baseData)
-                    console.log("customData:", customData[slideValue]);
+                    // Get names for top5 list along with ID
                     var names = [];
                     for (const [key, value] of Object.entries(baseData)) {
                         names.push({
@@ -576,12 +574,14 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     svg.select(".titleText").text(inputText).style("font-size", "30px").attr("alignment-baseline","middle");
     
                     updateLegendLimits(domain);
-                    updateGeoMap(customData[slideValue], color, names);
+                    updateGeoMap(customData[slideValue], color);
+                    updateTop5(customData[slideValue], names);
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData[slideValue], color, names);
+                        updateGeoMap(customData[slideValue], color);
+                        updateTop5(customData[slideValue], names);
                     });
         
                     d3.select("#parseroutput")
