@@ -7,7 +7,8 @@ const tooltipDiv = d3.select("body").append("div")
  
 const svg = d3.select("#mapcontainer").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .style("background-color", 'white');
 
 const defs = svg.append("defs");
 
@@ -39,7 +40,6 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 showWorldMap();
-
 createLegend();
 
 d3.select("#mapoptions").on("change", (a, b, c) => {
@@ -393,6 +393,8 @@ function updateSlider(allDates, dateIndex) {
 function resetGeoMap(geomapFeatures) {
     // clear map
     svg.selectAll("g.mapg > path").remove();
+    svg.selectAll("g.top5").remove();
+    svg.selectAll("g.title").remove();
     
     const data = svg.select("g.mapg")
         .selectAll("path")
@@ -429,7 +431,16 @@ function resetGeoMap(geomapFeatures) {
 // Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(locationValues, color) {
+function updateGeoMap(locationValues, color, names) {
+    var i = 0;
+    console.log(names);
+    var locArray = Object.keys(locationValues).map((key) => {
+        return [names[i++], locationValues[key]] // Store name of location with result in array
+    });
+
+    locArray.sort(function (a,b){return a[1] - b[1]});
+    locArray = locArray.slice(Math.max(locArray.length - 5, 0)).reverse(); // Get top 5
+
     svg.selectAll(".mapg path")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
@@ -448,6 +459,14 @@ function updateGeoMap(locationValues, color) {
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
+
+    svg.select(".top5Text").text('Top 5:');
+    var xVal = 40;
+    var yVal = 360;
+    locArray.map((loc) => {
+        svg.select(".text"+yVal).text(loc[0]+": "+loc[1]).style("font-size", "15px").attr("alignment-baseline","middle");
+        yVal = yVal + 20;
+    })
 }
 
 function createLegend() {
@@ -487,6 +506,24 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
     resetGeoMap(geomapFeatures);
 
+    const top5 = svg.append("g")
+        .attr("class", "top5");
+
+    var xValTop5 = 40;
+    var yValTop5 = 360;
+    top5.append("text").attr("class", "top5Text").attr("x", xValTop5).attr("y", yValTop5 - 20)
+    for (let i = 0; i < 5; i++) {
+        top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
+        yValTop5 = yValTop5 + 20;
+    }
+
+    const title = svg.append("g")
+        .attr("class", "title");
+
+    var xValTitle = 480;
+    var yValTitle = 15;
+    title.append("text").attr("class", "titleText").attr("x", xValTitle).attr("y", yValTitle);
+
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
         if (inputText === "") {
@@ -523,14 +560,22 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .range([lowColor, highColor])
                         .clamp(true)
                         .unknown(lowColor);
+
+                    // Get names for top5 list
+                    var names = [];
+                    for (const [key, value] of Object.entries(baseData)) {
+                        names.push(value.name);
+                    }
+
+                    svg.select(".titleText").text(inputText).style("font-size", "30px").attr("alignment-baseline","middle");
     
                     updateLegendLimits(domain);
-                    updateGeoMap(customData[slideValue], color);
+                    updateGeoMap(customData[slideValue], color, names);
                     
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData[slideValue], color);
+                        updateGeoMap(customData[slideValue], color, names);
                     });
         
                     d3.select("#parseroutput")
