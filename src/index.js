@@ -507,7 +507,6 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
-    svg.selectAll("g.mapg > path").remove();
     svg.selectAll("g.top5").remove();
     svg.selectAll("g.title").remove();
     svg.call(zoom.transform, d3.zoomIdentity);
@@ -573,20 +572,23 @@ function updateGeoMap(locationValues, color) {
 
 function updateTop5(locationValues, names) {
     var i = 0;
-    var locArray = Object.keys(locationValues).map((key) => {
+    var nameValuePairs = Object.keys(locationValues).map((key) => {
         return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
     });
 
-    locArray.sort(function (a,b){return a[1] - b[1]});
-    locArray = locArray.slice(Math.max(locArray.length - 5, 0)).reverse(); // Get top 5
+    nameValuePairs.sort(function (a,b){return a[1] - b[1]});
+    nameValuePairs = nameValuePairs.slice(Math.max(nameValuePairs.length - 5, 0)).reverse(); // Get top 5
 
     svg.select(".top5Text").text('Top 5:');
     var xVal = 40;
     var yVal = 360;
-    locArray.map((loc) => {
-        svg.select(".text"+yVal).text(loc[0]+": "+loc[1]).style("font-size", "15px").attr("alignment-baseline","middle");
+    nameValuePairs.forEach((pair) =>{
+        svg.select(".text"+yVal)
+            .text(pair[0]+": "+pair[1])
+            .style("font-size", "15px")
+            .attr("alignment-baseline","middle");
         yVal = yVal + 20;
-    })
+    });
 }
 
 function createLegend() {
@@ -693,28 +695,44 @@ document.addEventListener("click", function(e) {
     closeAutocomplete();
 })
 
-// Called when data is initially loaded.
-function dataLoaded(geomapFeatures, allDates, baseData) {
-    const slider = resetSlider(allDates);
-    resetGeoMap(geomapFeatures);
-
+function createTop5() {
     const top5 = svg.append("g")
         .attr("class", "top5");
 
     var xValTop5 = 40;
     var yValTop5 = 360;
-    top5.append("text").attr("class", "top5Text").attr("x", xValTop5).attr("y", yValTop5 - 20)
+    top5.append("text").attr("x", xValTop5).attr("y", yValTop5 - 20)
     for (let i = 0; i < 5; i++) {
         top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
         yValTop5 = yValTop5 + 20;
     }
+}
 
-    const title = svg.append("g")
-        .attr("class", "title");
+function createMapTitle() {
+    const mapTitle = svg.append("g")
+        .attr("class", "mapTitle");
 
-    var xValTitle = 480;
-    var yValTitle = 15;
-    title.append("text").attr("class", "titleText").attr("x", xValTitle).attr("y", yValTitle);
+    var xValMapTitle = 480;
+    var yValMapTitle = 15;
+    mapTitle.append("text")
+        .attr("class", "mapTitleText")
+        .attr("x", xValMapTitle)
+        .attr("y", yValMapTitle);
+}
+
+function updateMapTitle(inputText) {
+    svg.select(".mapTitleText")
+        .text(inputText).style("font-size", "30px")
+        .attr("alignment-baseline","middle");
+}
+
+// Called when data is initially loaded.
+function dataLoaded(geomapFeatures, allDates, baseData) {
+    const slider = resetSlider(allDates);
+    resetGeoMap(geomapFeatures);
+
+    createTop5();
+    createMapTitle();
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -766,8 +784,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         });
                     }
 
-                    svg.select(".titleText").text(inputText).style("font-size", "30px").attr("alignment-baseline","middle");
-    
+                    updateMapTitle(inputText);
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color);
                     updateTop5(customData[slideValue], names);
