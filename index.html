@@ -31,14 +31,29 @@
     <div id="mapoptionscontainer">
         <label for="mapoptions">Select map type:</label>
         <select name="mapoptions" id="mapoptions">
-            <option value="worldcountries">World - countries</option>
+            <option value="worldflat">World</option>
             <option value="usastates">USA - states</option>
             <option value="usacounties">USA - counties</option>
             <option value="timechart">Time Graph</option>
         </select>
+        <label for="viewtype" id="viewtypelabel" class="viewtype">View: </label>
+        <select name="viewtype" id="viewtype" class="viewtype">
+            <option value="worldflat">World</option>
+            <option value="northam">North America</option>
+            <option value="carib">Central America and the Caribbean</option>
+            <option value="southam">South America</option>
+            <option value="wafrica">West Africa</option>
+            <option value="safrica">Southern Africa</option>
+            <option value="europe">Europe</option>
+            <option value="swasia">Southwest Asia</option>
+            <option value="seasia">South and Southeast Asia</option>
+            <option value="easia">East Asia</option>
+            <option value="wpac">Western Pacific</option>
+        </select>
     </div>
     <p id="tipcontainer">Tip: Click on a location to generate a time chart below.</p>
     <div id="mapcontainer"></div>
+    <div id="legendcontainer"></div>
     <div id="slidecontainer">
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>

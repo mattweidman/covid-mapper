@@ -1,4 +1,4 @@
-const width = 960, height = 600;
+const width = 960, height = 550, legendHeight = 45;
 const lowColor = "#dcdcdc", highColor = "#8b0000";
  
 const tooltipDiv = d3.select("body").append("div")
@@ -7,22 +7,12 @@ const tooltipDiv = d3.select("body").append("div")
  
 const svg = d3.select("#mapcontainer").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .style("background-color", 'white');
 
-const defs = svg.append("defs");
-
-const linearGradient = defs.append("linearGradient")
-    .attr("id", "linear-gradient")
-    .attr("x1", "0%")
-    .attr("x2", "100%");
-
-linearGradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", lowColor);
-
-linearGradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", highColor);
+const legendsvg = d3.select("#legendcontainer").append("svg")
+    .attr("width", width)
+    .attr("height", legendHeight);
 
 const path = d3.geoPath();
 
@@ -49,6 +39,12 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 showWorldMap();
+
+// Sphere shape
+mapg.append("path")
+    .attr("class", "sphereoutline")
+    .style("visibility", "hidden");
+
 loadDocs();
 loadSuggestions();
 createLegend();
@@ -56,6 +52,11 @@ createLegend();
 d3.select("#mapoptions").on("change", () => {
     const optionSelected = d3.select("#mapoptions").node().value;
     updateMapType(optionSelected);
+});
+
+d3.select("#viewtype").on("change", () => {
+    const optionSelected = d3.select("#viewtype").node().value;
+    updateViewType(optionSelected);
 });
 
 // Set properties.id and properties.name for every region
@@ -229,6 +230,21 @@ function setPopulationData(baseData, rawPopulationData) {
     }
 }
 
+function getWhoRegionsMap(rawWorldData) {
+    const whoRegions = {};
+
+    for (const row of rawWorldData) {
+        const countryId = row[" Country_code"];
+        const whoRegion = row[" WHO_region"];
+
+        if (!(whoRegion in whoRegions)) {
+            whoRegions[countryId] = whoRegion;
+        }
+    }
+
+    return whoRegions;
+}
+
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
@@ -276,7 +292,7 @@ function getPercentiles(customData, percentiles) {
     const allValues = [];
     for (const geoIdToValueDict of customData) {
         for (const value of Object.values(geoIdToValueDict)) {
-            if (!isNaN(value)) {
+            if (!isNaN(value) && isFinite(value)) {
                 allValues.push(value);
             }
         }
@@ -318,8 +334,12 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
-function showWorldMap() {
+function showWorldMap(whoRegion) {
     path.projection(d3.geoRobinson());
+
+    hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "visible");
+    d3.select("#viewtype").property("value", "worldflat");
 
     Promise.all([
         d3.json("./data/countries.json"),
@@ -332,8 +352,13 @@ function showWorldMap() {
 
         const allDates = getDateListFromWorldData(rawData);
         const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-        const geomapFeatures = geomap.features;
+        var geomapFeatures = geomap.features;
         preprocessWorldMap(geomapFeatures);
+
+        if (whoRegion) {
+            const whoRegions = getWhoRegionsMap(rawData);
+            geomapFeatures = geomapFeatures.filter(f => whoRegions[f.properties.id] === whoRegion);
+        }
 
         dataLoaded(geomapFeatures, allDates, baseData);
     });
@@ -341,6 +366,9 @@ function showWorldMap() {
 
 function showUsaCounties() {
     path.projection(d3.geoAlbersUsa());
+
+    hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
         d3.json("./data/us.json"),
@@ -361,6 +389,9 @@ function showUsaCounties() {
 function showUsaStates() {
     path.projection(d3.geoAlbersUsa());
 
+    hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "hidden");
+
     Promise.all([
         d3.json("./data/us.json"),
         d3.csv("./data/covid_usa.csv")
@@ -377,14 +408,81 @@ function showUsaStates() {
     });
 }
 
+function set3dProjection(rotation, scale) {
+    const projection = d3.geoSatellite()
+        .rotate(rotation);
+
+    path.projection(projection);
+
+    showSphere();
+
+    svg.call(zoom.transform, d3.zoomIdentity);
+    svg.call(zoom.scaleTo, scale / 432.147);
+
+    mapg.selectAll("path.geofeatures")
+        .attr("d", path);
+}
+
+function setFlatProjection() {
+    const projection = d3.geoRobinson();
+
+    path.projection(projection);
+
+    hideSphere();
+
+    svg.call(zoom.transform, d3.zoomIdentity);
+    mapg.selectAll("path.geofeatures")
+        .attr("d", path);
+}
+
+function hideSphere() {
+    d3.select(".sphereoutline")
+        .style("visibility", "hidden");
+}
+
+function showSphere() {
+    d3.select(".sphereoutline")
+        .attr("d", path({ type: "Sphere" }))
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", 1)
+        .style("visibility", "visible");
+}
+
 // Respond to event where user changes map type.
 function updateMapType(mapType) {
-    if (mapType === "worldcountries") {
+    if (mapType === "worldflat") {
         showWorldMap();
     } else if (mapType === "usacounties") {
         showUsaCounties();
     } else if (mapType === "usastates") {
         showUsaStates();
+    }
+}
+
+function updateViewType(viewType) {
+    if (viewType === "worldflat") {
+        setFlatProjection();
+    } else if (viewType === "northam") {
+        set3dProjection([92, -50], 525);
+    } else if (viewType === "carib") {
+        set3dProjection([85, -27], 1150);
+    } else if (viewType === "southam") {
+        set3dProjection([59, 15], 550);
+    } else if (viewType === "wafrica") {
+        set3dProjection([-4, -22], 800);
+    } else if (viewType === "safrica") {
+        set3dProjection([-28, 8], 800);
+    } else if (viewType === "europe") {
+        set3dProjection([-15, -58], 850);
+    } else if (viewType === "swasia") {
+        set3dProjection([-42, -30], 900);
+    } else if (viewType === "seasia") {
+        set3dProjection([-87, -24], 850);
+    } else if (viewType === "easia") {
+        set3dProjection([-118, -40], 850);
+    } else if (viewType === "wpac") {
+        set3dProjection([-140, 11], 550);
     }
 }
 
@@ -422,12 +520,17 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
-    svg.selectAll("g.mapg > path").remove();
+    svg.selectAll("g.top5").remove();
+    svg.selectAll("g.title").remove();
+    svg.call(zoom.transform, d3.zoomIdentity);
+    svg.selectAll(".geofeatures").remove();
     
     const data = svg.select("g.mapg")
-        .selectAll("path")
+        .selectAll("path.geofeatures")
         .data(geomapFeatures)
         .enter().append("path")
+        .attr("class", "geofeatures")
+        .attr("id", d => "region_" + d.properties.id)
         .attr("d", path)
         .style("fill", lowColor)
         .on("mouseover", function(d) {
@@ -460,7 +563,7 @@ function resetGeoMap(geomapFeatures) {
 // locationValues: map geo id -> value
 // color: d3 coloring function
 function updateGeoMap(locationValues, color, allDatesallLocations) {
-    svg.selectAll(".mapg path")
+    svg.selectAll(".geofeatures")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
         })
@@ -618,36 +721,125 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
         })
 }
 
+function updateTop5(locationValues, names) {
+    var i = 0;
+    var nameValuePairs = Object.keys(locationValues).map((key) => {
+        return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
+    });
+
+    nameValuePairs.sort(function (a,b){return a[1] - b[1]});
+    nameValuePairs = nameValuePairs.slice(Math.max(nameValuePairs.length - 5, 0)).reverse(); // Get top 5
+
+    svg.select(".top5Text").text('Top 5:');
+    var xVal = 40;
+    var yVal = 360;
+    nameValuePairs.forEach((pair) =>{
+        svg.select(".text"+yVal)
+            .text(pair[0]+": "+pair[1])
+            .style("font-size", "15px")
+            .attr("alignment-baseline","middle");
+        yVal = yVal + 20;
+    });
+}
+
 function createLegend() {
-    const legend = svg.append("g")
+    const defs = legendsvg.append("defs");
+    
+    const linearGradient = defs.append("linearGradient")
+        .attr("id", "linear-gradient")
+        .attr("x1", "0%")
+        .attr("x2", "100%");
+    
+    linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", lowColor);
+    
+    linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", highColor);
+    
+    const legend = legendsvg.append("g")
         .attr("class", "legend");
+
+    const gradientHeight = 20;
 
     legend.append("rect")
         .attr("x", 0)
-        .attr("y", 550)
+        .attr("y", 0)
         .attr("width", width)
-        .attr("height", 20)
+        .attr("height", gradientHeight)
         .style("fill", "url(#linear-gradient)")
         .style("opacity", 0.8);
 
-    legend.append("text")
-        .attr("class", "legendmin")
-        .attr("x", 0)
-        .attr("y", 590);
+    const foreignObjHeight = 20;
+    const foreignObjY = gradientHeight + 5;
+    const foreignObjWidth = width / 2;
 
-    legend.append("text")
-        .attr("class", "legendmax")
-        .attr("x", width)
-        .attr("y", 590)
-        .attr("text-anchor", "end");
+    legend.append("foreignObject")
+            .attr("x", 0)
+            .attr("y", foreignObjY)
+            .attr("width", foreignObjWidth)
+            .attr("height", foreignObjHeight)
+        .append("xhtml:div")
+            .attr("contenteditable", true)
+            .attr("class", "legendmin")
+            .style("float", "left");
+
+    legend.append("foreignObject")
+            .attr("x", width - foreignObjWidth)
+            .attr("y", foreignObjY)
+            .attr("width", foreignObjWidth)
+            .attr("height", foreignObjHeight)
+            .attr("text-anchor", "end")
+        .append("xhtml:div")
+            .attr("contenteditable", true)
+            .attr("class", "legendmax")
+            .style("float", "right");
 }
 
 function updateLegendLimits(domain) {
-    svg.select(".legendmin")
+    d3.select(".legendmin")
         .text(domain[0]);
 
-    svg.select(".legendmax")
+    d3.select(".legendmax")
         .text(domain[1]);
+}
+
+// Responds to event where user changes the legend.
+// event: d3.event
+// isMin: true if editing minimum, false if editing maximum
+// color: d3.color for map. Domain is modified by this function.
+// Returns whether legend domain was successfully updated.
+function userChangesLegend(text, isMin, color) {
+    var domain = color.domain();
+    if (!isNaN(text)) {
+        var newMin;
+        var newMax;
+        if (isMin) {
+            newMin = parseFloat(text);
+            newMax = domain[1];
+        } else {
+            newMin = domain[0];
+            newMax = parseFloat(text);
+        }
+
+        // Don't change domain if max <= min
+        if (newMax > newMin) {
+            domain = [newMin, newMax];
+
+            color.domain(domain);
+
+            successfulChange = true;
+        }
+    }
+
+    if (isMin) {
+        d3.select(".legendmin").text(domain[0]);
+    } else {
+        d3.select(".legendmax").text(domain[1]);
+    }
+
+    return successfulChange;
 }
 
 function loadDocs() {
@@ -722,10 +914,44 @@ document.addEventListener("click", function(e) {
     closeAutocomplete();
 })
 
+function createTop5() {
+    const top5 = svg.append("g")
+        .attr("class", "top5");
+
+    var xValTop5 = 40;
+    var yValTop5 = 360;
+    top5.append("text").attr("x", xValTop5).attr("y", yValTop5 - 20)
+    for (let i = 0; i < 5; i++) {
+        top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
+        yValTop5 = yValTop5 + 20;
+    }
+}
+
+function createMapTitle() {
+    const mapTitle = svg.append("g")
+        .attr("class", "mapTitle");
+
+    var xValMapTitle = 480;
+    var yValMapTitle = 15;
+    mapTitle.append("text")
+        .attr("class", "mapTitleText")
+        .attr("x", xValMapTitle)
+        .attr("y", yValMapTitle);
+}
+
+function updateMapTitle(inputText) {
+    svg.select(".mapTitleText")
+        .text(inputText).style("font-size", "30px")
+        .attr("alignment-baseline","middle");
+}
+
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
     resetGeoMap(geomapFeatures);
+
+    createTop5();
+    createMapTitle();
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -768,16 +994,59 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .range([lowColor, highColor])
                         .clamp(true)
                         .unknown(lowColor);
+
+                    // Get names for top5 list along with ID
+                    var names = [];
+                    for (const [key, value] of Object.entries(baseData)) {
+                        names.push({
+                            "id": value.id,
+                            "name": value.name
+                        });
+                    }
                     
                     d3.select("#timechart").selectAll("*").remove();
+                    updateMapTitle(inputText);
                     updateLegendLimits(domain);
-                    updateGeoMap(customData[slideValue], color, customData);
-                    
+                    updateGeoMap(customData[slideValue], color);
+                    updateTop5(customData[slideValue], names);
+
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData[slideValue], color, customData);
+                        updateGeoMap(customData[slideValue], color);
+                        updateTop5(customData[slideValue], names);
                     });
+
+                    // Updates legend minimum value
+                    d3.select(".legendmin")
+                        .on("keydown", () => {
+                            if (d3.event.keyCode === 13) {
+                                d3.event.preventDefault();
+                                if (userChangesLegend(d3.event.target.textContent, true, color)) {
+                                    updateGeoMap(customData[slideValue], color);
+                                }
+                            }
+                        })
+                        .on("blur", () => {
+                            if (userChangesLegend(d3.event.target.textContent, true, color)) {
+                                updateGeoMap(customData[slideValue], color);
+                            }
+                        });
+
+                    // Updates legend maximum value
+                    d3.select(".legendmax")
+                        .on("keydown", () => {
+                            if (d3.event.keyCode === 13) {
+                                d3.event.preventDefault();
+                                if (userChangesLegend(d3.event.target.textContent, false, color)) {
+                                    updateGeoMap(customData[slideValue], color);
+                                }
+                            }
+                        }).on("blur", () => {
+                            if (userChangesLegend(d3.event.target.textContent, false, color)) {
+                                updateGeoMap(customData[slideValue], color);
+                            }
+                        });
         
                     d3.select("#parseroutput")
                         .text("Entered.")

@@ -139,3 +139,7 @@ label {
     stroke: steelblue;
     stroke-width: 3;
 }
+
+#mapoptionscontainer {
+    margin-bottom: 10px;
+}
