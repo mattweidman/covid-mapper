@@ -12,7 +12,8 @@ const svg = d3.select("#mapcontainer").append("svg")
 
 const legendsvg = d3.select("#legendcontainer").append("svg")
     .attr("width", width)
-    .attr("height", legendHeight);
+    .attr("height", legendHeight)
+    .style("background-color", 'white');
 
 const path = d3.geoPath();
 
@@ -1135,15 +1136,26 @@ function downloadAsPng() {
         serializer = new XMLSerializer(),
         svgStr = serializer.serializeToString(svg);
 
-    data = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
+    console.log(svg);
+
+    console.log(d3.select("#legendcontainer").select("svg").node());
+    var legend = d3.select("#legendcontainer").select("svg").node(),
+        img2 = new Image(),
+        serializer2 = new XMLSerializer(),
+        legendStr = serializer2.serializeToString(legend);
+
+    var data = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
+    var data2 = 'data:image/svg+xml;base64,'+window.btoa(legendStr);
 
     var canvas = document.createElement("canvas");
     canvas.width = width;
-    canvas.height = height;
+    canvas.height = height+legendHeight;
     context = canvas.getContext("2d");
     img.src = data;
+    img2.src = data2;
     img.onload = function() {
         context.drawImage(img, 0, 0);
+        context.drawImage(img2, 0, height);
         var canvasdata = canvas.toDataURL("image/png");
         var pngimg = '<img src="'+canvasdata+'">';
         var a = document.createElement("a");
