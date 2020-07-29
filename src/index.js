@@ -47,9 +47,14 @@ mapg.append("path")
 
 createLegend();
 
-d3.select("#mapoptions").on("change", (a, b, c) => {
+d3.select("#mapoptions").on("change", () => {
     const optionSelected = d3.select("#mapoptions").node().value;
     updateMapType(optionSelected);
+});
+
+d3.select("#viewtype").on("change", () => {
+    const optionSelected = d3.select("#viewtype").node().value;
+    updateViewType(optionSelected);
 });
 
 // Set properties.id and properties.name for every region
@@ -312,6 +317,8 @@ function showWorldMap(whoRegion) {
     path.projection(d3.geoRobinson());
 
     hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "visible");
+    d3.select("#viewtype").property("value", "worldflat");
 
     Promise.all([
         d3.json("./data/countries.json"),
@@ -340,6 +347,7 @@ function showUsaCounties() {
     path.projection(d3.geoAlbersUsa());
 
     hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
         d3.json("./data/us.json"),
@@ -361,6 +369,7 @@ function showUsaStates() {
     path.projection(d3.geoAlbersUsa());
 
     hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
         d3.json("./data/us.json"),
@@ -378,7 +387,7 @@ function showUsaStates() {
     });
 }
 
-function showRegion3d(rotation, scale, whoRegion) {
+function set3dProjection(rotation, scale) {
     const projection = d3.geoSatellite()
         .scale(scale)
         .rotate(rotation);
@@ -387,27 +396,21 @@ function showRegion3d(rotation, scale, whoRegion) {
 
     showSphere();
 
-    Promise.all([
-        d3.json("./data/countries.json"),
-        d3.csv("./data/WHO-COVID-19-global-data.csv"),
-        d3.csv("./data/world-bank-population-isoa2.csv")
-    ]).then(function (data) {
-        const geomap = data[0];
-        const rawData = data[1];
-        const rawPopulationData = data[2];
+    mapg.attr("transform", "");
+    mapg.selectAll("path.geofeatures")
+        .attr("d", path);
+}
 
-        const allDates = getDateListFromWorldData(rawData);
-        const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-        var geomapFeatures = geomap.features;
-        preprocessWorldMap(geomapFeatures);
+function setFlatProjection() {
+    const projection = d3.geoRobinson();
 
-        if (whoRegion) {
-            const whoRegions = getWhoRegionsMap(rawData);
-            geomapFeatures = geomapFeatures.filter(f => whoRegions[f.properties.id] === whoRegion);
-        }
+    path.projection(projection);
 
-        dataLoaded(geomapFeatures, allDates, baseData);
-    });
+    hideSphere();
+
+    mapg.attr("transform", "");
+    mapg.selectAll("path.geofeatures")
+        .attr("d", path);
 }
 
 function hideSphere() {
@@ -432,20 +435,32 @@ function updateMapType(mapType) {
         showUsaCounties();
     } else if (mapType === "usastates") {
         showUsaStates();
-    } else if (mapType === "northam3d") {
-        showRegion3d([92, -50], 500);
-    } else if (mapType === "southam3d") {
-        showRegion3d([59, 10], 500);
-    } else if (mapType === "africa3d") {
-        showRegion3d([-17, -10], 500);
-    } else if (mapType === "europe3d") {
-        showRegion3d([-20, -58], 887);
-    } else if (mapType === "swasia3d") {
-        showRegion3d([-42, -30], 950);
-    } else if (mapType === "easia3d") {
-        showRegion3d([-96, -38], 500);
-    } else if (mapType === "wpac3d") {
-        showRegion3d([-140, 11], 500);
+    }
+}
+
+function updateViewType(viewType) {
+    if (viewType === "worldflat") {
+        setFlatProjection();
+    } else if (viewType === "northam") {
+        set3dProjection([92, -50], 525);
+    } else if (viewType === "carib") {
+        set3dProjection([85, -22], 1150);
+    } else if (viewType === "southam") {
+        set3dProjection([59, 15], 550);
+    } else if (viewType === "wafrica") {
+        set3dProjection([-4, -20], 800);
+    } else if (viewType === "safrica") {
+        set3dProjection([-28, 10], 900);
+    } else if (viewType === "europe") {
+        set3dProjection([-20, -58], 887);
+    } else if (viewType === "swasia") {
+        set3dProjection([-42, -30], 950);
+    } else if (viewType === "seasia") {
+        set3dProjection([-87, -21], 900);
+    } else if (viewType === "easia") {
+        set3dProjection([-118, -38], 900);
+    } else if (viewType === "wpac") {
+        set3dProjection([-140, 11], 500);
     }
 }
 
@@ -490,7 +505,7 @@ function resetGeoMap(geomapFeatures) {
         .data(geomapFeatures)
         .enter().append("path")
         .attr("class", "geofeatures")
-        .attr("id", d => "feature" + d.properties.id)
+        .attr("id", d => "region_" + d.properties.id)
         .attr("d", path)
         .style("fill", lowColor)
         .on("mouseover", function(d) {
