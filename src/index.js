@@ -357,7 +357,6 @@ function showUsaStates() {
 
 // Respond to event where user changes map type.
 function updateMapType(mapType) {
-    console.log("maptypechanged")
     if (mapType === "worldcountries") {
         showWorldMap();
     } else if (mapType === "usacounties") {
@@ -550,6 +549,7 @@ function autocomplete(input, suggestions) {
                             .text(err)
                             .style("color", "darkred");
                     }
+                    document.getElementById("expressioninput").focus();
                 });
                 a.appendChild(b); 
             };
@@ -569,7 +569,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
-        console.log("hi")
         if (inputText === "") {
             d3.select("#parseroutput")
                 .text("Enter an expression.")
@@ -638,7 +637,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 };
 
 function inputSuggestion() {
-    console.log("hi2");
     var input = document.getElementById("expressioninput");
     var dropdown = document.getElementById("suggestions");
     input.value = dropdown.value;
@@ -662,10 +660,9 @@ function loadSuggestions(){
         for (var key in samples) {
             var dropdown = document.getElementById("suggestions");
             var option = document.createElement("OPTION");
-            option.innerHTML = key;
-            option.value = samples[key];
+            option.innerHTML = samples[key]["title"]
+            option.value = samples[key]["expression"];
             dropdown.options.add(option);
-            console.log(option);
         }
         document.getElementById("suggestions").onchange = inputSuggestion;
     });

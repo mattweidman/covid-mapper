@@ -21,6 +21,10 @@
     "/": "operator to divide the numbers"
   },
   "expressions": {
+    "TotalCasesOnaDay": {
+      "title": "Total confirmed cases on a particuar day",
+      "expression": "cases(day)"
+    },
     "NewCasesOnaDay": {
       "title": "New cases on a particuar day",
       "expression": "newcases(day)"
@@ -28,10 +32,6 @@
     "NewDeathsOnaDay": {
       "title": "New deaths on a particuar day",
       "expression": "newdeaths(day)"
-    },
-    "TotalCasesOnaDay": {
-      "title": "Total confirmed cases on a particuar day",
-      "expression": "cases(day)"
     },
     "TotalCasesOnaDayPer1M": {
       "title": "Total confirmed cases on a particuar day per million",
