@@ -452,7 +452,7 @@ function updateViewType(viewType) {
     } else if (viewType === "safrica") {
         set3dProjection([-28, 10], 900);
     } else if (viewType === "europe") {
-        set3dProjection([-20, -58], 887);
+        set3dProjection([-15, -55], 850);
     } else if (viewType === "swasia") {
         set3dProjection([-42, -30], 950);
     } else if (viewType === "seasia") {
