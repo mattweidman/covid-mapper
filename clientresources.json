@@ -82,12 +82,12 @@
       "expression": "cases(day)-cases(day-30)"
     },
     "TotalNewDeathsInLast7Days": {
-      "title": "Total new death casess in last 7 days",
-      "expression": "deaths(day)-cases(day-7)"
+      "title": "Total new death cases in last 7 days",
+      "expression": "deaths(day)-deaths(day-7)"
     },
     "TotalNewDeathsInLast30Days": {
       "title": "Total new death cases in last 30 days",
-      "expression": "deaths(day)-cases(day-30)"
+      "expression": "deaths(day)-deaths(day-30)"
     },
     "MaxNewCasesinLast7Days": {
       "title": "Max new cases in last 7 days",
