@@ -18,7 +18,7 @@ const path = d3.geoPath();
 
 var USAdates = []
 
-var wordDates = []
+var worldDates = []
 
 var currast; 
 
@@ -270,7 +270,7 @@ function computeCustomData(baseData, ast) {
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomTimeData(allLocationsallData, locationId) {
     const singleLocData = [];
-    if (d3.select("#mapoptions").node().value === "worldcountries") {
+    if (d3.select("#mapoptions").node().value === "worldflat") {
         dates = worldDates;
     } else {
         dates = USAdates;
@@ -282,7 +282,7 @@ function computeCustomTimeData(allLocationsallData, locationId) {
             maxValue = allLocationsallData[i][locationId];
         }
     }
-    return [singleLocData, maxValue];
+    return [singleLocData, maxValue, dates];
 }
 
 // Percentiles come from entire customData matrix, not just one row or column.
@@ -583,11 +583,14 @@ function updateGeoMap(locationValues, color, allDatesallLocations) {
         })
         .on("click", function(d) {
             d3.select("#timechart").selectAll("*").remove();
-
+            console.log(worldDates);
+            console.log(USAdates);
             // compute appropriate data for this location
             const timeGraphData = computeCustomTimeData(allDatesallLocations, d.properties.id);
             const maxValue = timeGraphData[1];
             const timeValueObjects = timeGraphData[0];
+            const dates = timeGraphData[2];
+            console.log(dates);
 
             // set margins
             var margin = {top: 20, right: 150, bottom: 50, left: 75};
@@ -1003,17 +1006,17 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             "name": value.name
                         });
                     }
-                    
+
                     d3.select("#timechart").selectAll("*").remove();
                     updateMapTitle(inputText);
                     updateLegendLimits(domain);
-                    updateGeoMap(customData[slideValue], color);
+                    updateGeoMap(customData[slideValue], color, customData);
                     updateTop5(customData[slideValue], names);
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData[slideValue], color);
+                        updateGeoMap(customData[slideValue], color, customData);
                         updateTop5(customData[slideValue], names);
                     });
 
@@ -1023,13 +1026,13 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                    updateGeoMap(customData[slideValue], color);
+                                    updateGeoMap(customData[slideValue], color, customData);
                                 }
                             }
                         })
                         .on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                updateGeoMap(customData[slideValue], color);
+                                updateGeoMap(customData[slideValue], color, customData);
                             }
                         });
 
@@ -1039,12 +1042,12 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                    updateGeoMap(customData[slideValue], color);
+                                    updateGeoMap(customData[slideValue], color, customData);
                                 }
                             }
                         }).on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                updateGeoMap(customData[slideValue], color);
+                                updateGeoMap(customData[slideValue], color, customData);
                             }
                         });
         
