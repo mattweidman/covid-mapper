@@ -2,6 +2,24 @@
   "siteTitle": "Covid-19 Mapper",
   "Path": "The path is ",
   "siteSubTitle": "Make your own graph by entering an expression:",
+  "docs": {
+    "cases": "dataset for the total number of confirmed cases up to the given day",
+    "deaths": "dataset for the total number of deaths up to the given day",
+    "newcases": "dataset for the number of new cases on the given day",
+    "newdeaths": "dataset for the number of new deaths on the given day",
+    "day": "indicates you would like to access data for the current day on the slider",
+    "first": "indicates you would like to access data for the first day in the dataset",
+    "last": "indicates you would like to access data for the last day in the dataset",
+    "population": "population of the region (county)",
+    "sum": "aggregate sum operation to be used over a range of data",
+    "average": "aggregate average operation to be used over a range of data",
+    "max": "aggregate max operation to be used over a range of data",
+    "min": "aggregate min operation to be used over a range of data",
+    "+": "operator to add the numbers",
+    "-": "operator to substract the numbers",
+    "*": "operator to multiply the numbers",
+    "/": "operator to divide the numbers"
+  },
   "expressions": {
     "NewCasesOnaDay": {
       "title": "New cases on a particuar day",
@@ -90,96 +108,6 @@
     "TotalRecoveredCasesSoFar": {
       "title": "Total recovered cases so far",
       "expression": "sum(newcases(first,last))- sum(cases(first,last))"
-    }
-  },
-  "keywords": {
-    "newcases": {
-      "keyword": "newcases",
-      "description": "total new cases on a day"
-    },
-    "newdeaths": {
-      "keyword": "newdeaths",
-      "description": "total new deaths on a day"
-    },
-    "totalcases": {
-      "keyword": "totalcases",
-      "description": "total cases on a day"
-    },
-    "totalcasespermillion": {
-      "keyword": "totalcasespermillion",
-      "description": "total Confirmed cases on a particuar day per million"
-    },
-    "totaldeaths": {
-      "keyword": "totaldeaths",
-      "description": "total Deaths cases on a particuar day"
-    },
-    "totaldeathspermillion": {
-      "keyword": "totaldeathspermillion",
-      "description": "total deaths cases on a particuar day per million"
-    },
-    "averagecases": {
-      "keyword": "averagecases",
-      "description": "average cases in Last 7 Days"
-    },
-    "averagedeaths": {
-      "keyword": "averagedeaths",
-      "description": "average death cases in Last 7 Days"
-    },
-    "averagecasesinlastonemonth": {
-      "keyword": "averagecasesinlastonemonth",
-      "description": "average cases in last 30 days"
-    },
-    "averagedeathsinlastonemonth": {
-      "keyword": "averagedeathsinlastonemonth",
-      "description": "average death cases in last 30 days"
-    },
-    "maxnewcases": {
-      "keyword": "maxnewcases",
-      "description": "max new cases per day so far"
-    },
-    "maxnewdeaths": {
-      "keyword": "maxnewdeaths",
-      "description": "max new death cases per day so far"
-    },
-    "averagedeathsperday": {
-      "keyword": "averagedeathsperday",
-      "description": "average deaths per day"
-    },
-    "totalnewCases": {
-      "keyword": "totalnewCases",
-      "description": "total new cases in last 7 days"
-    },
-    "totalnewcasesinlastonemonth": {
-      "keyword": "totalnewcasesinlastonemonth",
-      "description": "Total new cases in last 30 days"
-    },
-    "totalnewdeaths": {
-      "keyword": "totalnewdeaths",
-      "description": "Total new death casess in last 7 days"
-    },
-    "totalnewdeathsinlastonemonth": {
-      "keyword": "totalnewdeathsinlastonemonth",
-      "description": "total new death cases in last 30 days"
-    },
-    "maxnewcasesinlastoneweek": {
-      "keyword": "maxnewcasesinlastoneweek",
-      "description": "max new cases in last 7 days"
-    },
-    "maxnewcasesinlastonemonth": {
-      "keyword": "maxnewcasesinlastonemonth",
-      "description": "Max new cases in last 30 days"
-    },
-    "minnewcasesinlastoneweek": {
-      "keyword": "minnewcasesinlastoneweek",
-      "description": "min new cases in last 7 days"
-    },
-    "minnewcasesinlastonemonth": {
-      "keyword": "minnewcasesinlastonemonth",
-      "description": "min new cases in last 30 days"
-    },
-    "totalrecoveredcases": {
-      "keyword": "totalrecoveredcases",
-      "description": "Total recovered cases so far"
     }
   }
 }
