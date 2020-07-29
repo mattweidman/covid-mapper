@@ -35,6 +35,12 @@ div.tooltip {
     pointer-events: none;
 }
 
+h3 {
+    margin-top: 20px;
+    margin-bottom: -2px;
+    font-style: italic;
+}
+
 p {
    font-family: 'Proxima Nova', sans-serif;
    font-size:10px;
@@ -147,3 +153,15 @@ label {
 #showtop5container {
     margin-top: 20px;
 }
+
+#doc > script > table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
