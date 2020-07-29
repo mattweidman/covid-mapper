@@ -458,6 +458,7 @@ function updateMapType(mapType) {
     } else if (mapType === "usastates") {
         showUsaStates();
     }
+    d3.select("#timechart").selectAll("*").remove();
 }
 
 function updateViewType(viewType) {
