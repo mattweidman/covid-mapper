@@ -7,7 +7,8 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>COVID-19 cases</title>
+    <title>COVID-19 cases</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
     <script type="text/javascript" src="https://d3js.org/topojson.v1.min.js"></script> 
     <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
@@ -16,12 +17,19 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<h1>COVID-19 Map Maker</h1>
+    <h1>COVID-19 Map Maker</h1>
     <div id="expressioncontainer">
         <h4>Make your own graph by entering an expression:</h4>
-        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
         <div id="parseroutput"></div>
+        <input type="text" id="expressioninput" value="cases(day)"></input><br></br>
     </div>
+    <div id="suggestionscontainer">
+        <label for="suggestions">Suggested expressions:</label>
+        <select name="suggestions" id="suggestions">
+
+        </select>
+    </div>
+    <p></p>
     <div id="mapoptionscontainer">
         <label for="mapoptions">Select map type:</label>
         <select name="mapoptions" id="mapoptions">
@@ -49,7 +57,9 @@
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>
     </div>
-    <p>Source: usafacts.org, covid19.who.int, data.worldbank.org</p>
+    <p>Sources: usafacts.org, covid19.who.int, data.worldbank.org</p>
     <script src="src/index.js"></script>
+    <br>
+    <button onclick=downloadAsPng()>CLICK TO DOWNLOAD AS PNG</button>
 </body>
 </html>

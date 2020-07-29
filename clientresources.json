@@ -1,4 +1,114 @@
 {
-    "siteTitle": "Covid-19 Mapper",
-    "siteSubTitle": "Make your own graph by entering an expression:"
+  "siteTitle": "Covid-19 Mapper",
+  "Path": "The path is ",
+  "siteSubTitle": "Make your own graph by entering an expression:",
+  "docs": {
+    "cases": "dataset for the total number of confirmed cases up to the given day",
+    "deaths": "dataset for the total number of deaths up to the given day",
+    "newcases": "dataset for the number of new cases on the given day",
+    "newdeaths": "dataset for the number of new deaths on the given day",
+    "day": "indicates you would like to access data for the current day on the slider",
+    "first": "indicates you would like to access data for the first day in the dataset",
+    "last": "indicates you would like to access data for the last day in the dataset",
+    "population": "population of the region (county)",
+    "sum": "aggregate sum operation to be used over a range of data",
+    "average": "aggregate average operation to be used over a range of data",
+    "max": "aggregate max operation to be used over a range of data",
+    "min": "aggregate min operation to be used over a range of data",
+    "+": "operator to add the numbers",
+    "-": "operator to substract the numbers",
+    "*": "operator to multiply the numbers",
+    "/": "operator to divide the numbers"
+  },
+  "expressions": {
+    "TotalCasesOnaDay": {
+      "title": "Total confirmed cases on a particuar day",
+      "expression": "cases(day)"
+    },
+    "NewCasesOnaDay": {
+      "title": "New cases on a particuar day",
+      "expression": "newcases(day)"
+    },
+    "NewDeathsOnaDay": {
+      "title": "New deaths on a particuar day",
+      "expression": "newdeaths(day)"
+    },
+    "TotalCasesOnaDayPer1M": {
+      "title": "Total confirmed cases on a particuar day per million",
+      "expression": "cases(day)/population*1000000"
+    },
+    "TotalDeathsOnaDay": {
+      "title": "Total death cases on a particuar day",
+      "expression": "deaths(day)"
+    },
+    "TotalDeathsOnaDayPer1M": {
+      "title": "Total death cases on a particuar day per million",
+      "expression": "deaths(day)/population*1000000"
+    },
+    "Last7DaysAverageCases": {
+      "title": "Average cases in Last 7 Days",
+      "expression": "average(cases(day-7,day))"
+    },
+    "Last7DaysAverageDeaths": {
+      "title": "Average death cases in Last 7 Days",
+      "expression": "average(deaths(day-7,day))"
+    },
+    "Last30DaysAverageCases": {
+      "title": "Average cases in last 30 days",
+      "expression": "average(cases(day-30,day))"
+    },
+    "Last30DaysAverageDeaths": {
+      "title": "Average death cases in last 30 days",
+      "expression": "average(deaths(day-30,day))"
+    },
+    "MaxNewCasesPerDaysoFar": {
+      "title": "Max new cases per day so far",
+      "expression": "max(newcases(first,last))"
+    },
+    "MaxNewDeathsPerDaysoFar": {
+      "title": "Max new death cases per day so far",
+      "expression": "max(newdeaths(first,last))"
+    },
+    "AverageDeathsPerDay": {
+      "title": "Average deaths per day",
+      "expression": "average(deaths(first,last))"
+    },
+    "TotalNewCasesInLast7Days": {
+      "title": "Total new cases in last 7 days",
+      "expression": "cases(day)-cases(day-7)"
+    },
+    "TotalNewCasesInLast30Days": {
+      "title": "Total new cases in last 30 days",
+      "expression": "cases(day)-cases(day-30)"
+    },
+    "TotalNewDeathsInLast7Days": {
+      "title": "Total new death casess in last 7 days",
+      "expression": "deaths(day)-cases(day-7)"
+    },
+    "TotalNewDeathsInLast30Days": {
+      "title": "Total new death cases in last 30 days",
+      "expression": "deaths(day)-cases(day-30)"
+    },
+    "MaxNewCasesinLast7Days": {
+      "title": "Max new cases in last 7 days",
+      "expression": "max(newcases(day-7,day)"
+    },
+    "MaxNewCasesinLast30Days": {
+      "title": "Max new cases in last 30 days",
+      "expression": "max(newcases(day-30,day))"
+    },
+    "MinNewCasesinLast7Days": {
+      "title": "Min new cases in last 7 days",
+      "expression": "min(newcases(day-7,day))"
+    },
+    "MinNewCasesinLast30Days": {
+      "title": "Min new cases in last 30 days",
+      "expression": "min(newcases(day-30,day))"
+    },
+    "TotalRecoveredCasesSoFar": {
+      "title": "Total recovered cases so far",
+      "expression": "sum(newcases(first,last))- sum(cases(first,last))"
+    }
+  }
 }
+ 

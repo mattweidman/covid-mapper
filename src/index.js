@@ -26,6 +26,10 @@ linearGradient.append("stop")
 
 const path = d3.geoPath();
 
+var options = [];
+
+var docs = {};
+
 moveSelectionsToBackOrFront();
 
 const mapg = svg.append("g")
@@ -44,6 +48,9 @@ showWorldMap();
 mapg.append("path")
     .attr("class", "sphereoutline")
     .style("visibility", "hidden");
+
+loadDocs();
+loadSuggestions();
 
 createLegend();
 
@@ -591,6 +598,78 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
+function loadDocs() {
+    $.getJSON('../../clientresources.json', function(data) {
+        docs = data.docs;
+        options = Object.keys(docs);
+    });
+}
+function closeAutocomplete() {
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+        x[i].parentNode.removeChild(x[i]);
+    }
+}
+
+function autocomplete(input, suggestions) {
+    input.addEventListener("input", function(e) {
+        var a, b, i, val = this.value;
+
+        closeAutocomplete();
+        if (!val) {
+            return false;
+        }
+        var a, b, i;
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autcomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        this.parentNode.appendChild(a);
+
+        var starter = Math.max(
+            0, 
+            val.lastIndexOf("(") + 1, 
+            val.lastIndexOf(" ") + 1, 
+            val.lastIndexOf("+") + 1,
+            val.lastIndexOf("*") + 1,
+            val.lastIndexOf("/") + 1,
+            val.lastIndexOf("-") + 1
+        );
+        var currentWord = val.substring(starter);
+
+        for (i = 0; i < suggestions.length; i++) {
+            if (suggestions[i].substring(0, currentWord.length).toLowerCase() === currentWord.toLowerCase()) {
+                b = document.createElement("DIV");
+                b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
+                b.innerHTML += suggestions[i].substring(currentWord.length);
+                b.innerHTML += ": " + docs[suggestions[i]];
+                b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
+
+                b.addEventListener("click", function(e) {
+                    input.value = input.value.substring(0, starter) + this.getElementsByTagName("input")[0].value;
+                    closeAutocomplete();
+                    try {
+                        ast = peg$parse(input.value);
+                        d3.select("#parseroutput")
+                                    .text("Valid expression. Press enter to use.")
+                                    .style("color", "black");
+                    } catch (err) {
+                        d3.select("#parseroutput")
+                            .text(err)
+                            .style("color", "darkred");
+                    }
+                    document.getElementById("expressioninput").focus();
+                });
+                a.appendChild(b); 
+            };
+        };
+    });
+};
+
+
+document.addEventListener("click", function(e) {
+    closeAutocomplete();
+})
+
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
@@ -603,6 +682,10 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                 .text("Enter an expression.")
                 .style("color", "black");
         }
+
+        // auto-complete suggestions here
+        // referencing https://www.w3schools.com/howto/howto_js_autocomplete.asp
+        autocomplete(document.getElementById("expressioninput"), options);
         
         var ast;
         try {
@@ -660,3 +743,58 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     inputElement.text(defaultExpression);
     updateExpressionInput(defaultExpression);
 };
+
+function inputSuggestion() {
+    var input = document.getElementById("expressioninput");
+    var dropdown = document.getElementById("suggestions");
+    input.value = dropdown.value;
+    document.getElementById("expressioninput").focus();
+    var ast;
+    try {
+        ast = peg$parse(dropdown.value);
+        d3.select("#parseroutput")
+                    .text("Valid expression. Press enter to use.")
+                    .style("color", "black");
+    } catch (err) {
+        d3.select("#parseroutput")
+            .text(err)
+            .style("color", "darkred");
+    }
+}
+
+function loadSuggestions(){ 
+    $.getJSON('../../clientresources.json', function(data) {
+        var samples = data.expressions;
+        for (var key in samples) {
+            var dropdown = document.getElementById("suggestions");
+            var option = document.createElement("OPTION");
+            option.innerHTML = samples[key]["title"]
+            option.value = samples[key]["expression"];
+            dropdown.options.add(option);
+        }
+        document.getElementById("suggestions").onchange = inputSuggestion;
+    });
+}
+function downloadAsPng() {
+    var svg = d3.select("svg").node(),
+        img = new Image(),
+        serializer = new XMLSerializer(),
+        svgStr = serializer.serializeToString(svg);
+
+    data = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
+
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    context = canvas.getContext("2d");
+    img.src = data;
+    img.onload = function() {
+        context.drawImage(img, 0, 0);
+        var canvasdata = canvas.toDataURL("image/png");
+        var pngimg = '<img src="'+canvasdata+'">';
+        var a = document.createElement("a");
+        a.download = "covid_data.png";
+        a.href = canvasdata;
+        a.click();
+    };
+}
