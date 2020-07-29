@@ -222,6 +222,21 @@ function setPopulationData(baseData, rawPopulationData) {
     }
 }
 
+function getWhoRegionsMap(rawWorldData) {
+    const whoRegions = {};
+
+    for (const row of rawWorldData) {
+        const countryId = row[" Country_code"];
+        const whoRegion = row[" WHO_region"];
+
+        if (!(whoRegion in whoRegions)) {
+            whoRegions[countryId] = whoRegion;
+        }
+    }
+
+    return whoRegions;
+}
+
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
@@ -293,7 +308,7 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
-function showWorldMap() {
+function showWorldMap(whoRegion) {
     path.projection(d3.geoRobinson());
 
     hideSphere();
@@ -309,34 +324,13 @@ function showWorldMap() {
 
         const allDates = getDateListFromWorldData(rawData);
         const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-        const geomapFeatures = geomap.features;
+        var geomapFeatures = geomap.features;
         preprocessWorldMap(geomapFeatures);
 
-        dataLoaded(geomapFeatures, allDates, baseData);
-    });
-}
-
-function showGlobe() {
-    const projection = d3.geoSatellite()
-        .rotate([125, -46]);
-
-    path.projection(projection);
-
-    showSphere();
-
-    Promise.all([
-        d3.json("./data/countries.json"),
-        d3.csv("./data/WHO-COVID-19-global-data.csv"),
-        d3.csv("./data/world-bank-population-isoa2.csv")
-    ]).then(function (data) {
-        const geomap = data[0];
-        const rawData = data[1];
-        const rawPopulationData = data[2];
-
-        const allDates = getDateListFromWorldData(rawData);
-        const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-        const geomapFeatures = geomap.features;
-        preprocessWorldMap(geomapFeatures);
+        if (whoRegion) {
+            const whoRegions = getWhoRegionsMap(rawData);
+            geomapFeatures = geomapFeatures.filter(f => whoRegions[f.properties.id] === whoRegion);
+        }
 
         dataLoaded(geomapFeatures, allDates, baseData);
     });
@@ -384,6 +378,38 @@ function showUsaStates() {
     });
 }
 
+function showRegion3d(rotation, scale, whoRegion) {
+    const projection = d3.geoSatellite()
+        .scale(scale)
+        .rotate(rotation);
+
+    path.projection(projection);
+
+    showSphere();
+
+    Promise.all([
+        d3.json("./data/countries.json"),
+        d3.csv("./data/WHO-COVID-19-global-data.csv"),
+        d3.csv("./data/world-bank-population-isoa2.csv")
+    ]).then(function (data) {
+        const geomap = data[0];
+        const rawData = data[1];
+        const rawPopulationData = data[2];
+
+        const allDates = getDateListFromWorldData(rawData);
+        const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
+        var geomapFeatures = geomap.features;
+        preprocessWorldMap(geomapFeatures);
+
+        if (whoRegion) {
+            const whoRegions = getWhoRegionsMap(rawData);
+            geomapFeatures = geomapFeatures.filter(f => whoRegions[f.properties.id] === whoRegion);
+        }
+
+        dataLoaded(geomapFeatures, allDates, baseData);
+    });
+}
+
 function hideSphere() {
     d3.select(".sphereoutline")
         .style("visibility", "hidden");
@@ -402,12 +428,24 @@ function showSphere() {
 function updateMapType(mapType) {
     if (mapType === "worldflat") {
         showWorldMap();
-    } else if (mapType === "worldglobe") {
-        showGlobe();
     } else if (mapType === "usacounties") {
         showUsaCounties();
     } else if (mapType === "usastates") {
         showUsaStates();
+    } else if (mapType === "northam3d") {
+        showRegion3d([92, -50], 500);
+    } else if (mapType === "southam3d") {
+        showRegion3d([59, 10], 500);
+    } else if (mapType === "africa3d") {
+        showRegion3d([-17, -10], 500);
+    } else if (mapType === "europe3d") {
+        showRegion3d([-20, -58], 887);
+    } else if (mapType === "swasia3d") {
+        showRegion3d([-42, -30], 950);
+    } else if (mapType === "easia3d") {
+        showRegion3d([-96, -38], 500);
+    } else if (mapType === "wpac3d") {
+        showRegion3d([-140, 11], 500);
     }
 }
 
