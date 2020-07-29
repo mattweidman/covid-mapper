@@ -27,6 +27,10 @@ linearGradient.append("stop")
 
 const path = d3.geoPath();
 
+var options = [];
+
+var docs = {};
+
 moveSelectionsToBackOrFront();
 
 const mapg = svg.append("g")
@@ -40,11 +44,25 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 showWorldMap();
+
+// Sphere shape
+mapg.append("path")
+    .attr("class", "sphereoutline")
+    .style("visibility", "hidden");
+
+loadDocs();
+loadSuggestions();
+
 createLegend();
 
-d3.select("#mapoptions").on("change", (a, b, c) => {
+d3.select("#mapoptions").on("change", () => {
     const optionSelected = d3.select("#mapoptions").node().value;
     updateMapType(optionSelected);
+});
+
+d3.select("#viewtype").on("change", () => {
+    const optionSelected = d3.select("#viewtype").node().value;
+    updateViewType(optionSelected);
 });
 
 // Set properties.id and properties.name for every region
@@ -217,6 +235,21 @@ function setPopulationData(baseData, rawPopulationData) {
     }
 }
 
+function getWhoRegionsMap(rawWorldData) {
+    const whoRegions = {};
+
+    for (const row of rawWorldData) {
+        const countryId = row[" Country_code"];
+        const whoRegion = row[" WHO_region"];
+
+        if (!(whoRegion in whoRegions)) {
+            whoRegions[countryId] = whoRegion;
+        }
+    }
+
+    return whoRegions;
+}
+
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
@@ -288,8 +321,12 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
-function showWorldMap() {
+function showWorldMap(whoRegion) {
     path.projection(d3.geoRobinson());
+
+    hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "visible");
+    d3.select("#viewtype").property("value", "worldflat");
 
     Promise.all([
         d3.json("./data/countries.json"),
@@ -302,8 +339,13 @@ function showWorldMap() {
 
         const allDates = getDateListFromWorldData(rawData);
         const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
-        const geomapFeatures = geomap.features;
+        var geomapFeatures = geomap.features;
         preprocessWorldMap(geomapFeatures);
+
+        if (whoRegion) {
+            const whoRegions = getWhoRegionsMap(rawData);
+            geomapFeatures = geomapFeatures.filter(f => whoRegions[f.properties.id] === whoRegion);
+        }
 
         dataLoaded(geomapFeatures, allDates, baseData);
     });
@@ -311,6 +353,9 @@ function showWorldMap() {
 
 function showUsaCounties() {
     path.projection(d3.geoAlbersUsa());
+
+    hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
         d3.json("./data/us.json"),
@@ -331,6 +376,9 @@ function showUsaCounties() {
 function showUsaStates() {
     path.projection(d3.geoAlbersUsa());
 
+    hideSphere();
+    d3.selectAll(".viewtype").style("visibility", "hidden");
+
     Promise.all([
         d3.json("./data/us.json"),
         d3.csv("./data/covid_usa.csv")
@@ -347,14 +395,81 @@ function showUsaStates() {
     });
 }
 
+function set3dProjection(rotation, scale) {
+    const projection = d3.geoSatellite()
+        .rotate(rotation);
+
+    path.projection(projection);
+
+    showSphere();
+
+    svg.call(zoom.transform, d3.zoomIdentity);
+    svg.call(zoom.scaleTo, scale / 432.147);
+
+    mapg.selectAll("path.geofeatures")
+        .attr("d", path);
+}
+
+function setFlatProjection() {
+    const projection = d3.geoRobinson();
+
+    path.projection(projection);
+
+    hideSphere();
+
+    svg.call(zoom.transform, d3.zoomIdentity);
+    mapg.selectAll("path.geofeatures")
+        .attr("d", path);
+}
+
+function hideSphere() {
+    d3.select(".sphereoutline")
+        .style("visibility", "hidden");
+}
+
+function showSphere() {
+    d3.select(".sphereoutline")
+        .attr("d", path({ type: "Sphere" }))
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", 1)
+        .style("visibility", "visible");
+}
+
 // Respond to event where user changes map type.
 function updateMapType(mapType) {
-    if (mapType === "worldcountries") {
+    if (mapType === "worldflat") {
         showWorldMap();
     } else if (mapType === "usacounties") {
         showUsaCounties();
     } else if (mapType === "usastates") {
         showUsaStates();
+    }
+}
+
+function updateViewType(viewType) {
+    if (viewType === "worldflat") {
+        setFlatProjection();
+    } else if (viewType === "northam") {
+        set3dProjection([92, -50], 525);
+    } else if (viewType === "carib") {
+        set3dProjection([85, -27], 1150);
+    } else if (viewType === "southam") {
+        set3dProjection([59, 15], 550);
+    } else if (viewType === "wafrica") {
+        set3dProjection([-4, -22], 800);
+    } else if (viewType === "safrica") {
+        set3dProjection([-28, 8], 800);
+    } else if (viewType === "europe") {
+        set3dProjection([-15, -58], 850);
+    } else if (viewType === "swasia") {
+        set3dProjection([-42, -30], 900);
+    } else if (viewType === "seasia") {
+        set3dProjection([-87, -24], 850);
+    } else if (viewType === "easia") {
+        set3dProjection([-118, -40], 850);
+    } else if (viewType === "wpac") {
+        set3dProjection([-140, 11], 550);
     }
 }
 
@@ -395,11 +510,15 @@ function resetGeoMap(geomapFeatures) {
     svg.selectAll("g.mapg > path").remove();
     svg.selectAll("g.top5").remove();
     svg.selectAll("g.title").remove();
+    svg.call(zoom.transform, d3.zoomIdentity);
+    svg.selectAll(".geofeatures").remove();
     
     const data = svg.select("g.mapg")
-        .selectAll("path")
+        .selectAll("path.geofeatures")
         .data(geomapFeatures)
         .enter().append("path")
+        .attr("class", "geofeatures")
+        .attr("id", d => "region_" + d.properties.id)
         .attr("d", path)
         .style("fill", lowColor)
         .on("mouseover", function(d) {
@@ -432,7 +551,7 @@ function resetGeoMap(geomapFeatures) {
 // locationValues: map geo id -> value
 // color: d3 coloring function
 function updateGeoMap(locationValues, color) {
-    svg.selectAll(".mapg path")
+    svg.selectAll(".geofeatures")
         .style ( "fill" , function (d) {
             return color(locationValues[d.properties.id]);
         })
@@ -502,6 +621,78 @@ function updateLegendLimits(domain) {
         .text(domain[1]);
 }
 
+function loadDocs() {
+    $.getJSON('../../clientresources.json', function(data) {
+        docs = data.docs;
+        options = Object.keys(docs);
+    });
+}
+function closeAutocomplete() {
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+        x[i].parentNode.removeChild(x[i]);
+    }
+}
+
+function autocomplete(input, suggestions) {
+    input.addEventListener("input", function(e) {
+        var a, b, i, val = this.value;
+
+        closeAutocomplete();
+        if (!val) {
+            return false;
+        }
+        var a, b, i;
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autcomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        this.parentNode.appendChild(a);
+
+        var starter = Math.max(
+            0, 
+            val.lastIndexOf("(") + 1, 
+            val.lastIndexOf(" ") + 1, 
+            val.lastIndexOf("+") + 1,
+            val.lastIndexOf("*") + 1,
+            val.lastIndexOf("/") + 1,
+            val.lastIndexOf("-") + 1
+        );
+        var currentWord = val.substring(starter);
+
+        for (i = 0; i < suggestions.length; i++) {
+            if (suggestions[i].substring(0, currentWord.length).toLowerCase() === currentWord.toLowerCase()) {
+                b = document.createElement("DIV");
+                b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
+                b.innerHTML += suggestions[i].substring(currentWord.length);
+                b.innerHTML += ": " + docs[suggestions[i]];
+                b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
+
+                b.addEventListener("click", function(e) {
+                    input.value = input.value.substring(0, starter) + this.getElementsByTagName("input")[0].value;
+                    closeAutocomplete();
+                    try {
+                        ast = peg$parse(input.value);
+                        d3.select("#parseroutput")
+                                    .text("Valid expression. Press enter to use.")
+                                    .style("color", "black");
+                    } catch (err) {
+                        d3.select("#parseroutput")
+                            .text(err)
+                            .style("color", "darkred");
+                    }
+                    document.getElementById("expressioninput").focus();
+                });
+                a.appendChild(b); 
+            };
+        };
+    });
+};
+
+
+document.addEventListener("click", function(e) {
+    closeAutocomplete();
+})
+
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
@@ -532,6 +723,10 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                 .text("Enter an expression.")
                 .style("color", "black");
         }
+
+        // auto-complete suggestions here
+        // referencing https://www.w3schools.com/howto/howto_js_autocomplete.asp
+        autocomplete(document.getElementById("expressioninput"), options);
         
         var ast;
         try {
@@ -603,6 +798,37 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     updateExpressionInput(defaultExpression);
 };
 
+function inputSuggestion() {
+    var input = document.getElementById("expressioninput");
+    var dropdown = document.getElementById("suggestions");
+    input.value = dropdown.value;
+    document.getElementById("expressioninput").focus();
+    var ast;
+    try {
+        ast = peg$parse(dropdown.value);
+        d3.select("#parseroutput")
+                    .text("Valid expression. Press enter to use.")
+                    .style("color", "black");
+    } catch (err) {
+        d3.select("#parseroutput")
+            .text(err)
+            .style("color", "darkred");
+    }
+}
+
+function loadSuggestions(){ 
+    $.getJSON('../../clientresources.json', function(data) {
+        var samples = data.expressions;
+        for (var key in samples) {
+            var dropdown = document.getElementById("suggestions");
+            var option = document.createElement("OPTION");
+            option.innerHTML = samples[key]["title"]
+            option.value = samples[key]["expression"];
+            dropdown.options.add(option);
+        }
+        document.getElementById("suggestions").onchange = inputSuggestion;
+    });
+}
 function downloadAsPng() {
     var svg = d3.select("svg").node(),
         img = new Image(),
