@@ -267,7 +267,7 @@ function getPercentiles(customData, percentiles) {
     const allValues = [];
     for (const geoIdToValueDict of customData) {
         for (const value of Object.values(geoIdToValueDict)) {
-            if (!isNaN(value)) {
+            if (!isNaN(value) && isFinite(value)) {
                 allValues.push(value);
             }
         }
