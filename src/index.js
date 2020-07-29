@@ -624,40 +624,33 @@ function updateLegendLimits(domain) {
 // isMin: true if editing minimum, false if editing maximum
 // color: d3.color for map. Domain is modified by this function.
 // Returns whether legend domain was successfully updated.
-function userChangesLegend(event, isMin, color) {
-    var successfulChange = false;
-
-    if (event.keyCode === 13) {
-        event.preventDefault();
-        
-        const text = event.target.textContent;
-        var domain = color.domain();
-        if (!isNaN(text)) {
-            var newMin;
-            var newMax;
-            if (isMin) {
-                newMin = parseFloat(text);
-                newMax = domain[1];
-            } else {
-                newMin = domain[0];
-                newMax = parseFloat(text);
-            }
-
-            // Don't change domain if max <= min
-            if (newMax > newMin) {
-                domain = [newMin, newMax];
-
-                color.domain(domain);
-
-                successfulChange = true;
-            }
-        }
-
+function userChangesLegend(text, isMin, color) {
+    var domain = color.domain();
+    if (!isNaN(text)) {
+        var newMin;
+        var newMax;
         if (isMin) {
-            d3.select(".legendmin").text(domain[0]);
+            newMin = parseFloat(text);
+            newMax = domain[1];
         } else {
-            d3.select(".legendmax").text(domain[1]);
+            newMin = domain[0];
+            newMax = parseFloat(text);
         }
+
+        // Don't change domain if max <= min
+        if (newMax > newMin) {
+            domain = [newMin, newMax];
+
+            color.domain(domain);
+
+            successfulChange = true;
+        }
+    }
+
+    if (isMin) {
+        d3.select(".legendmin").text(domain[0]);
+    } else {
+        d3.select(".legendmax").text(domain[1]);
     }
 
     return successfulChange;
@@ -791,18 +784,35 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     });
 
                     // Updates legend minimum value
-                    d3.select(".legendmin").on("keydown", () => {
-                        if (userChangesLegend(d3.event, true, color)) {
-                            updateGeoMap(customData[slideValue], color);
-                        }
-                    });
+                    d3.select(".legendmin")
+                        .on("keydown", () => {
+                            if (d3.event.keyCode === 13) {
+                                d3.event.preventDefault();
+                                if (userChangesLegend(d3.event.target.textContent, true, color)) {
+                                    updateGeoMap(customData[slideValue], color);
+                                }
+                            }
+                        })
+                        .on("blur", () => {
+                            if (userChangesLegend(d3.event.target.textContent, true, color)) {
+                                updateGeoMap(customData[slideValue], color);
+                            }
+                        });
 
                     // Updates legend maximum value
-                    d3.select(".legendmax").on("keydown", () => {
-                        if (userChangesLegend(d3.event, false, color)) {
-                            updateGeoMap(customData[slideValue], color);
-                        }
-                    });
+                    d3.select(".legendmax")
+                        .on("keydown", () => {
+                            if (d3.event.keyCode === 13) {
+                                d3.event.preventDefault();
+                                if (userChangesLegend(d3.event.target.textContent, false, color)) {
+                                    updateGeoMap(customData[slideValue], color);
+                                }
+                            }
+                        }).on("blur", () => {
+                            if (userChangesLegend(d3.event.target.textContent, false, color)) {
+                                updateGeoMap(customData[slideValue], color);
+                            }
+                        });
         
                     d3.select("#parseroutput")
                         .text("Entered.")
