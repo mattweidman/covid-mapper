@@ -7,7 +7,8 @@ const tooltipDiv = d3.select("body").append("div")
  
 const svg = d3.select("#mapcontainer").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .style("background-color", 'white');
 
 const defs = svg.append("defs");
 
@@ -506,6 +507,8 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
+    svg.selectAll("g.top5").remove();
+    svg.selectAll("g.title").remove();
     svg.call(zoom.transform, d3.zoomIdentity);
     svg.selectAll(".geofeatures").remove();
     
@@ -565,6 +568,27 @@ function updateGeoMap(locationValues, color) {
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY -30) + "px");
         });
+}
+
+function updateTop5(locationValues, names) {
+    var i = 0;
+    var nameValuePairs = Object.keys(locationValues).map((key) => {
+        return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
+    });
+
+    nameValuePairs.sort(function (a,b){return a[1] - b[1]});
+    nameValuePairs = nameValuePairs.slice(Math.max(nameValuePairs.length - 5, 0)).reverse(); // Get top 5
+
+    svg.select(".top5Text").text('Top 5:');
+    var xVal = 40;
+    var yVal = 360;
+    nameValuePairs.forEach((pair) =>{
+        svg.select(".text"+yVal)
+            .text(pair[0]+": "+pair[1])
+            .style("font-size", "15px")
+            .attr("alignment-baseline","middle");
+        yVal = yVal + 20;
+    });
 }
 
 function createLegend() {
@@ -671,10 +695,44 @@ document.addEventListener("click", function(e) {
     closeAutocomplete();
 })
 
+function createTop5() {
+    const top5 = svg.append("g")
+        .attr("class", "top5");
+
+    var xValTop5 = 40;
+    var yValTop5 = 360;
+    top5.append("text").attr("x", xValTop5).attr("y", yValTop5 - 20)
+    for (let i = 0; i < 5; i++) {
+        top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
+        yValTop5 = yValTop5 + 20;
+    }
+}
+
+function createMapTitle() {
+    const mapTitle = svg.append("g")
+        .attr("class", "mapTitle");
+
+    var xValMapTitle = 480;
+    var yValMapTitle = 15;
+    mapTitle.append("text")
+        .attr("class", "mapTitleText")
+        .attr("x", xValMapTitle)
+        .attr("y", yValMapTitle);
+}
+
+function updateMapTitle(inputText) {
+    svg.select(".mapTitleText")
+        .text(inputText).style("font-size", "30px")
+        .attr("alignment-baseline","middle");
+}
+
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
     resetGeoMap(geomapFeatures);
+
+    createTop5();
+    createMapTitle();
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -716,14 +774,26 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .range([lowColor, highColor])
                         .clamp(true)
                         .unknown(lowColor);
-    
+
+                    // Get names for top5 list along with ID
+                    var names = [];
+                    for (const [key, value] of Object.entries(baseData)) {
+                        names.push({
+                            "id": value.id,
+                            "name": value.name
+                        });
+                    }
+
+                    updateMapTitle(inputText);
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color);
-                    
+                    updateTop5(customData[slideValue], names);
+
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
                         updateGeoMap(customData[slideValue], color);
+                        updateTop5(customData[slideValue], names);
                     });
         
                     d3.select("#parseroutput")
