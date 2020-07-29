@@ -55,6 +55,7 @@ d3.select("#viewtype").on("change", () => {
 });
 
 var top5 = false; // Using this variable for toggle to decide if top5 queries are currently on screen or not
+var showTop5 = true;
 
 // Set properties.id and properties.name for every region
 function preprocessUsaMap(geomapFeatures, baseData) {
@@ -582,6 +583,11 @@ function updateTop5(locationValues, names) {
             .attr("alignment-baseline","middle");
         yVal = yVal + 20;
     });
+
+    if(showTop5 === false){
+        svg.select(".top5")
+            .style("opacity", 0);
+    }
 }
 
 function createLegend() {
@@ -794,23 +800,11 @@ function createTop5Toggle() {
 
 }
 
-function updateTop5Toggle() {
-    if(top5 === true) {
-        var check = true;
-        svg.select(".top5Toggle")
-            .append("text")
-            .text("Hide/Show top 5")
-            .attr("x", 40)
-            .attr("y", height - 10)
-            .on("click", function () {
-                console.log(check);
-                check = check ? false : true;
-                var show = check ? 1 : 0;
-                console.log(check);
-                svg.select(".top5")
-                    .style("opacity", show);
-            });
-    }
+function updateTop5Toggle(value) {
+    showTop5 = showTop5 ? false : true;
+    var show = showTop5 ? 1 : 0;
+    svg.select(".top5")
+        .style("opacity", show);
 }
 
 // Called when data is initially loaded.
@@ -820,8 +814,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     top5 = false;
 
     createTop5();
-    createTop5Toggle()
-
     // createMapTitle();
 
     // Updates to expression textbox
@@ -878,14 +870,12 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     updateLegendLimits(domain);
                     updateGeoMap(customData[slideValue], color);
                     updateTop5(customData[slideValue], names);
-                    updateTop5Toggle();
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
                         updateGeoMap(customData[slideValue], color);
                         updateTop5(customData[slideValue], names);
-                        updateTop5Toggle();
                     });
 
                     // Updates legend minimum value
@@ -971,10 +961,7 @@ function loadSuggestions(){
 }
 
 function downloadAsPng() {
-    var svg2 = d3.select("svg");
-    console.log(svg2);
-    svg2.selectAll("g.top5Toggle").remove();
-    var svg = svg2.node(), //d3.select("svg")
+    var svg = d3.select("svg").node(), //d3.select("svg")
         img = new Image(),
         serializer = new XMLSerializer(),
         svgStr = serializer.serializeToString(svg);
@@ -995,6 +982,4 @@ function downloadAsPng() {
         a.href = canvasdata;
         a.click();
     };
-    createTop5Toggle();
-    updateTop5Toggle();
 }
