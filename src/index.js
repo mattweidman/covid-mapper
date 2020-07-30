@@ -1,4 +1,6 @@
-const width = 960, height = 550, legendHeight = 45;
+const width = (window.innerWidth > 1000) ? window.innerWidth/2 - 20 : window.innerWidth - 40;
+const height = .6*width;
+const legendHeight = 45;
 const lowColor = "#dcdcdc", highColor = "#8b0000";
  
 const tooltipDiv = d3.select("body").append("div")
@@ -17,12 +19,13 @@ const legendsvg = d3.select("#legendcontainer").append("svg")
 const path = d3.geoPath();
 
 var options = [];
-
 var docs = {};
 
 moveSelectionsToBackOrFront();
+const mapWrapper = svg.append("g")
+    .attr("transform", "scale(0.75)");
 
-const mapg = svg.append("g")
+const mapg = mapWrapper.append("g")
     .attr("class", "mapg");
 
 const zoom = d3.zoom()
@@ -745,7 +748,7 @@ function updateTop5(locationValues, names) {
 
     svg.select(".top5Text").text('Top 5:');
     var xVal = 40;
-    var yVal = 360;
+    var yVal = 300;
     nameValuePairs.forEach((pair) =>{
         svg.select(".text"+yVal)
             .text(pair[0]+": "+pair[1])
@@ -938,7 +941,7 @@ function createTop5() {
         .attr("id", "top5Id");
 
     var xValTop5 = 40;
-    var yValTop5 = 360;
+    var yValTop5 = 300;
     top5.append("text").attr("class", "top5Text").attr("x", xValTop5).attr("y", yValTop5 - 20)
     for (let i = 0; i < 5; i++) {
         top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);

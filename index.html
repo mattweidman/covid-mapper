@@ -27,13 +27,6 @@
         <label for="suggestions">Suggested expressions:</label>
         <select name="suggestions" id="suggestions"></select>
     </div>
-    <div id="showtop5container">
-        <label for="top5">Show top 5?</label>
-        <select name="top5" id="top5" onchange="updateTop5Toggle(value)">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select>
-    </div>
     <p></p>
     <div id="mapoptionscontainer">
         <label for="mapoptions">Select map type:</label>
@@ -56,15 +49,24 @@
             <option value="easia">East Asia</option>
             <option value="wpac">Western Pacific</option>
         </select>
+        <label for="top5">Show top 5?</label>
+        <select name="top5" id="top5" onchange="updateTop5Toggle(value)">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
     </div>
     <p id="tipcontainer">Tip: Click on a location to generate a time chart below.</p>
-    <div id="mapcontainer"></div>
-    <div id="legendcontainer"></div>
     <div id="slidecontainer">
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>
     </div>
-    <div id="timechart"></div>
+    <div class="graphcontainer flex-direction">
+        <div>
+            <div id="mapcontainer"></div>
+            <div id="legendcontainer"></div>
+        </div>
+        <div id="timechart"></div>
+    </div>
     <p>Sources: usafacts.org, covid19.who.int, data.worldbank.org</p>
     <script src="src/index.js"></script>
     <br>
