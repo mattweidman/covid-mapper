@@ -12,7 +12,8 @@ const svg = d3.select("#mapcontainer").append("svg")
 
 const legendsvg = d3.select("#legendcontainer").append("svg")
     .attr("width", width)
-    .attr("height", legendHeight);
+    .attr("height", legendHeight)
+    .style("background-color", 'white');
 
 const path = d3.geoPath();
 
@@ -57,6 +58,7 @@ d3.select("#viewtype").on("change", () => {
 
 var top5 = false; // Using this variable for toggle to decide if top5 queries are currently on screen or not
 var showTop5 = true;
+var inputExp = '';
 
 // Set properties.id and properties.name for every region
 function preprocessUsaMap(geomapFeatures, baseData) {
@@ -514,7 +516,6 @@ function updateSlider(allDates, dateIndex) {
 function resetGeoMap(geomapFeatures) {
     // clear map
     svg.selectAll("g.top5").remove();
-    // svg.selectAll("g.title").remove();
     svg.selectAll("g.top5Toggle").remove();
     svg.call(zoom.transform, d3.zoomIdentity);
     svg.selectAll(".geofeatures").remove();
@@ -946,30 +947,6 @@ function createTop5() {
     }
 }
 
-function createMapTitle() {
-    const mapTitle = svg.append("g")
-        .attr("class", "mapTitle");
-
-    var xValMapTitle = 480;
-    var yValMapTitle = 15;
-    mapTitle.append("text")
-        .attr("class", "mapTitleText")
-        .attr("x", xValMapTitle)
-        .attr("y", yValMapTitle);
-}
-
-function updateMapTitle(inputText) {
-    svg.select(".mapTitleText")
-        .text(inputText).style("font-size", "30px")
-        .attr("alignment-baseline","middle");
-}
-
-function createTop5Toggle() {
-    const top5Toggle = svg.append("g")
-        .attr("class", "top5Toggle");
-
-}
-
 function updateTop5Toggle(value) {
     showTop5 = showTop5 ? false : true;
     var show = showTop5 ? 1 : 0;
@@ -984,7 +961,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     top5 = false;
 
     createTop5();
-    // createMapTitle();
+    inputExp = '';
 
     // Updates to expression textbox
     function updateExpressionInput(inputText) {
@@ -1037,7 +1014,8 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     }
 
                     d3.select("#timechart").selectAll("*").remove();
-                    updateMapTitle(inputText);
+
+                    inputExp = inputText;
                     updateLegendLimits(domain);
                     updateGeoMap(customData, color, slideValue, allDates, inputText);
                     updateTop5(customData[slideValue], names);
@@ -1132,20 +1110,41 @@ function loadSuggestions(){
 }
 
 function downloadAsPng() {
-    var svg = d3.select("svg").node(), //d3.select("svg")
-        img = new Image(),
-        serializer = new XMLSerializer(),
-        svgStr = serializer.serializeToString(svg);
+    var svgObj = d3.select("svg");
 
-    data = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
+    var xValMapTitle = 480;
+    var yValMapTitle = 15;
+    svgObj.append("text")
+        .attr("class", "mapTitle")
+        .text(inputExp).style("font-size", "30px")
+        .attr("alignment-baseline","middle")
+        .attr("x", xValMapTitle)
+        .attr("y", yValMapTitle);
+
+    var svg = d3.select("svg").node(), //d3.select("svg")
+        img1 = new Image(),
+        serializer1 = new XMLSerializer(),
+        svgStr = serializer1.serializeToString(svg);
+
+    svgObj.selectAll("text.mapTitle").remove();
+
+    var legend = d3.select("#legendcontainer").select("svg").node(),
+        img2 = new Image(),
+        serializer2 = new XMLSerializer(),
+        legendStr = serializer2.serializeToString(legend);
+
+    var data1 = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
+    var data2 = 'data:image/svg+xml;base64,'+window.btoa(legendStr);
 
     var canvas = document.createElement("canvas");
     canvas.width = width;
-    canvas.height = height;
+    canvas.height = height+legendHeight;
     context = canvas.getContext("2d");
-    img.src = data;
-    img.onload = function() {
-        context.drawImage(img, 0, 0);
+    img1.src = data1;
+    img2.src = data2;
+    img1.onload = function() {
+        context.drawImage(img1, 0, 0);
+        context.drawImage(img2, 0, height);
         var canvasdata = canvas.toDataURL("image/png");
         var pngimg = '<img src="'+canvasdata+'">';
         var a = document.createElement("a");
