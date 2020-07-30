@@ -15,7 +15,7 @@ const legendsvg = d3.select("#legendcontainer").append("svg")
     .attr("height", legendHeight)
     .style("background-color", 'white');
 
-const mapTitleHeight = 30;
+const mapTitleHeight = 45;
 const mapTitleSvg = d3.select("#maptitlecontainer").append("svg")
     .attr("width", width)
     .attr("height", mapTitleHeight)
@@ -1124,18 +1124,29 @@ function loadSuggestions(){
 }
 
 function downloadAsPng() {
-    var xValMapTitle = 40;
+    var xValMapTitle = 10;
     var yValMapTitle = 15;
 
     var xValSources = 10;
     var yValSources = 5;
 
+    const mapTitleFontSize = 20;
+
     mapTitleSvg.append("text")
         .attr("class", "mapTitle")
-        .text('Expression entered: ' + inputExp).style("font-size", "30px")
+        .text(inputExp)
+        .style("font-size", mapTitleFontSize)
         .attr("alignment-baseline","middle")
         .attr("x", xValMapTitle)
         .attr("y", yValMapTitle);
+
+    mapTitleSvg.append("text")
+        .attr("class", "mapTitle")
+        .text(d3.select("#datetext").text())
+        .style("font-size", mapTitleFontSize)
+        .attr("alignment-baseline","middle")
+        .attr("x", xValMapTitle)
+        .attr("y", yValMapTitle + mapTitleFontSize);
 
     sourcesSvg.append("text")
         .attr("class", "sourcesText")
