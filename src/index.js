@@ -285,7 +285,10 @@ function computeCustomTimeData(allLocationsallData, locationId, dates) {
     const singleLocData = [];
     var maxValue = allLocationsallData[0][locationId];
     for (var i = 0; i < allLocationsallData.length; i++) {
-        singleLocData.push({date: dates[i], value: allLocationsallData[i][locationId]})
+        var processsedDate = new Date(processDate(dates[i])[0],
+                                      processDate(dates[i])[1],
+                                      processDate(dates[i])[2]);
+        singleLocData.push({date: processsedDate, value: allLocationsallData[i][locationId]})
         if (allLocationsallData[i][locationId] > maxValue) {
             maxValue = allLocationsallData[i][locationId];
         }
@@ -568,6 +571,25 @@ function resetGeoMap(geomapFeatures) {
         });
 }
 
+// world map: stored as YYYY-MM-DD
+// us maps: stored as M or MM/DD/YY
+// due to broswer inconsistencies we want to output [YYYY, MM, DD]
+// where MM ranges from 0 to 11 and all values should be integers, not strings
+function processDate(date) {
+    if (d3.select("#mapoptions").node().value === "worldflat") {
+        return [parseInt(date.substring(0, 4)), 
+                parseInt(date.substring(5, 7)) - ``, 
+                parseInt(date.substring(8))];
+    } else {
+        var firstSlash = date.indexOf("/");
+        var lastSlash = date.lastIndexOf("/");
+        var year = parseInt("20" + date.substring(lastSlash + 1));
+        var month = parseInt(date.substring(0, firstSlash)) - 1;
+        var day = date.substring(firstSlash + 1, lastSlash);
+        return [year, month, day];
+    }
+}
+
 function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
     d3.select("#timechart").selectAll("*").remove();
 
@@ -583,10 +605,15 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
 
     var xstart = margin.top + vizHeight;
     // axis scales
-    // console.log(dates[0]);
-    // console.log(processDate(dates[0]));
+
     var xScale = d3.scaleTime()
-        .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
+        .domain([new Date(processDate(dates[0])[0],
+                          processDate(dates[0])[1],
+                          processDate(dates[0])[2]), 
+                new Date(processDate(dates[dates.length-1])[0],
+                         processDate(dates[dates.length-1])[1],
+                         processDate(dates[dates.length-1])[2])
+                ])
         .range([ 0, vizWidth ]);
 
     var yScale = d3.scaleLinear()
@@ -597,7 +624,7 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
     // line generator
     var line = d3.line()
         .x(function(data) { 
-            return xScale(new Date(data.date));
+            return xScale(data.date);
         })
         .y(function(data) { 
             return yScale(data.value); 
@@ -625,20 +652,6 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
         .text(titleText)
         .append("g")
 
-    function processDate(date) {
-        // stored as MM-DD-YYYY, we want YYYY-MM-DD
-        if (d3.select("#mapoptions").node().value === "worldflat") {
-            return date.substring(5) + "-" + date.substring(0, 5);
-        } else {
-            var firstSlash = date.indexOf("/");
-            var lastSlash = date.lastIndexOf("/");
-            return "20" + date.substring(lastSlash + 1) + "-" 
-                        + date.substring(0, firstSlash) + "-" 
-                        + date.substring(firstSlash + 1, lastSlash);
-        }
-        return date.substring(5) + "-" + date.substring(0, 5)
-    }
-
     svg.append("path")
         .datum(timeValueObjects)
         .attr("class", "line")
@@ -646,7 +659,7 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
         .attr("transform", "translate(0," + margin.top + ")")
 
     // reference: https://www.d3-graph-gallery.com/graph/line_cursor.html
-    var bisect = d3.bisector(function(data) { return new Date(data.date); }).left;
+    var bisect = d3.bisector(function(data) { return data.date; }).left;
     var focus = svg
         .append('g')
         .append('circle')
@@ -654,7 +667,7 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
         .attr("stroke", "black")
         .attr('r', 4)
         .attr("id", "focus")
-        .style("opacity", 0);
+        .attr("opacity", 0);
 
     var focusText = svg
         .append('g')
@@ -669,13 +682,13 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
         .style("pointer-events", "all")
         .attr('width', width)
         .attr('height', height)
-        .on('mouseover', mouseover)
+        //.on('mouseover', mouseover)
         .on('mousemove', mousemove)
         .on('mouseout', mouseout);
     
     function mouseover() {
-        focus.style("opacity", 1)
-        focusText.style("opacity", 1)
+        focus.style("opacity", 1);
+        focusText.style("opacity", 1);
     }
 
     function mouseout() {
@@ -686,25 +699,29 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
     function updateFocus(data) {
         if (data) {
             focus
-                .attr("cx", xScale(new Date(data.date)))
+                .attr("cx", xScale(data.date))
                 .attr("cy", yScale(data.value) + 20);
             focusText
                 .html(data.value)
-                .attr("x", xScale(new Date(data.date)))
+                .attr("x", xScale(data.date))
                 .attr("y", yScale(data.value));
         };
     }
-    // TODO update time chart circle when slider is updated!
+
     function mousemove() {
         var x0 = xScale.invert(d3.mouse(this)[0])
         var i = bisect(timeValueObjects, x0, 1);
         var selectedData = timeValueObjects[i];
         updateFocus(selectedData);
         if (selectedData) {
+            mouseover();
             updateSlider(dates, i);
             var slider = d3.select("#dateslider");
             slider.property('value', i);
             updateGeoMap(allDatesAllLocations, color, i, dates, inputText);
+        }
+        else {
+            mouseout();
         }
     }
     var slider = d3.select("#dateslider");

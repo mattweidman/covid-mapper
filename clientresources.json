@@ -37,6 +37,14 @@
       "title": "Total deaths on a particular day",
       "expression": "deaths(day)"
     },
+    "NewCasesOnaDayPer1M": {
+      "title": "New confirmed cases on a particular day per million people",
+      "expression": "newcases(day)/population*1000000"
+    },
+    "NewDeathsOnaDayPer1M": {
+      "title": "New deaths on a particular day per million people",
+      "expression": "newdeaths(day)/population*1000000"
+    },
     "TotalCasesOnaDayPer1M": {
       "title": "Total confirmed cases on a particular day per million people",
       "expression": "cases(day)/population*1000000"
