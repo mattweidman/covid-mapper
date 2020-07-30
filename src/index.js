@@ -1158,12 +1158,12 @@ function showDocumentation() {
     d3.json("./clientresources.json")
     .then(function (data) {
         const docs = getDocsList(data.docs);
-        document.getElementById("doc").innerHTML = tabulate(docs, ['keyword', 'definition']);
+        tabulate(docs, ['keyword', 'definition']);
     });
 }
 
 function tabulate(data, columns) {
-    var table = d3.select('body').append('table')
+    var table = d3.select('#doc').append('table')
     var thead = table.append('thead')
     var	tbody = table.append('tbody');
 
@@ -1190,8 +1190,6 @@ function tabulate(data, columns) {
     .enter()
     .append('td')
         .text(function (d) { return d.value; });
-
-    return table;
 }
 
 function getDocsList(data) {

@@ -22,71 +22,71 @@
   },
   "expressions": {
     "TotalCasesOnaDay": {
-      "title": "Total confirmed cases on a particuar day",
+      "title": "Total confirmed cases on a particular day",
       "expression": "cases(day)"
     },
     "NewCasesOnaDay": {
-      "title": "New cases on a particuar day",
+      "title": "New cases on a particular day",
       "expression": "newcases(day)"
     },
     "NewDeathsOnaDay": {
-      "title": "New deaths on a particuar day",
+      "title": "New deaths on a particular day",
       "expression": "newdeaths(day)"
     },
-    "TotalCasesOnaDayPer1M": {
-      "title": "Total confirmed cases on a particuar day per million",
-      "expression": "cases(day)/population*1000000"
-    },
     "TotalDeathsOnaDay": {
-      "title": "Total death cases on a particuar day",
+      "title": "Total deaths on a particular day",
       "expression": "deaths(day)"
     },
+    "TotalCasesOnaDayPer1M": {
+      "title": "Total confirmed cases on a particular day per million people",
+      "expression": "cases(day)/population*1000000"
+    },
     "TotalDeathsOnaDayPer1M": {
-      "title": "Total death cases on a particuar day per million",
+      "title": "Total deaths on a particular day per million people",
       "expression": "deaths(day)/population*1000000"
     },
     "Last7DaysAverageCases": {
-      "title": "Average cases in Last 7 Days",
-      "expression": "average(cases(day-7,day))"
+      "title": "Average new cases in Last 7 Days",
+      "expression": "average(newcases(day-7,day))"
     },
     "Last7DaysAverageDeaths": {
-      "title": "Average death cases in Last 7 Days",
-      "expression": "average(deaths(day-7,day))"
+      "title": "Average new deaths in Last 7 Days",
+      "expression": "average(newdeaths(day-7,day))"
     },
     "Last30DaysAverageCases": {
-      "title": "Average cases in last 30 days",
-      "expression": "average(cases(day-30,day))"
+      "title": "Average new cases in last 30 days",
+      "expression": "average(newcases(day-30,day))"
     },
     "Last30DaysAverageDeaths": {
-      "title": "Average death cases in last 30 days",
-      "expression": "average(deaths(day-30,day))"
+      "title": "Average new deaths in last 30 days",
+      "expression": "average(newdeaths(day-30,day))"
     },
     "MaxNewCasesPerDaysoFar": {
       "title": "Max new cases per day so far",
       "expression": "max(newcases(first,last))"
     },
     "MaxNewDeathsPerDaysoFar": {
-      "title": "Max new death cases per day so far",
+      "title": "Max new deaths per day so far",
       "expression": "max(newdeaths(first,last))"
     },
     "AverageDeathsPerDay": {
-      "title": "Average deaths per day",
-      "expression": "average(deaths(first,last))"
+      "title": "Average deaths per day over all time",
+      "expression": "average(newdeaths(first,last))"
     },
     "TotalNewCasesInLast7Days": {
-      "title": "Total new cases in last 7 days",
+      "title": "New cases in last 7 days",
       "expression": "cases(day)-cases(day-7)"
     },
     "TotalNewCasesInLast30Days": {
-      "title": "Total new cases in last 30 days",
+      "title": "New cases in last 30 days",
       "expression": "cases(day)-cases(day-30)"
     },
     "TotalNewDeathsInLast7Days": {
-      "title": "Total new death cases in last 7 days",
+      "title": "New deaths in last 7 days",
       "expression": "deaths(day)-deaths(day-7)"
     },
     "TotalNewDeathsInLast30Days": {
-      "title": "Total new death cases in last 30 days",
+      "title": "New deaths in last 30 days",
       "expression": "deaths(day)-deaths(day-30)"
     },
     "MaxNewCasesinLast7Days": {
