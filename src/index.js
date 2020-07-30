@@ -583,8 +583,8 @@ function updateTimeChart(allDatesAllLocations, color, dates, inputText, d) {
 
     var xstart = margin.top + vizHeight;
     // axis scales
-    console.log(dates[0]);
-    console.log(processDate(dates[0]));
+    // console.log(dates[0]);
+    // console.log(processDate(dates[0]));
     var xScale = d3.scaleTime()
         .domain([new Date(processDate(dates[0])), new Date(processDate(dates[dates.length-1]))])
         .range([ 0, vizWidth ]);
@@ -751,11 +751,17 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText)
 function updateTop5(locationValues, names) {
     top5 = true;
     var i = 0;
-    var nameValuePairs = Object.keys(locationValues).map((key) => {
-        return [(names.find(loc => loc.id === (key))).name, locationValues[key]] // Store name of location with result in array
+    var nameValuePairs = [];
+    Object.keys(locationValues).map((key) => {
+        if(!isNaN(locationValues[key])){
+            nameValuePairs.push([(names.find(loc => loc.id === (key))).name, locationValues[key]]) // Store name of location with result in array
+        }else {
+        }
     });
 
-    nameValuePairs.sort(function (a,b){return a[1] - b[1]});
+    nameValuePairs.sort(function (a,b){
+        return a[1] - b[1]
+    });
     nameValuePairs = nameValuePairs.slice(Math.max(nameValuePairs.length - 5, 0)).reverse(); // Get top 5
 
     svg.select(".top5Text").text('Top 5:');
