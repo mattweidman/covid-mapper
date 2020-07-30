@@ -96,6 +96,7 @@ The following aggregate operations can be used over a range of data:
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
 * Make color contrast accessible.
+* If you click on a region and then move the slider, the top 5 list doesn't update.
 
 ### Non-feature work items
 * Migrate more to TypeScript.
