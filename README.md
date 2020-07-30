@@ -1,6 +1,6 @@
 # covid-mapper
 
-Create maps using COVID-19 data. Enter an expression and view a map of the data across US counties.
+Create maps using COVID-19 data. Enter an expression and view a map of the data across US counties, US states, and countries.
 
 Code based on: http://bl.ocks.org/TheMapSmith/bd3ef04e33483e671601c753856273cb
 
