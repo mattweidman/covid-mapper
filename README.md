@@ -79,6 +79,7 @@ The following aggregate operations can be used over a range of data:
 * Floating point numbers in expressions.
 * Let users change map colors.
 * Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
+* Allow exp, log, trig functions
 * Shareable maps - maybe could generate a link that you can send to others. - Aman
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
 * Most popular options
@@ -89,7 +90,6 @@ The following aggregate operations can be used over a range of data:
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
 * Make color contrast accessible.
-* If you click on a region and then move the slider, the top 5 list doesn't update.
 
 ### Non-feature work items
 * Migrate more to TypeScript.
