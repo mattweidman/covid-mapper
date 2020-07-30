@@ -15,6 +15,20 @@ const legendsvg = d3.select("#legendcontainer").append("svg")
     .attr("height", legendHeight)
     .style("background-color", 'white');
 
+const mapTitleHeight = 30;
+const mapTitleSvg = d3.select("#maptitlecontainer").append("svg")
+    .attr("width", width)
+    .attr("height", mapTitleHeight)
+    .style("background-color", 'white');
+
+const sources = "Sources: usafacts.org, covid19.who.int, data.worldbank.org";
+
+const sourcesHeight = 15;
+const sourcesSvg = d3.select("#sourcescontainer").append("svg")
+    .attr("width", width)
+    .attr("height", sourcesHeight)
+    .style("background-color", 'white');
+
 const path = d3.geoPath();
 
 var options = [];
@@ -1110,41 +1124,66 @@ function loadSuggestions(){
 }
 
 function downloadAsPng() {
-    var svgObj = d3.select("svg");
-
-    var xValMapTitle = 480;
+    var xValMapTitle = 40;
     var yValMapTitle = 15;
-    svgObj.append("text")
+
+    var xValSources = 10;
+    var yValSources = 5;
+
+    mapTitleSvg.append("text")
         .attr("class", "mapTitle")
-        .text(inputExp).style("font-size", "30px")
+        .text('Expression entered: ' + inputExp).style("font-size", "30px")
         .attr("alignment-baseline","middle")
         .attr("x", xValMapTitle)
         .attr("y", yValMapTitle);
 
+    sourcesSvg.append("text")
+        .attr("class", "sourcesText")
+        .text(sources).style("font-size", "10px")
+        .attr("alignment-baseline","middle")
+        .attr("x", xValSources)
+        .attr("y", yValSources);
+
     var svg = d3.select("svg").node(), //d3.select("svg")
         img1 = new Image(),
-        serializer1 = new XMLSerializer(),
-        svgStr = serializer1.serializeToString(svg);
-
-    svgObj.selectAll("text.mapTitle").remove();
+        serializer = new XMLSerializer(),
+        svgStr = serializer.serializeToString(svg);
 
     var legend = d3.select("#legendcontainer").select("svg").node(),
         img2 = new Image(),
-        serializer2 = new XMLSerializer(),
-        legendStr = serializer2.serializeToString(legend);
+        legendStr = serializer.serializeToString(legend);
+
+    var title = d3.select("#maptitlecontainer").select("svg").node(),
+        img3 = new Image(),
+        titleStr = serializer.serializeToString(title);
+
+    mapTitleSvg.selectAll("text.mapTitle").remove();
+
+    var source = d3.select("#sourcescontainer").select("svg").node(),
+        img4 = new Image(),
+        sourceStr = serializer.serializeToString(source);
+
+    sourcesSvg.selectAll("text.sourcesText").remove();
+
 
     var data1 = 'data:image/svg+xml;base64,'+window.btoa(svgStr);
     var data2 = 'data:image/svg+xml;base64,'+window.btoa(legendStr);
+    var data3 = 'data:image/svg+xml;base64,'+window.btoa(titleStr);
+    var data4 = 'data:image/svg+xml;base64,'+window.btoa(sourceStr);
 
     var canvas = document.createElement("canvas");
     canvas.width = width;
-    canvas.height = height+legendHeight;
+    canvas.height = height+legendHeight+mapTitleHeight+sourcesHeight;
     context = canvas.getContext("2d");
     img1.src = data1;
     img2.src = data2;
+    img3.src = data3;
+    img4.src = data4;
     img1.onload = function() {
-        context.drawImage(img1, 0, 0);
-        context.drawImage(img2, 0, height);
+        context.drawImage(img1, 0, mapTitleHeight);
+        context.drawImage(img2, 0, height+mapTitleHeight);
+        context.drawImage(img3, 0, 0);
+        context.drawImage(img4, 0, mapTitleHeight + height + legendHeight);
         var canvasdata = canvas.toDataURL("image/png");
         var pngimg = '<img src="'+canvasdata+'">';
         var a = document.createElement("a");
