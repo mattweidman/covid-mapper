@@ -91,34 +91,50 @@ function preprocessUsaMap(geomapFeatures, baseData) {
 function getDateListFromUsaData(rawData) {
     const allDates = [];
     for (const key in rawData[0]) {
-        if (key.startsWith("confirmed_")) {
-            allDates.push(key.substring("confirmed_".length));
+        if (key.includes("/")) {
+            allDates.push(key);
         }
     }
     return allDates;
 }
 
 // Convert raw USA data to new format with data separated by county.
-// rawData: list of {CSV header -> value} dictionaries for location
+// casesCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,confirmedcases...]
+// deathsCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,deaths...]
+// populationCsv: CSV containing [countyFIPS,County Name,State,population]
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
-function preprocessUsaData(rawData, allDates) {
+function preprocessUsaData(casesCsv, deathsCsv, populationCsv, allDates) {
     const baseData = {};
 
-    rawData.forEach(rawDatum => {
-
+    for (var i = 0; i < casesCsv.length; i++) {
         const cases = [], deaths = [], newCases = [], newDeaths = [];
-        allDates.forEach(dateStr => {
-            cases.push(parseInt(rawDatum["confirmed_" + dateStr]));
-            deaths.push(parseInt(rawDatum["deaths_" + dateStr]));
-            newCases.push(parseInt(rawDatum["newconfirmed_" + dateStr]));
-            newDeaths.push(parseInt(rawDatum["newdeaths_" + dateStr]));
-        });
+
+        for (var j = 0; j < allDates.length; j++) {
+            const dateStr = allDates[j];
+
+            const casesToday = parseInt(casesCsv[i][dateStr]);
+            const deathsToday = parseInt(deathsCsv[i][dateStr]);
+
+            cases.push(casesToday);
+            deaths.push(deathsToday);
+
+            if (j === 0) {
+                newCases.push(casesToday);
+                newDeaths.push(deathsToday);
+            } else {
+                const casesYesterday = cases[j - 1];
+                const deathsYesterday = deaths[j - 1];
+
+                newCases.push(casesToday - casesYesterday);
+                newDeaths.push(deathsToday - deathsYesterday);
+            }
+        }
 
         const newDatum = {
-            id: rawDatum["countyFIPS"],
-            name: rawDatum["County Name"],
-            population: rawDatum["population"],
+            id: casesCsv[i]["countyFIPS"],
+            name: casesCsv[i]["County Name"],
+            population: populationCsv[i]["population"],
             cases: cases,
             deaths: deaths,
             newCases: newCases,
@@ -126,25 +142,35 @@ function preprocessUsaData(rawData, allDates) {
         };
 
         baseData[newDatum.id] = newDatum;
-    });
+    }
 
     return baseData;
 }
 
 // Convert raw USA data to new format with data separated by state.
-// rawData: list of {CSV header -> value} dictionaries for location
+// casesCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,confirmedcases...]
+// deathsCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,deaths...]
+// populationCsv: CSV containing [countyFIPS,County Name,State,population]
 // allDates: list of date strings from CSV headers
+// stateAbbrsCsv: CSV containing [state,abbreviation]
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
-function preprocessUsaStatesData(rawData, allDates) {
+function preprocessUsaStatesData(casesCsv, deathsCsv, populationCsv, stateAbbrsCsv, allDates) {
     const baseData = {};
 
-    rawData.forEach(rawDatum => {
-        const stateId = rawDatum["stateFIPS"];
+    // Construct ID -> state name mapping
+    const stateNames = {};
+    for (const stateAbbrPair of stateAbbrsCsv) {
+        stateNames[stateAbbrPair["abbreviation"]] = stateAbbrPair["state"];
+    }
+
+    // Populate cases, deaths, and constants
+    for (var i = 0; i < casesCsv.length; i++) {
+        const stateId = casesCsv[i]["stateFIPS"];
 
         if (!(stateId in baseData)) {
             baseData[stateId] = {
                 id: stateId,
-                name: rawDatum["stateName"],
+                name: stateNames[casesCsv[i]["State"]],
                 population: 0,
                 cases: Array.from(Array(allDates.length), () => 0),
                 deaths: Array.from(Array(allDates.length), () => 0),
@@ -154,16 +180,25 @@ function preprocessUsaStatesData(rawData, allDates) {
         }
 
         const currentState = baseData[stateId];
-        currentState.population += parseInt(rawDatum["population"]);
+        currentState.population += parseInt(populationCsv[i]["population"]);
 
-        for (var i = 0; i < allDates.length; i++) {
-            dateStr = allDates[i];
-            currentState.cases[i] += parseInt(rawDatum["confirmed_" + dateStr]);
-            currentState.deaths[i] += parseInt(rawDatum["deaths_" + dateStr]);
-            currentState.newCases[i] += parseInt(rawDatum["newconfirmed_" + dateStr]);
-            currentState.newDeaths[i] += parseInt(rawDatum["newdeaths_" + dateStr]);
+        for (var j = 0; j < allDates.length; j++) {
+            dateStr = allDates[j];
+            currentState.cases[j] += parseInt(casesCsv[i][dateStr]);
+            currentState.deaths[j] += parseInt(deathsCsv[i][dateStr]);
         }
-    });
+    }
+
+    // Populate newcases and newdeaths
+    for (const covidData of Object.values(baseData)) {
+        covidData.newCases[0] = covidData.cases[0];
+        covidData.newDeaths[0] = covidData.deaths[0];
+
+        for (var j = 1; j < allDates.length; j++) {
+            covidData.newCases[j] = covidData.cases[j] - covidData.cases[j - 1];
+            covidData.newDeaths[j] = covidData.deaths[j] - covidData.deaths[j - 1];
+        }
+    }
 
     return baseData;
 }
@@ -354,7 +389,7 @@ function showWorldMap(whoRegion) {
 
     Promise.all([
         d3.json("./data/countries.json"),
-        d3.csv("./data/WHO-COVID-19-global-data.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://covid19.who.int/WHO-COVID-19-global-data.csv"),
         d3.csv("./data/world-bank-population-isoa2.csv")
     ]).then(function (data) {
         const geomap = data[0];
@@ -383,13 +418,17 @@ function showUsaCounties() {
 
     Promise.all([
         d3.json("./data/us.json"),
-        d3.csv("./data/covid_usa.csv")
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv")
     ]).then(function (data) {
         const geomap = data[0];
-        const rawData = data[1];
+        const casesCsv = data[1];
+        const deathsCsv = data[2];
+        const populationCsv = data[3];
 
-        const allDates = getDateListFromUsaData(rawData);
-        const baseData = preprocessUsaData(rawData, allDates);
+        const allDates = getDateListFromUsaData(casesCsv);
+        const baseData = preprocessUsaData(casesCsv, deathsCsv, populationCsv, allDates);
         const geomapFeatures = topojson.feature(geomap, geomap.objects.counties).features;
         preprocessUsaMap(geomapFeatures, baseData);
 
@@ -405,13 +444,19 @@ function showUsaStates() {
 
     Promise.all([
         d3.json("./data/us.json"),
-        d3.csv("./data/covid_usa.csv")
+        d3.csv("./data/state_abbrs.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv")
     ]).then(function (data) {
         const geomap = data[0];
-        const rawData = data[1];
+        const stateAbbrsCsv = data[1];
+        const casesCsv = data[2];
+        const deathsCsv = data[3];
+        const populationCsv = data[4];
 
-        const allDates = getDateListFromUsaData(rawData);
-        const baseData = preprocessUsaStatesData(rawData, allDates);
+        const allDates = getDateListFromUsaData(casesCsv);
+        const baseData = preprocessUsaStatesData(casesCsv, deathsCsv, populationCsv, stateAbbrsCsv, allDates);
         const geomapFeatures = topojson.feature(geomap, geomap.objects.states).features;
         preprocessUsaMap(geomapFeatures, baseData);
 
