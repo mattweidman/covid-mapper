@@ -380,6 +380,10 @@ function moveSelectionsToBackOrFront() {
     };
 }
 
+function randStrGen() {
+    return (Math.random() + "").substring(2);
+}
+
 function showWorldMap(whoRegion) {
     path.projection(d3.geoRobinson());
 
@@ -389,7 +393,7 @@ function showWorldMap(whoRegion) {
 
     Promise.all([
         d3.json("./data/countries.json"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://covid19.who.int/WHO-COVID-19-global-data.csv"),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://covid19.who.int/WHO-COVID-19-global-data.csv?" + randStrGen()),
         d3.csv("./data/world-bank-population-isoa2.csv")
     ]).then(function (data) {
         const geomap = data[0];
@@ -418,9 +422,9 @@ function showUsaCounties() {
 
     Promise.all([
         d3.json("./data/us.json"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv")
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv?" + randStrGen()),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv?" + randStrGen()),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv?" + randStrGen())
     ]).then(function (data) {
         const geomap = data[0];
         const casesCsv = data[1];
@@ -445,9 +449,9 @@ function showUsaStates() {
     Promise.all([
         d3.json("./data/us.json"),
         d3.csv("./data/state_abbrs.csv"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv")
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv?" + randStrGen()),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv?" + randStrGen()),
+        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv?" + randStrGen())
     ]).then(function (data) {
         const geomap = data[0];
         const stateAbbrsCsv = data[1];
