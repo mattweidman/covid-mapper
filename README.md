@@ -75,25 +75,37 @@ The following aggregate operations can be used over a range of data:
 
 ## TODO 
 
-### Features
-* Floating point numbers in expressions.
+### Major features
 * Let users change map colors.
 * Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
-* Allow exp, log, trig functions
-* Shareable maps - maybe could generate a link that you can send to others. - Aman
+* Shareable maps - maybe could generate a link that you can send to others.
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
-* Most popular options
 * Expanding circles option on maps
-* Show a map of countries and states on the same map.
 * More countries states/provinces: Canada, China, Mexico, Brazil, India, Australia, Russia, etc.
+* Show a ranked list of all regions below the charts instead of showing top 5 on top of the map.
+* Show multiple regions at once in line chart.
+* Video or gif of change over time.
+
+### Minor features
+* Floating point numbers in expressions.
+* Exp and log function.
+* Show a map of countries and states on the same map.
+* Show loading while user is waiting.
+* Change sources listed on screen when user changes the map.
+* Let user use up, down, and tab to navigate suggestions.
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
 * Make color contrast accessible.
+* For better performance, don't update map when hovering over line chart.
+* Don't reload data when switching between USA states map and USA counties map.
 
 ### Non-feature work items
 * Migrate more to TypeScript.
+* Divide index.js into smaller files.
 * Set up npm.
 * Use grunt or some kind of build system.
-* Use BI or Bing infrastructure instead of D3?
-* Automatically download CSV files to browser without python.
+* Include a version as part of the URL in order to prevent caching when we update.
+* Host on an app service.
+* Get a custom domain.
+* Better mobile experience.
