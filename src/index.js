@@ -1171,25 +1171,16 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     const startExpression = inputElement.node().value;
     inputElement.text(startExpression);
     updateExpressionInput(startExpression, true);
-};
 
-function inputSuggestion() {
-    var input = document.getElementById("expressioninput");
-    var dropdown = document.getElementById("suggestions");
-    input.value = dropdown.value;
-    document.getElementById("expressioninput").focus();
-    var ast;
-    try {
-        ast = peg$parse(dropdown.value);
-        d3.select("#parseroutput")
-                    .text("Valid expression. Press enter to use.")
-                    .style("color", "black");
-    } catch (err) {
-        d3.select("#parseroutput")
-            .text(err)
-            .style("color", "darkred");
-    }
-}
+    // Suggestions clicked
+    const dropdown = d3.select("#suggestions");
+    dropdown.on("change", function () {
+        const input = d3.select("#expressioninput");
+        const expression = dropdown.node().value;
+        input.node().value = expression;
+        updateExpressionInput(expression, true);
+    });
+};
 
 function loadSuggestions(){ 
     $.getJSON('../../clientresources.json', function(data) {
@@ -1201,7 +1192,6 @@ function loadSuggestions(){
             option.value = samples[key]["expression"];
             dropdown.options.add(option);
         }
-        document.getElementById("suggestions").onchange = inputSuggestion;
     });
 }
 

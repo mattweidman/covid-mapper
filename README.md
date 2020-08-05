@@ -80,9 +80,8 @@ The following aggregate operations can be used over a range of data:
 * Let users change map colors.
 * Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
 * Allow exp, log, trig functions
-* Shareable maps - maybe could generate a link that you can send to others. - Aman
+* Shareable maps - maybe could generate a link that you can send to others.
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
-* Most popular options
 * Expanding circles option on maps
 * Show a map of countries and states on the same map.
 * More countries states/provinces: Canada, China, Mexico, Brazil, India, Australia, Russia, etc.
@@ -95,5 +94,3 @@ The following aggregate operations can be used over a range of data:
 * Migrate more to TypeScript.
 * Set up npm.
 * Use grunt or some kind of build system.
-* Use BI or Bing infrastructure instead of D3?
-* Automatically download CSV files to browser without python.

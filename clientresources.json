@@ -21,97 +21,45 @@
     "/": "operator to divide the numbers"
   },
   "expressions": {
-    "TotalCasesOnaDay": {
-      "title": "Total confirmed cases on a particular day",
-      "expression": "cases(day)"
+    "sevenDayAvgNewCasesPer100000": {
+        "title": "7-day average of new cases per 100,000 people",
+        "expression": "(cases(day) - cases(day - 7)) / 7 / population * 100000"
     },
-    "NewCasesOnaDay": {
-      "title": "New cases on a particular day",
-      "expression": "newcases(day)"
+    "sevenDayAvgNewDeathsPer100000": {
+        "title": "7-day average of new deaths per 100,000 people",
+        "expression": "(deaths(day) - deaths(day - 7)) / 7 / population * 100000"
     },
-    "NewDeathsOnaDay": {
-      "title": "New deaths on a particular day",
-      "expression": "newdeaths(day)"
+    "newCasesPer100000": {
+        "title": "New cases per 100,000 people",
+        "expression": "newcases(day) / population * 100000"
     },
-    "TotalDeathsOnaDay": {
-      "title": "Total deaths on a particular day",
-      "expression": "deaths(day)"
+    "newDeathsPer100000": {
+        "title": "New deaths per 100,000 people",
+        "expression": "newdeaths(day) / population * 100000"
     },
-    "NewCasesOnaDayPer1M": {
-      "title": "New confirmed cases on a particular day per million people",
-      "expression": "newcases(day)/population*1000000"
+    "totalCasesPer100000": {
+      "title": "Total confirmed cases per 100,000 people",
+      "expression": "cases(day) / population * 100000"
     },
-    "NewDeathsOnaDayPer1M": {
-      "title": "New deaths on a particular day per million people",
-      "expression": "newdeaths(day)/population*1000000"
+    "totalDeathsPer100000": {
+      "title": "Total deaths per 100,000 people",
+      "expression": "deaths(day) / population * 100000"
     },
-    "TotalCasesOnaDayPer1M": {
-      "title": "Total confirmed cases on a particular day per million people",
-      "expression": "cases(day)/population*1000000"
+    "sevenDayMaxNewCasesPer100000": {
+        "title": "7-day maximum of new cases per 100,000 people",
+        "expression": "max(newcases(day-6,day+1)) / population * 100000"
     },
-    "TotalDeathsOnaDayPer1M": {
-      "title": "Total deaths on a particular day per million people",
-      "expression": "deaths(day)/population*1000000"
+    "sevenDayMaxNewDeathsPer100000": {
+        "title": "7-day maximum of new deaths per 100,000 people",
+        "expression": "max(newdeaths(day-6,day+1)) / population * 100000"
     },
-    "Last7DaysAverageCases": {
-      "title": "Average new cases in Last 7 Days",
-      "expression": "average(newcases(day-7,day))"
+    "progressToZero": {
+        "title": "Percentage of maximum new cases",
+        "expression": "newcases(day) / max(newcases(first,last)) * 100"
     },
-    "Last7DaysAverageDeaths": {
-      "title": "Average new deaths in Last 7 Days",
-      "expression": "average(newdeaths(day-7,day))"
-    },
-    "Last30DaysAverageCases": {
-      "title": "Average new cases in last 30 days",
-      "expression": "average(newcases(day-30,day))"
-    },
-    "Last30DaysAverageDeaths": {
-      "title": "Average new deaths in last 30 days",
-      "expression": "average(newdeaths(day-30,day))"
-    },
-    "MaxNewCasesPerDaysoFar": {
-      "title": "Max new cases per day so far",
-      "expression": "max(newcases(first,last))"
-    },
-    "MaxNewDeathsPerDaysoFar": {
-      "title": "Max new deaths per day so far",
-      "expression": "max(newdeaths(first,last))"
-    },
-    "AverageDeathsPerDay": {
-      "title": "Average deaths per day over all time",
-      "expression": "average(newdeaths(first,last))"
-    },
-    "TotalNewCasesInLast7Days": {
-      "title": "New cases in last 7 days",
-      "expression": "cases(day)-cases(day-7)"
-    },
-    "TotalNewCasesInLast30Days": {
-      "title": "New cases in last 30 days",
-      "expression": "cases(day)-cases(day-30)"
-    },
-    "TotalNewDeathsInLast7Days": {
-      "title": "New deaths in last 7 days",
-      "expression": "deaths(day)-deaths(day-7)"
-    },
-    "TotalNewDeathsInLast30Days": {
-      "title": "New deaths in last 30 days",
-      "expression": "deaths(day)-deaths(day-30)"
-    },
-    "MaxNewCasesinLast7Days": {
-      "title": "Max new cases in last 7 days",
-      "expression": "max(newcases(day-7,day))"
-    },
-    "MaxNewCasesinLast30Days": {
-      "title": "Max new cases in last 30 days",
-      "expression": "max(newcases(day-30,day))"
-    },
-    "MinNewCasesinLast7Days": {
-      "title": "Min new cases in last 7 days",
-      "expression": "min(newcases(day-7,day))"
-    },
-    "MinNewCasesinLast30Days": {
-      "title": "Min new cases in last 30 days",
-      "expression": "min(newcases(day-30,day))"
+    "deathRate": {
+        "title": "Cumulative death rate",
+        "expression": "deaths(day) / cases(day) * 100"
     }
   }
 }
