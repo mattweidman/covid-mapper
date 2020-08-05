@@ -955,71 +955,70 @@ function loadDocs() {
         options = Object.keys(docs);
     });
 }
+
 function closeAutocomplete() {
-    var x = document.getElementsByClassName("autocomplete-items");
-    for (var i = 0; i < x.length; i++) {
-        x[i].parentNode.removeChild(x[i]);
-    }
+    d3.select("#autocomplete-list")
+        .selectAll("div")
+        .data([])
+        .exit().remove();
 }
 
-function autocomplete(input, suggestions) {
-    input.addEventListener("input", function(e) {
-        var a, b, i, val = this.value;
-
-        closeAutocomplete();
-        if (!val) {
-            return false;
-        }
-        var a, b, i;
-        a = document.createElement("DIV");
-        a.setAttribute("id", this.id + "autcomplete-list");
-        a.setAttribute("class", "autocomplete-items");
-        this.parentNode.appendChild(a);
-
-        var starter = Math.max(
-            0, 
-            val.lastIndexOf("(") + 1, 
-            val.lastIndexOf(" ") + 1, 
-            val.lastIndexOf("+") + 1,
-            val.lastIndexOf("*") + 1,
-            val.lastIndexOf("/") + 1,
-            val.lastIndexOf("-") + 1
-        );
-        var currentWord = val.substring(starter);
-
-        for (i = 0; i < suggestions.length; i++) {
-            if (suggestions[i].substring(0, currentWord.length).toLowerCase() === currentWord.toLowerCase()) {
-                b = document.createElement("DIV");
-                b.innerHTML = "<strong>" + suggestions[i].substring(0, currentWord.length) + "</strong>";
-                b.innerHTML += suggestions[i].substring(currentWord.length);
-                b.innerHTML += ": " + docs[suggestions[i]];
-                b.innerHTML += "<input type='hidden' value='" + suggestions[i] + "'>";
-
-                b.addEventListener("click", function(e) {
-                    input.value = input.value.substring(0, starter) + this.getElementsByTagName("input")[0].value;
-                    closeAutocomplete();
-                    try {
-                        ast = peg$parse(input.value);
-                        d3.select("#parseroutput")
-                                    .text("Valid expression. Press enter to use.")
-                                    .style("color", "black");
-                    } catch (err) {
-                        d3.select("#parseroutput")
-                            .text(err)
-                            .style("color", "darkred");
-                    }
-                    document.getElementById("expressioninput").focus();
-                });
-                a.appendChild(b); 
-            };
-        };
-    });
-};
-
-
-document.addEventListener("click", function(e) {
+document.addEventListener("click", function() {
     closeAutocomplete();
-})
+});
+
+function autocomplete() {
+    const input = d3.select("#expressioninput");
+    const inputValue = input.node().value;
+
+    const starter = Math.max(
+        0, 
+        inputValue.lastIndexOf("(") + 1, 
+        inputValue.lastIndexOf(" ") + 1, 
+        inputValue.lastIndexOf("+") + 1,
+        inputValue.lastIndexOf("*") + 1,
+        inputValue.lastIndexOf("/") + 1,
+        inputValue.lastIndexOf("-") + 1
+    );
+
+    const currentWord = inputValue.substring(starter);
+
+    const filteredList = currentWord.length > 0
+        ? Object.keys(docs).filter(k => k.length > currentWord.length && k.substr(0, currentWord.length) === currentWord)
+        : [];
+
+    const autocompleteList = d3.select("#autocomplete-list")
+        .selectAll("div")
+        .data(filteredList);
+
+    const newDivs = autocompleteList.enter().append("div");
+    newDivs.append("strong").text(d => d + ": ");
+    newDivs.append("span").text(d => docs[d]);
+    
+    newDivs.on("click", function(d) {
+        const newInputValue = inputValue.substring(0, starter) + d;
+        closeAutocomplete();
+
+        try {
+            ast = peg$parse(newInputValue);
+            d3.select("#parseroutput")
+                        .text("Valid expression. Press enter to use.")
+                        .style("color", "black");
+        } catch (err) {
+            d3.select("#parseroutput")
+                .text(err)
+                .style("color", "darkred");
+        }
+
+        input.node().value = newInputValue;
+        input.node().focus();
+    });
+
+    autocompleteList.exit().remove();
+
+    autocompleteList.select("strong").text(d => d + ": ");
+    autocompleteList.select("span").text(d => docs[d]);
+}
 
 function createTop5() {
     const top5 = svg.append("g")
@@ -1052,7 +1051,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     inputExp = '';
 
     // Updates to expression textbox
-    function updateExpressionInput(inputText) {
+    function updateExpressionInput(inputText, refreshMap) {
         if (inputText === "") {
             d3.select("#parseroutput")
                 .text("Enter an expression.")
@@ -1060,8 +1059,8 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
         }
 
         // auto-complete suggestions here
-        // referencing https://www.w3schools.com/howto/howto_js_autocomplete.asp
-        autocomplete(document.getElementById("expressioninput"), options);
+        // autocomplete(document.getElementById("expressioninput"), options);
+        autocomplete();
         
         var ast;
         try {
@@ -1073,7 +1072,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
         }
 
         if (ast != undefined) {
-            if (d3.event && d3.event.keyCode === 13) {
+            if (refreshMap) {
                 var customData;
                 try {
                     customData = computeCustomData(baseData, ast);
@@ -1159,10 +1158,19 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     }
     
     const inputElement = d3.select("#expressioninput");
-    inputElement.on("keyup", function () { updateExpressionInput(this.value); });
-    const defaultExpression = "cases(day)";
-    inputElement.text(defaultExpression);
-    updateExpressionInput(defaultExpression);
+    var inputTimeout = null;
+    inputElement.on("keyup", function () {
+        if (d3.event.keyCode !== 13) {
+            clearTimeout(inputTimeout);
+            inputTimeout = setTimeout(() => updateExpressionInput(this.value, false), 250);
+        } else {
+            updateExpressionInput(this.value, true);
+        }
+    });
+
+    const startExpression = inputElement.node().value;
+    inputElement.text(startExpression);
+    updateExpressionInput(startExpression, true);
 };
 
 function inputSuggestion() {
