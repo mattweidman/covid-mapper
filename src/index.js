@@ -240,7 +240,6 @@ function preprocessWorldData(rawData, rawPopulationData, allDates) {
 
     for (const row of rawData) {
         // If baseData doesn't contain Country_code as a key, add it and initialize arrays
-        // TODO: set population
         const countryCode = row[" Country_code"];
         if (!(countryCode in baseData)) {
             baseData[countryCode] = {
@@ -649,7 +648,7 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
     const timeValueObjects = timeGraphData[0];
 
     // set margins
-    var margin = {top: 20, right: 75, bottom: 50, left: 75};
+    var margin = {top: 20, right: 100, bottom: 50, left: 75};
     var vizWidth = width - margin.left - margin.right;
     var vizHeight = height - margin.top - margin.bottom;
 
@@ -710,20 +709,23 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
 
     // reference: https://www.d3-graph-gallery.com/graph/line_cursor.html
     var bisect = d3.bisector(function(data) { return data.date; }).left;
-    var focus = svg
-        .append('g')
+
+    svg.append('g')
         .append('circle')
         .style("fill", "none")
         .attr("stroke", "black")
         .attr('r', 4)
         .attr("id", "focus");
 
-    var focusText = svg
-        .append('g')
-        .append('text')
-            .attr("text-anchor", "left")
-            .attr("alignment-baseline", "middle")
-            .attr("id", "focusText");
+    const focusTextG = svg.append('g');
+    focusTextG.append('text')
+        .attr("text-anchor", "left")
+        .attr("alignment-baseline", "middle")
+        .attr("id", "focusTextTop");
+    focusTextG.append("text")
+        .attr("text-anchor", "left")
+        .attr("alignment-baseline", "middle")
+        .attr("id", "focusTextBottom");
 
     svg.append('rect')
         .style("fill", "none")
@@ -742,7 +744,7 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
     }
 }
 
-function updateTimeChartFocusText(dateIndex) {
+function updateTimeChartFocusText(dateIndex, allDates) {
     if (!xScale || !yScale || !timeGraphData) {
         return;
     }
@@ -751,18 +753,21 @@ function updateTimeChartFocusText(dateIndex) {
         dateIndex = slideValue;
     }
 
-    const focus = d3.select("#focus");
-    const focusText = d3.select("#focusText");
-
     const dataPoint = timeGraphData[0][dateIndex];
     const date = dataPoint.date;
     const value = dataPoint.value;
 
-    focus
+    d3.select("#focus")
         .attr("cx", xScale(date))
         .attr("cy", yScale(value) + 20);
-    focusText
-        .html(value)
+
+    d3.select("#focusTextTop")
+        .text(allDates[dateIndex])
+        .attr("x", xScale(date))
+        .attr("y", yScale(value) - 20);
+
+    d3.select("#focusTextBottom")
+        .text(value)
         .attr("x", xScale(date))
         .attr("y", yScale(value));
 }
@@ -791,7 +796,6 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText,
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
-            // TODO only allow graph to display if you've entered an expression!
             updateTimeChart(allDatesAllLocations, dates, inputText, d, names);
         })
 }
