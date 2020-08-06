@@ -93,11 +93,12 @@ The following aggregate operations can be used over a range of data:
 * Show loading while user is waiting.
 * Change sources listed on screen when user changes the map.
 * Let user use up, down, and tab to navigate suggestions.
+* Round data values on map, values on time chart, and min/max legend values to significant figures.
+* Show time chart of world or time chart of USA when no region selected.
 
 ### Bugs
 * Fix undefined counties (examples in South Dakota and Alaska).
 * Make color contrast accessible.
-* For better performance, don't update map when hovering over line chart.
 * Don't reload data when switching between USA states map and USA counties map.
 
 ### Non-feature work items
