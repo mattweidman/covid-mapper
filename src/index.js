@@ -731,31 +731,14 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
         .attr('width', width)
         .attr('height', height)
         .on('mousemove', mousemove)
-        .on('mouseout', mouseout);
+        .on('mouseout', () => updateTimeChartFocusText(slideValue, dates));
 
-    function mouseout() {
-        setFocusTextLocation(timeValueObjects[slideValue]);
-    }
-
-    function setFocusTextLocation(data) {
-        focus
-            .attr("cx", xScale(data.date))
-            .attr("cy", yScale(data.value) + 20);
-        focusText
-            .html(data.value)
-            .attr("x", xScale(data.date))
-            .attr("y", yScale(data.value));
-    }
+    updateTimeChartFocusText(slideValue, dates);
 
     function mousemove() {
-        var x0 = xScale.invert(d3.mouse(this)[0])
+        var x0 = xScale.invert(d3.mouse(this)[0]);
         var i = bisect(timeValueObjects, x0, 1);
-        var selectedData = timeValueObjects[i];
-        if (selectedData) {
-            setFocusTextLocation(selectedData);
-        } else {
-            mouseout();
-        }
+        updateTimeChartFocusText(i, dates);
     }
 }
 
@@ -764,9 +747,16 @@ function updateTimeChartFocusText(dateIndex) {
         return;
     }
 
+    if (dateIndex < 0 || dateIndex >= timeGraphData[0].length) {
+        dateIndex = slideValue;
+    }
+
     const focus = d3.select("#focus");
     const focusText = d3.select("#focusText");
-    const value = timeGraphData[0][dateIndex];
+
+    const dataPoint = timeGraphData[0][dateIndex];
+    const date = dataPoint.date;
+    const value = dataPoint.value;
 
     focus
         .attr("cx", xScale(date))
@@ -1102,6 +1092,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         updateSlider(allDates, this.value);
                         updateGeoMap(customData, color, slideValue, allDates, inputText, names);
                         updateTop5(customData[slideValue], names);
+                        updateTimeChartFocusText(slideValue, allDates);
                     });
 
                     // Updates legend minimum value
