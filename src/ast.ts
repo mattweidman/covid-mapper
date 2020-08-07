@@ -8,15 +8,17 @@ interface CovidData {
     newDeaths: number[];
 }
 
-abstract class ScalarExpr {
-    public abstract evaluate(data: CovidData, currentDay: number): number;
+enum ExprType {
+    Scalar,
+    Array
 }
 
-abstract class ArrayExpr {
-    public abstract evaluate(data: CovidData, currentDay: number): number[];
+abstract class Expr {
+    public abstract getType(): ExprType;
+    public abstract evaluate(data: CovidData, currentDay: number): number | number[];
 }
 
-class NumberNode extends ScalarExpr {
+class NumberNode extends Expr {
     private value: number;
 
     constructor(valueStr: string) {
@@ -24,14 +26,22 @@ class NumberNode extends ScalarExpr {
         this.value = parseInt(valueStr, 10);
     }
 
+    public getType(): ExprType {
+        return ExprType.Scalar;
+    }
+
     public evaluate(): number {
         return this.value;
     }
 }
 
-class ConstantNode extends ScalarExpr {
+class ConstantNode extends Expr {
     constructor(private name: string) {
         super();
+    }
+
+    public getType(): ExprType {
+        return ExprType.Scalar;
     }
 
     public evaluate(data: CovidData, currentDay: number): number {
@@ -50,13 +60,21 @@ class ConstantNode extends ScalarExpr {
     }
 }
 
-class DataAccessNode extends ScalarExpr {
-    constructor(private name: string, private indexExpr: ScalarExpr) {
+class DataAccessNode extends Expr {
+    constructor(private name: string, private indexExpr: Expr) {
         super();
+
+        if (indexExpr.getType() !== ExprType.Scalar) {
+            throw "Index to data access must be a scalar.";
+        }
+    }
+
+    public getType(): ExprType {
+        return ExprType.Scalar;
     }
 
     public evaluate(data: CovidData, currentDay: number): number {
-        var index = this.indexExpr.evaluate(data, currentDay);
+        var index = <number>this.indexExpr.evaluate(data, currentDay);
 
         switch(this.name) {
             case "cases":
@@ -83,14 +101,25 @@ class DataAccessNode extends ScalarExpr {
     }
 }
 
-class DataRangeNode extends ArrayExpr {
-    constructor(private name: string, private startExpr: ScalarExpr, private endExpr: ScalarExpr) {
+class DataRangeNode extends Expr {
+    constructor(private name: string, private startExpr: Expr, private endExpr: Expr) {
         super();
+
+        if (startExpr.getType() !== ExprType.Scalar) {
+            throw "Starting index to data range must be a scalar.";
+        }
+        if (endExpr.getType() !== ExprType.Scalar) {
+            throw "Ending index to data range must be a scalar.";
+        }
+    }
+
+    public getType(): ExprType {
+        return ExprType.Array;
     }
 
     public evaluate(data: CovidData, currentDay: number): number[] {
-        const startIndex = this.startExpr.evaluate(data, currentDay);
-        const endIndex = this.endExpr.evaluate(data, currentDay);
+        const startIndex = <number>this.startExpr.evaluate(data, currentDay);
+        const endIndex = <number>this.endExpr.evaluate(data, currentDay);
 
         switch(this.name) {
             case "cases":
@@ -142,13 +171,21 @@ class DataRangeNode extends ArrayExpr {
     }
 }
 
-class AggregateNode extends ScalarExpr {
-    constructor(private name: string, private rangeExpr: ArrayExpr) {
+class AggregateNode extends Expr {
+    constructor(private name: string, private rangeExpr: Expr) {
         super();
+
+        if (rangeExpr.getType() !== ExprType.Array) {
+            throw `Input to aggregate function ${name} must be a range.`;
+        }
+    }
+
+    public getType(): ExprType {
+        return ExprType.Scalar;
     }
 
     public evaluate(data: CovidData, currentDay: number): number {
-        const range = this.rangeExpr.evaluate(data, currentDay);
+        const range = <number[]>this.rangeExpr.evaluate(data, currentDay);
 
         if (this.name === "max") {
             return range.reduce((acc, x) => acc > x ? acc : x, range[0]);
@@ -164,25 +201,97 @@ class AggregateNode extends ScalarExpr {
     }
 }
 
-class BinopNode extends ScalarExpr {
-    constructor(private operator: string, private expr1: ScalarExpr, private expr2: ScalarExpr) {
+class BinopNode extends Expr {
+    constructor(private operator: string, private expr1: Expr, private expr2: Expr) {
         super();
     }
 
-    public evaluate(data: CovidData, currentDay: number): number {
+    public getType(): ExprType {
+        return this.expr1.getType() === ExprType.Array || this.expr2.getType() === ExprType.Array
+            ? ExprType.Array
+            : ExprType.Scalar;
+    }
+
+    public evaluate(data: CovidData, currentDay: number): number | number[] {
         const val1 = this.expr1.evaluate(data, currentDay);
         const val2 = this.expr2.evaluate(data, currentDay);
 
-        if (this.operator === "+") {
-            return val1 + val2;
-        } else if (this.operator === "-") {
-            return val1 - val2;
-        } else if (this.operator === "*") {
-            return val1 * val2;
-        } else if (this.operator === "/") {
-            return val1 === 0 ? 0 : val1 / val2;
+        const type1 = this.expr1.getType();
+        const type2 = this.expr2.getType();
+
+        if (type1 === ExprType.Scalar && type2 === ExprType.Scalar) {
+            const scalar1 = <number>val1;
+            const scalar2 = <number>val2;
+
+            if (this.operator === "+") {
+                return scalar1 + scalar2;
+            } else if (this.operator === "-") {
+                return scalar1 - scalar2;
+            } else if (this.operator === "*") {
+                return scalar1 * scalar2;
+            } else if (this.operator === "/") {
+                return scalar1 === 0 ? 0 : scalar1 / scalar2;
+            } else {
+                throw "Unsupported binary operation: " + this.operator;
+            }
+        } else if (type1 === ExprType.Array && type2 === ExprType.Array) {
+            const arr1 = <number[]>val1;
+            const arr2 = <number[]>val2;
+
+            if (this.operator === "+") {
+                return this.zipArrays(arr1, arr2, (a, b) => a + b);
+            } else if (this.operator === "-") {
+                return this.zipArrays(arr1, arr2, (a, b) => a - b);
+            } else if (this.operator === "*") {
+                return this.zipArrays(arr1, arr2, (a, b) => a * b);
+            } else if (this.operator === "/") {
+                return this.zipArrays(arr1, arr2, (a, b) => a === 0 ? 0 : a / b);
+            } else {
+                throw "Unsupported binary operation: " + this.operator;
+            }
+        } else if (type1 === ExprType.Scalar) {
+            var scalar1 = <number>val1;
+            var array2 = <number[]>val2;
+
+            if (this.operator === "+") {
+                return array2.map(a => scalar1 + a);
+            } else if (this.operator === "-") {
+                return array2.map(a => scalar1 - a);
+            } else if (this.operator === "*") {
+                return array2.map(a => scalar1 * a);
+            } else if (this.operator === "/") {
+                return array2.map(a => scalar1 === 0 ? 0 : scalar1 / a);
+            } else {
+                throw "Unsupported binary operation: " + this.operator;
+            }
         } else {
-            throw "Unsupported binary operation: " + this.operator
+            var array1 = <number[]>val1;
+            var scalar2 = <number>val2;
+
+            if (this.operator === "+") {
+                return array1.map(a => a + scalar2);
+            } else if (this.operator === "-") {
+                return array1.map(a => a - scalar2);
+            } else if (this.operator === "*") {
+                return array1.map(a => a * scalar2);
+            } else if (this.operator === "/") {
+                return array1.map(a => a === 0 ? 0 : a / scalar2);
+            } else {
+                throw "Unsupported binary operation: " + this.operator;
+            }
         }
+    }
+
+    private zipArrays<T>(arr1: T[], arr2: T[], combine: (x1: T, x2: T) => T): T[] {
+        if (arr1.length !== arr2.length) {
+            throw "Cannot combine arrays of different lengths.";
+        }
+
+        const arrAns = [];
+        for (var i = 0; i < arr1.length; i++) {
+            arrAns.push(combine(arr1[i], arr2[i]));
+        }
+
+        return arrAns;
     }
 }

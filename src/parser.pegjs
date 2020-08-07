@@ -21,7 +21,7 @@ Term
 
 Factor
   = "(" _ expr:Expression _ ")" { return expr; }
-  / Integer / Constant / DataAccess / Aggregate
+  / Integer / Constant / DataAccess / Aggregate / DataRange
   
 DataAccess
   = name:("cases" / "deaths" / "newcases" / "newdeaths") _ "(" _ expr:Expression _ ")" {
@@ -34,7 +34,7 @@ DataRange
   }
   
 Aggregate
-  = name:("max" / "min" / "sum" / "average") _ "(" _ range:DataRange _ ")" { 
+  = name:("max" / "min" / "sum" / "average") _ "(" _ range:Expression _ ")" { 
       return new AggregateNode(name, range); 
     }
   
