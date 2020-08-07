@@ -77,7 +77,6 @@ The following aggregate operations can be used over a range of data:
 
 ### Major features
 * Let users change map colors.
-* Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
 * Shareable maps - maybe could generate a link that you can send to others.
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
 * Expanding circles option on maps
