@@ -295,3 +295,37 @@ class BinopNode extends Expr {
         return arrAns;
     }
 }
+
+class ShiftNode extends Expr {
+    constructor(private rangeExpr: Expr, private offsetExpr: Expr) {
+        super();
+
+        if (rangeExpr.getType() !== ExprType.Array) {
+            throw "First argument to shift must be an array.";
+        }
+        if (offsetExpr.getType() !== ExprType.Scalar) {
+            throw "Second argument to shift must be a scalar.";
+        }
+    }
+
+    public getType(): ExprType {
+        return ExprType.Array;
+    }
+
+    public evaluate(data: CovidData, currentDay: number): number[] {
+        const range = <number[]>this.rangeExpr.evaluate(data, currentDay);
+        const offset = <number>this.offsetExpr.evaluate(data, currentDay);
+
+        return range.map((_, i) => {
+            const readIndex = i - offset;
+
+            if (readIndex < 0) {
+                return 0;
+            } else if (readIndex >= range.length) {
+                throw "Offset to shift attempts to read future data.";
+            } else {
+                return range[readIndex];
+            }
+        });
+    }
+}

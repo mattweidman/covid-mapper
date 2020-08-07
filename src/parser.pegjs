@@ -21,7 +21,7 @@ Term
 
 Factor
   = "(" _ expr:Expression _ ")" { return expr; }
-  / Integer / Constant / DataAccess / Aggregate / DataRange
+  / Integer / Constant / DataAccess / Aggregate / DataRange / Shift
   
 DataAccess
   = name:("cases" / "deaths" / "newcases" / "newdeaths") _ "(" _ expr:Expression _ ")" {
@@ -37,6 +37,11 @@ Aggregate
   = name:("max" / "min" / "sum" / "average") _ "(" _ range:Expression _ ")" { 
       return new AggregateNode(name, range); 
     }
+
+Shift
+  = "shift" _ "(" _ range:Expression _ "," _ offset:Expression _ ")" {
+      return new ShiftNode(range, offset);
+  }
   
 Constant "constant"
   = name:("population" / "day" / "first" / "last") {
