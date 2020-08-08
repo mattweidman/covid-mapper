@@ -7,28 +7,28 @@
     "deaths": "dataset for the total number of deaths up to the given day",
     "newcases": "dataset for the number of new cases on the given day",
     "newdeaths": "dataset for the number of new deaths on the given day",
-    "day": "indicates you would like to access data for the current day on the slider",
-    "first": "indicates you would like to access data for the first day in the dataset",
-    "last": "indicates you would like to access data for the last day in the dataset",
+    "day": "the date indicated by the slider",
+    "first": "the first date in the dataset",
+    "last": "the last date in the dataset",
     "population": "population of the region",
-    "sum": "aggregate sum operation to be used over a range of data",
-    "average": "aggregate average operation to be used over a range of data",
-    "max": "aggregate max operation to be used over a range of data",
-    "min": "aggregate min operation to be used over a range of data",
-    "shift": "takes a range and an offset as input; returns a new range that has been shifted offset amount",
-    "+": "operator to add the numbers",
-    "-": "operator to substract the numbers",
-    "*": "operator to multiply the numbers",
-    "/": "operator to divide the numbers"
+    "sum": "aggregate sum operation, used over a range of data",
+    "average": "aggregate average operation, used over a range of data",
+    "max": "aggregate max operation, used over a range of data",
+    "min": "aggregate min operation, used over a range of data",
+    "shift": "takes a range and an offset as input; returns the range shifted by offset number of days",
+    "+": "addition",
+    "-": "subtraction",
+    "*": "multiplication",
+    "/": "division: dividing zero by zero returns zero"
   },
   "expressions": {
     "sevenDayAvgNewCasesPer100000": {
         "title": "7-day average of new cases per 100,000 people",
-        "expression": "(cases(day) - cases(day - 7)) / 7 / population * 100000"
+        "expression": "(cases(day) - cases(day-7)) / 7 / population * 100000"
     },
     "sevenDayAvgNewDeathsPer100000": {
         "title": "7-day average of new deaths per 100,000 people",
-        "expression": "(deaths(day) - deaths(day - 7)) / 7 / population * 100000"
+        "expression": "(deaths(day) - deaths(day-7)) / 7 / population * 100000"
     },
     "newCasesPer100000": {
         "title": "New cases per 100,000 people",
@@ -46,13 +46,13 @@
       "title": "Total deaths per 100,000 people",
       "expression": "deaths(day) / population * 100000"
     },
-    "sevenDayMaxNewCasesPer100000": {
-        "title": "7-day maximum of new cases per 100,000 people",
-        "expression": "max(newcases(day-6, day+1)) / population * 100000"
+    "totalCases": {
+        "title": "Total cases",
+        "expression": "cases(day)"
     },
-    "sevenDayMaxNewDeathsPer100000": {
-        "title": "7-day maximum of new deaths per 100,000 people",
-        "expression": "max(newdeaths(day-6, day+1)) / population * 100000"
+    "totalDeaths": {
+        "title": "Total deaths",
+        "expression": "deaths(day)"
     },
     "progressToZero": {
         "title": "Percentage of maximum new cases",
@@ -60,7 +60,7 @@
     },
     "progressToZeroSevenDayAvg": {
         "title": "Percentage of maximum new cases, averaged over 7 days",
-        "expression": "(cases(day) - cases(day - 7)) / max(cases(first, last) - shift(cases(first, last), 7)) * 100"
+        "expression": "(cases(day) - cases(day-7)) / max(cases(first, last) - shift(cases(first, last), 7)) * 100"
     },
     "deathRate": {
         "title": "Cumulative death rate",

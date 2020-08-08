@@ -202,14 +202,18 @@ class AggregateNode extends Expr {
 }
 
 class BinopNode extends Expr {
+    private binopType: ExprType;
+
     constructor(private operator: string, private expr1: Expr, private expr2: Expr) {
         super();
+
+        this.binopType = this.expr1.getType() === ExprType.Array || this.expr2.getType() === ExprType.Array
+            ? ExprType.Array
+            : ExprType.Scalar;
     }
 
     public getType(): ExprType {
-        return this.expr1.getType() === ExprType.Array || this.expr2.getType() === ExprType.Array
-            ? ExprType.Array
-            : ExprType.Scalar;
+        return this.binopType;
     }
 
     public evaluate(data: CovidData, currentDay: number): number | number[] {
