@@ -391,13 +391,11 @@ function showWorldMap(whoRegion) {
     d3.select("#viewtype").property("value", "worldflat");
 
     Promise.all([
-        d3.json("./data/countries.json"),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://covid19.who.int/WHO-COVID-19-global-data.csv?" + randStrGen()),
-        d3.csv("./data/world-bank-population-isoa2.csv")
+        d3.csv("https://cors-anywhere.herokuapp.com/https://covid19.who.int/WHO-COVID-19-global-data.csv?" + randStrGen())
     ]).then(function (data) {
-        const geomap = data[0];
-        const rawData = data[1];
-        const rawPopulationData = data[2];
+        const geomap = countriesJSON;
+        const rawData = data[0];
+        const rawPopulationData = worldPopulationJSON;
 
         const allDates = getDateListFromWorldData(rawData);
         const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
@@ -420,15 +418,14 @@ function showUsaCounties() {
     d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
-        d3.json("./data/us.json"),
         d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv?" + randStrGen()),
         d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv?" + randStrGen()),
         d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv?" + randStrGen())
     ]).then(function (data) {
-        const geomap = data[0];
-        const casesCsv = data[1];
-        const deathsCsv = data[2];
-        const populationCsv = data[3];
+        const geomap = usJSON;
+        const casesCsv = data[0];
+        const deathsCsv = data[1];
+        const populationCsv = data[2];
 
         const allDates = getDateListFromUsaData(casesCsv);
         const baseData = preprocessUsaData(casesCsv, deathsCsv, populationCsv, allDates);
@@ -446,17 +443,15 @@ function showUsaStates() {
     d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
-        d3.json("./data/us.json"),
-        d3.csv("./data/state_abbrs.csv"),
         d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv?" + randStrGen()),
         d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv?" + randStrGen()),
         d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv?" + randStrGen())
     ]).then(function (data) {
-        const geomap = data[0];
-        const stateAbbrsCsv = data[1];
-        const casesCsv = data[2];
-        const deathsCsv = data[3];
-        const populationCsv = data[4];
+        const geomap = usJSON;
+        const stateAbbrsCsv = usStateAbbrsJSON;
+        const casesCsv = data[0];
+        const deathsCsv = data[1];
+        const populationCsv = data[2];
 
         const allDates = getDateListFromUsaData(casesCsv);
         const baseData = preprocessUsaStatesData(casesCsv, deathsCsv, populationCsv, stateAbbrsCsv, allDates);
@@ -934,10 +929,9 @@ function userChangesLegend(text, isMin, color) {
 }
 
 function loadDocs() {
-    $.getJSON('../../clientresources.json', function(data) {
-        docs = data.docs;
-        options = Object.keys(docs);
-    });
+    const data = clientResources;
+    docs = data.docs;
+    options = Object.keys(docs);
 }
 
 function closeAutocomplete() {
@@ -1178,16 +1172,15 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
 };
 
 function loadSuggestions(){ 
-    $.getJSON('../../clientresources.json', function(data) {
-        var samples = data.expressions;
-        for (var key in samples) {
-            var dropdown = document.getElementById("suggestions");
-            var option = document.createElement("OPTION");
-            option.innerHTML = samples[key]["title"]
-            option.value = samples[key]["expression"];
-            dropdown.options.add(option);
-        }
-    });
+    const data = clientResources;
+    var samples = data.expressions;
+    for (var key in samples) {
+        var dropdown = document.getElementById("suggestions");
+        var option = document.createElement("OPTION");
+        option.innerHTML = samples[key]["title"]
+        option.value = samples[key]["expression"];
+        dropdown.options.add(option);
+    }
 }
 
 function downloadAsPng() {
@@ -1272,11 +1265,9 @@ function downloadAsPng() {
 }
 
 function showDocumentation() {
-    d3.json("./clientresources.json")
-    .then(function (data) {
-        const docs = getDocsList(data.docs);
-        tabulate(docs, ['keyword', 'definition']);
-    });
+    const data = clientResources;
+    const docs = getDocsList(data.docs);
+    tabulate(docs, ['keyword', 'definition']);
 }
 
 function tabulate(data, columns) {

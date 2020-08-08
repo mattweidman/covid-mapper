@@ -14,25 +14,13 @@ First, you need to install the necessary NPM libaries:
 
 `npm install -g typescript`
 
-`npm install -g http-server`
-
 `npm install -g pegjs`
-
-To download and merge data into one CSV:
-
-`cd data`
-
-`python merge_csv.py`
-
-Make sure you have Python 3 installed.
 
 To build code:
 
 `build.cmd`
 
-To run:
-
-`http-server .`
+To run, open index.html in the browser of your choice.
 
 ## Usage
 
