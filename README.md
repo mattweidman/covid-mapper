@@ -73,11 +73,16 @@ The following aggregate operations can be used over a range of data:
 * sum
 * average
 
+Arithmetic operators can act on two scalars, a scalar and an array (range), or on two arrays. When a scalar and an array are added, for example, the scalar is added to each element of the array. Operations on two arrays are always element-wise, so multiplying two arrays will produce a new array in which each element is the product of the elements from the multiplied arrays at the same index. Arrays must be the same length in order to be combined.
+
+There is also a shift operation that takes a range of data and shifts it in time by some offset. For example, shift(newcases(first, last), 7) would take the range of newcases from the first day to the last day and produce a new array of the same length, but each element is now the data point from 7 days ago. If the offset (7 in this case) is positive, the last 7 days of the dataset are ignored, and the first 7 days are filled in with zeros. If the offset is negative, an error will appear during evaluation because the evaluator will attempt to access future data. 
+
+The shift operation is useful if you want to compare ranges of data from different time periods. For example, cases(first, last) - shift(cases(first, last), 7) returns a range of data in which each element is the number of new cases in the last 7 days. Taking max(cases(first, last) - shift(cases(first, last), 7)) gives the maximum number of 7-day new cases.
+
 ## TODO 
 
 ### Major features
 * Let users change map colors.
-* Support array-level operations, like adding arrays element-wise and multiplying arrays by scalars. Also a shift operation to allow subtracting an array of today's cases with an array of past cases.
 * Shareable maps - maybe could generate a link that you can send to others.
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
 * Expanding circles option on maps

@@ -985,6 +985,11 @@ function autocomplete() {
 
         try {
             ast = peg$parse(newInputValue);
+
+            if (ast.getType() !== 0 /* Scalar */) {
+                throw "Expression must evaluate to a scalar.";
+            }
+
             d3.select("#parseroutput")
                         .text("Valid expression. Press enter to use.")
                         .style("color", "black");
@@ -1049,6 +1054,11 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
         var ast;
         try {
             ast = peg$parse(inputText);
+
+            if (ast.getType() !== 0 /* Scalar */) {
+                ast = undefined;
+                throw "Expression must evaluate to a scalar.";
+            }
         } catch (err) {
             d3.select("#parseroutput")
                 .text(err)
