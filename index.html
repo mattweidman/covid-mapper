@@ -69,18 +69,18 @@
     </div>
     <div id="timechart"></div>
     <p>Sources: usafacts.org, covid19.who.int, data.worldbank.org</p>
+    <br>
+    <button onclick=downloadAsPng()>Download map as PNG</button>
+    <div id="documentation">
+        <h3>Keywords & Definitions</h3>
+        <div id="doc"></div>
+        <p>For more information, see <a href="https://github.com/mattweidman/covid-mapper/blob/master/README.md#usage">usage documentation on GitHub.</a></p>
+    </div>
     <script src="data/usgeomap.js"></script>
     <script src="data/usstateabbrs.js"></script>
     <script src="data/worldgeomap.js"></script>
     <script src="data/worldpopulation.js"></script>
     <script src="clientresources.js"></script>
     <script src="src/index.js"></script>
-    <br>
-    <button onclick=downloadAsPng()>Download map as PNG</button>
-    <div id="documentation">
-        <h3>Keywords & Definitions :)</h3>
-        <div id="doc"></div>
-        <p>For more information, see <a href="https://github.com/mattweidman/covid-mapper/blob/master/README.md#usage">usage documentation on GitHub.</a></p>
-    </div>
 </body>
 </html>
