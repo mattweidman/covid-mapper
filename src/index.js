@@ -844,7 +844,7 @@ function updateRankings(customData, slideValue, allDates, inputText, names, page
         d3.select("#rankingslist").append("h5")
             .attr("id", "rankloadmore")
             .attr("class", "rankload")
-            .text(`Load ${rankingsPageSize} more`)
+            .text(`Show ${rankingsPageSize} more`)
             .on("click", function () {
                 updateRankings(customData, slideValue, allDates, inputText, names, pageSize + rankingsPageSize);
             });
@@ -852,7 +852,7 @@ function updateRankings(customData, slideValue, allDates, inputText, names, page
         d3.select("#rankingslist").append("h5")
             .attr("id", "rankloadall")
             .attr("class", "rankload")
-            .text("Load all")
+            .text("Show all")
             .on("click", function () {
                 updateRankings(customData, slideValue, allDates, inputText, names, Object.keys(locationValues).length);
             });
