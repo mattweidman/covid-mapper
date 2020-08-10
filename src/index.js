@@ -630,7 +630,7 @@ function processDate(date) {
 }
 
 var xScale, yScale, timeGraphData;
-function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
+function updateTimeChart(allDatesAllLocations, dates, inputText, d) {
     d3.select("#timechart").selectAll("*").remove();
 
     // compute appropriate data for this location
@@ -766,7 +766,7 @@ function updateTimeChartFocusText(dateIndex, allDates) {
 // Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText, names) {
+function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText) {
     const locationValues = allDatesAllLocations[slideValue];
     svg.selectAll(".geofeatures")
         .style ( "fill" , function (d) {
@@ -787,17 +787,16 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText,
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
-            updateTimeChart(allDatesAllLocations, dates, inputText, d, names);
+            updateTimeChart(allDatesAllLocations, dates, inputText, d);
         })
 }
 
 function updateRankings(locationValues, names) {
-    // TODO: change data structure of names
     // TODO: only show top 100 or so and let user click to see more
 
     var nameValuePairs = Object.keys(locationValues)
         .filter(key => !isNaN(locationValues[key]) && isFinite(locationValues[key]))
-        .map(key => [(names.find(loc => loc.id === (key))).name, locationValues[key]]);
+        .map(key => [names[key], locationValues[key]]);
 
     nameValuePairs.sort((a, b) => b[1] - a[1]);
 
@@ -1049,25 +1048,22 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .unknown(lowColor);
 
                     // Get names for top5 list along with ID
-                    var names = [];
+                    var names = {};
                     for (const [key, value] of Object.entries(baseData)) {
-                        names.push({
-                            "id": value.id,
-                            "name": value.name
-                        });
+                        names[key] = value.name;
                     }
 
                     d3.select("#timechart").selectAll("*").remove();
 
                     inputExp = inputText;
                     updateLegendLimits(domain);
-                    updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                     updateRankings(customData[slideValue], names);
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                        updateGeoMap(customData, color, slideValue, allDates, inputText);
                         updateTimeChartFocusText(slideValue, allDates);
                     });
 
@@ -1081,13 +1077,13 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                    updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                                 }
                             }
                         })
                         .on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                updateGeoMap(customData, color, slideValue, allDates, inputText);
                             }
                         });
 
@@ -1097,12 +1093,12 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                    updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                                 }
                             }
                         }).on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                updateGeoMap(customData, color, slideValue, allDates, inputText);
                             }
                         });
         
