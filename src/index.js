@@ -735,6 +735,9 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, id, name) {
         var i = bisect(timeValueObjects, x0, 1);
         updateTimeChartFocusText(i, dates);
     }
+
+    // scroll to element
+    d3.select("#timechart").node().scrollIntoView();
 }
 
 function updateTimeChartFocusText(dateIndex, allDates) {
