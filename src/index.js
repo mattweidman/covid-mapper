@@ -1002,7 +1002,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
     inputExp = '';
 
     // Updates to expression textbox
-    function updateExpressionInput(inputText, refreshMap) {
+    function updateExpressionInput(inputText, refreshMap, clearSuggestions = false) {
         if (inputText === "") {
             d3.select("#parseroutput")
                 .text("Enter an expression.")
@@ -1105,6 +1105,10 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     d3.select("#parseroutput")
                         .text("Entered.")
                         .style("color", "black");
+
+                    if (clearSuggestions) {
+                        d3.select("#suggestions").node().value = null;
+                    }
                 }
             } else {
                 d3.select("#parseroutput")
@@ -1121,7 +1125,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
             clearTimeout(inputTimeout);
             inputTimeout = setTimeout(() => updateExpressionInput(this.value, false), 250);
         } else {
-            updateExpressionInput(this.value, true);
+            updateExpressionInput(this.value, true, true);
         }
     });
 
