@@ -70,8 +70,6 @@ d3.select("#viewtype").on("change", () => {
     updateViewType(optionSelected);
 });
 
-var top5 = false; // Using this variable for toggle to decide if top5 queries are currently on screen or not
-var showTop5 = true;
 var inputExp = '';
 
 // Set properties.id and properties.name for every region
@@ -575,8 +573,6 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
-    svg.selectAll("g.top5").remove();
-    svg.selectAll("g.top5Toggle").remove();
     svg.call(zoom.transform, d3.zoomIdentity);
     svg.selectAll(".geofeatures").remove();
     
@@ -795,37 +791,35 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText,
         })
 }
 
-function updateTop5(locationValues, names) {
-    top5 = true;
-    var i = 0;
-    var nameValuePairs = [];
-    Object.keys(locationValues).map((key) => {
-        if(!isNaN(locationValues[key])){
-            nameValuePairs.push([(names.find(loc => loc.id === (key))).name, locationValues[key]]) // Store name of location with result in array
-        }else {
-        }
-    });
+function updateRankings(locationValues, names) {
+    // TODO: also shown undefined values at the end
+    // TODO: only update rankings when slider is released
+    // TODO: change data structure of names
+    // TODO: only show top 10 or so and let user click to see more
 
-    nameValuePairs.sort(function (a,b){
-        return a[1] - b[1]
-    });
-    nameValuePairs = nameValuePairs.slice(Math.max(nameValuePairs.length - 5, 0)).reverse(); // Get top 5
+    var nameValuePairs = Object.keys(locationValues)
+        .filter(key => !isNaN(locationValues[key]) && isFinite(locationValues[key]))
+        .map(key => [(names.find(loc => loc.id === (key))).name, locationValues[key]]);
 
-    svg.select(".top5Text").text('Top 5:');
-    var xVal = 40;
-    var yVal = 360;
-    nameValuePairs.forEach((pair) =>{
-        svg.select(".text"+yVal)
-            .text(pair[0]+": "+pair[1])
-            .style("font-size", "15px")
-            .attr("alignment-baseline","middle");
-        yVal = yVal + 20;
-    });
+    nameValuePairs.sort((a, b) => b[1] - a[1]);
 
-    if(showTop5 === false){
-        svg.select(".top5")
-            .style("opacity", 0);
-    }
+    // Update text on top of table
+    d3.select("#rankingsexpr").text(inputExp);
+
+    const rankedRegions = d3.select("#rankingslist table").selectAll(".rankedregion")
+        .data(nameValuePairs);
+
+    const newRanks = rankedRegions.enter().append("tr")
+        .attr("class", "rankedregion");
+    newRanks.append("td").attr("class", "ranknum").text((d, i) => i);
+    newRanks.append("td").attr("class", "rankname").text(d => d[0]);
+    newRanks.append("td").attr("class", "rankval").text(d => d[1]);
+
+    rankedRegions.exit().remove();
+
+    rankedRegions.select(".ranknum").text((d, i) => i);
+    rankedRegions.select(".rankname").text(d => d[0]);
+    rankedRegions.select(".rankval").text(d => d[1]);
 }
 
 function createLegend() {
@@ -1003,34 +997,11 @@ function autocomplete() {
     autocompleteList.select("span").text(d => docs[d]);
 }
 
-function createTop5() {
-    const top5 = svg.append("g")
-        .attr("class", "top5")
-        .attr("id", "top5Id");
-
-    var xValTop5 = 40;
-    var yValTop5 = 360;
-    top5.append("text").attr("class", "top5Text").attr("x", xValTop5).attr("y", yValTop5 - 20)
-    for (let i = 0; i < 5; i++) {
-        top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
-        yValTop5 = yValTop5 + 20;
-    }
-}
-
-function updateTop5Toggle(value) {
-    showTop5 = showTop5 ? false : true;
-    var show = showTop5 ? 1 : 0;
-    svg.select(".top5")
-        .style("opacity", show);
-}
-
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
     resetGeoMap(geomapFeatures);
-    top5 = false;
 
-    createTop5();
     inputExp = '';
 
     // Updates to expression textbox
@@ -1093,13 +1064,13 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     inputExp = inputText;
                     updateLegendLimits(domain);
                     updateGeoMap(customData, color, slideValue, allDates, inputText, names);
-                    updateTop5(customData[slideValue], names);
+                    updateRankings(customData[slideValue], names);
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
                         updateGeoMap(customData, color, slideValue, allDates, inputText, names);
-                        updateTop5(customData[slideValue], names);
+                        updateRankings(customData[slideValue], names);
                         updateTimeChartFocusText(slideValue, allDates);
                     });
 
