@@ -792,10 +792,8 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText,
 }
 
 function updateRankings(locationValues, names) {
-    // TODO: also shown undefined values at the end
-    // TODO: only update rankings when slider is released
     // TODO: change data structure of names
-    // TODO: only show top 10 or so and let user click to see more
+    // TODO: only show top 100 or so and let user click to see more
 
     var nameValuePairs = Object.keys(locationValues)
         .filter(key => !isNaN(locationValues[key]) && isFinite(locationValues[key]))
@@ -1070,8 +1068,11 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
                         updateGeoMap(customData, color, slideValue, allDates, inputText, names);
-                        updateRankings(customData[slideValue], names);
                         updateTimeChartFocusText(slideValue, allDates);
+                    });
+
+                    slider.on("change", function () {
+                        updateRankings(customData[slideValue], names);
                     });
 
                     // Updates legend minimum value
