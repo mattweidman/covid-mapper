@@ -169,3 +169,11 @@ th, td {
 .rankload {
     cursor: pointer;
 }
+
+.rankedregion {
+    cursor: pointer;
+}
+
+.rankedregion:hover {
+    background-color: aliceblue;
+}

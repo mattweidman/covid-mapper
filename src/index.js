@@ -632,11 +632,11 @@ function processDate(date) {
 }
 
 var xScale, yScale, timeGraphData;
-function updateTimeChart(allDatesAllLocations, dates, inputText, d) {
+function updateTimeChart(allDatesAllLocations, dates, inputText, id, name) {
     d3.select("#timechart").selectAll("*").remove();
 
     // compute appropriate data for this location
-    timeGraphData = computeCustomTimeData(allDatesAllLocations, d.properties.id, dates);
+    timeGraphData = computeCustomTimeData(allDatesAllLocations, id, dates);
     const maxValue = timeGraphData[1];
     const timeValueObjects = timeGraphData[0];
 
@@ -687,7 +687,7 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d) {
         .attr("transform", "translate(0," + margin.top + ")")
         .call(d3.axisLeft(yScale));
 
-    var titleText = inputText + " in " + d.properties.name;
+    var titleText = inputText + " in " + name;
     svg.append("text")
         .attr("x", 0)
         .attr("y", 10)
@@ -771,9 +771,10 @@ function updateTimeChartFocusText(dateIndex, allDates) {
 function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText) {
     const locationValues = allDatesAllLocations[slideValue];
     svg.selectAll(".geofeatures")
-        .style ( "fill" , function (d) {
+        .style("fill", function (d) {
             return color(locationValues[d.properties.id]);
         })
+        .style("cursor", "pointer")
         .on("mouseover", function(d) {
             const sel = d3.select(this);
             sel.moveToFront();
@@ -789,37 +790,46 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText)
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
-            updateTimeChart(allDatesAllLocations, dates, inputText, d);
+            updateTimeChart(allDatesAllLocations, dates, inputText, d.properties.id, d.properties.name);
         })
 }
 
-function updateRankings(locationValues, names, pageSize = rankingsPageSize) {
-    // TODO: responsive UI when hovering over rows
-    // TODO: click on row to change line chart
+function updateRankings(customData, slideValue, allDates, inputText, names, pageSize = rankingsPageSize) {
+    const locationValues = customData[slideValue];
 
     const nameValuePairs = Object.keys(locationValues)
         .filter(key => !isNaN(locationValues[key]) && isFinite(locationValues[key]))
-        .map(key => [names[key], locationValues[key]]);
+        .map(key => {
+            return {
+                "name": names[key],
+                "value": locationValues[key],
+                "id": key
+            }
+        });
 
-    nameValuePairs.sort((a, b) => b[1] - a[1]);
+    nameValuePairs.sort((a, b) => b.value - a.value);
 
     // Update text on top of table
-    d3.select("#rankingsexpr").text(inputExp);
+    d3.select("#rankingsexpr").text(inputText);
 
     const rankedRegions = d3.select("#rankingslist table").selectAll(".rankedregion")
         .data(nameValuePairs.slice(0, pageSize));
 
     const newRanks = rankedRegions.enter().append("tr")
-        .attr("class", "rankedregion");
+        .attr("class", "rankedregion")
+        .on("click", function (d) {
+            updateTimeChart(customData, allDates, inputText, d.id, d.name);
+        });
+
     newRanks.append("td").attr("class", "ranknum").text((d, i) => (i + 1));
-    newRanks.append("td").attr("class", "rankname").text(d => d[0]);
-    newRanks.append("td").attr("class", "rankval").text(d => d[1]);
+    newRanks.append("td").attr("class", "rankname").text(d => d.name);
+    newRanks.append("td").attr("class", "rankval").text(d => d.value);
 
     rankedRegions.exit().remove();
 
     rankedRegions.select(".ranknum").text((d, i) => (i + 1));
-    rankedRegions.select(".rankname").text(d => d[0]);
-    rankedRegions.select(".rankval").text(d => d[1]);
+    rankedRegions.select(".rankname").text(d => d.name);
+    rankedRegions.select(".rankval").text(d => d.value);
 
     d3.select("#rankloadmore").remove();
     d3.select("#rankloadall").remove();
@@ -830,7 +840,7 @@ function updateRankings(locationValues, names, pageSize = rankingsPageSize) {
             .attr("class", "rankload")
             .text(`Load ${rankingsPageSize} more`)
             .on("click", function () {
-                updateRankings(locationValues, names, pageSize + rankingsPageSize);
+                updateRankings(customData, slideValue, allDates, inputText, names, pageSize + rankingsPageSize);
             });
 
         d3.select("#rankingslist").append("h5")
@@ -838,7 +848,7 @@ function updateRankings(locationValues, names, pageSize = rankingsPageSize) {
             .attr("class", "rankload")
             .text("Load all")
             .on("click", function () {
-                updateRankings(locationValues, names, Object.keys(locationValues).length);
+                updateRankings(customData, slideValue, allDates, inputText, names, Object.keys(locationValues).length);
             });
     }
 }
@@ -1081,7 +1091,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     inputExp = inputText;
                     updateLegendLimits(domain);
                     updateGeoMap(customData, color, slideValue, allDates, inputText);
-                    updateRankings(customData[slideValue], names);
+                    updateRankings(customData, slideValue, allDates, inputText, names);
 
                     // Updates slider
                     slider.on("input", function() {
@@ -1091,7 +1101,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                     });
 
                     slider.on("change", function () {
-                        updateRankings(customData[slideValue], names);
+                        updateRankings(customData, slideValue, allDates, inputText, names);
                     });
 
                     // Updates legend minimum value
