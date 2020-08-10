@@ -794,7 +794,7 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText)
         })
         .on("click", function(d) {
             updateTimeChart(allDatesAllLocations, dates, inputText, d.properties.id, d.properties.name);
-        })
+        });
 }
 
 function updateRankings(customData, slideValue, allDates, inputText, names, pageSize = rankingsPageSize) {
@@ -816,7 +816,10 @@ function updateRankings(customData, slideValue, allDates, inputText, names, page
     d3.select("#rankingsexpr").text(inputText);
 
     const rankedRegions = d3.select("#rankingslist table").selectAll(".rankedregion")
-        .data(nameValuePairs.slice(0, pageSize));
+        .data(nameValuePairs.slice(0, pageSize))
+        .on("click", function (d) {
+            updateTimeChart(customData, allDates, inputText, d.id, d.name);
+        });;
 
     const newRanks = rankedRegions.enter().append("tr")
         .attr("class", "rankedregion")

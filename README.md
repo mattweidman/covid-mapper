@@ -75,7 +75,6 @@ The shift operation is useful if you want to compare ranges of data from differe
 * Different types of data - age groups, symptoms(?), hospitalizations, ICU use
 * Expanding circles option on maps
 * More countries states/provinces: Canada, China, Mexico, Brazil, India, Australia, Russia, etc.
-* Show a ranked list of all regions below the charts instead of showing top 5 on top of the map.
 * Show multiple regions at once in line chart.
 * Video or gif of change over time.
 
