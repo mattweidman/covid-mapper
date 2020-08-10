@@ -46,6 +46,22 @@ const clientResources = {
       "title": "Total deaths per 100,000 people",
       "expression": "deaths(day) / population * 100000"
     },
+    "sevenDayAvgNewCases": {
+        "title": "7-day average of new cases",
+        "expression": "(cases(day) - cases(day-7)) / 7"
+    },
+    "sevenDayAvgNewDeaths": {
+        "title": "7-day average of new deaths",
+        "expression": "(deaths(day) - deaths(day-7)) / 7"
+    },
+    "newCases": {
+        "title": "New cases",
+        "expression": "newcases(day)"
+    },
+    "newDeaths": {
+        "title": "New deaths",
+        "expression": "newdeaths(day)"
+    },
     "totalCases": {
         "title": "Total cases",
         "expression": "cases(day)"

@@ -28,13 +28,6 @@
         <label for="suggestions">Suggested expressions:</label>
         <select name="suggestions" id="suggestions"></select>
     </div>
-    <div id="showtop5container">
-        <label for="top5">Show top 5?</label>
-        <select name="top5" id="top5" onchange="updateTop5Toggle(value)">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select>
-    </div>
     <p></p>
     <div id="mapoptionscontainer">
         <label for="mapoptions">Select map type:</label>
@@ -63,14 +56,19 @@
     <div id="maptitlecontainer"></div>
     <div id="legendcontainer"></div>
     <div id="sourcescontainer"></div>
+    <button onclick=downloadAsPng()>Download map as PNG</button>
     <div id="slidecontainer">
         <h4 id="datetext">Date: </h4>
         <input type="range" class="slider" id="dateslider"></input>
     </div>
     <div id="timechart"></div>
+    <div id="rankingslist">
+        <table>
+            <tr><th>Rank</th><th>Name</th><th id="rankingsexpr"></th></tr>
+        </table>
+    </div>
     <p>Sources: usafacts.org, covid19.who.int, data.worldbank.org</p>
     <br>
-    <button onclick=downloadAsPng()>Download map as PNG</button>
     <div id="documentation">
         <h3>Keywords & Definitions</h3>
         <div id="doc"></div>

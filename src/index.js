@@ -70,9 +70,9 @@ d3.select("#viewtype").on("change", () => {
     updateViewType(optionSelected);
 });
 
-var top5 = false; // Using this variable for toggle to decide if top5 queries are currently on screen or not
-var showTop5 = true;
 var inputExp = '';
+
+const rankingsPageSize = 10;
 
 // Set properties.id and properties.name for every region
 function preprocessUsaMap(geomapFeatures, baseData) {
@@ -575,8 +575,6 @@ function updateSlider(allDates, dateIndex) {
 // Create blank map from geographical data.
 function resetGeoMap(geomapFeatures) {
     // clear map
-    svg.selectAll("g.top5").remove();
-    svg.selectAll("g.top5Toggle").remove();
     svg.call(zoom.transform, d3.zoomIdentity);
     svg.selectAll(".geofeatures").remove();
     
@@ -634,11 +632,11 @@ function processDate(date) {
 }
 
 var xScale, yScale, timeGraphData;
-function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
+function updateTimeChart(allDatesAllLocations, dates, inputText, id, name) {
     d3.select("#timechart").selectAll("*").remove();
 
     // compute appropriate data for this location
-    timeGraphData = computeCustomTimeData(allDatesAllLocations, d.properties.id, dates);
+    timeGraphData = computeCustomTimeData(allDatesAllLocations, id, dates);
     const maxValue = timeGraphData[1];
     const timeValueObjects = timeGraphData[0];
 
@@ -689,7 +687,7 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
         .attr("transform", "translate(0," + margin.top + ")")
         .call(d3.axisLeft(yScale));
 
-    var titleText = inputText + " in " + d.properties.name;
+    var titleText = inputText + " in " + name;
     svg.append("text")
         .attr("x", 0)
         .attr("y", 10)
@@ -737,6 +735,9 @@ function updateTimeChart(allDatesAllLocations, dates, inputText, d, names) {
         var i = bisect(timeValueObjects, x0, 1);
         updateTimeChartFocusText(i, dates);
     }
+
+    // scroll to element
+    d3.select("#timechart").node().scrollIntoView();
 }
 
 function updateTimeChartFocusText(dateIndex, allDates) {
@@ -770,12 +771,13 @@ function updateTimeChartFocusText(dateIndex, allDates) {
 // Color map using data.
 // locationValues: map geo id -> value
 // color: d3 coloring function
-function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText, names) {
+function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText) {
     const locationValues = allDatesAllLocations[slideValue];
     svg.selectAll(".geofeatures")
-        .style ( "fill" , function (d) {
+        .style("fill", function (d) {
             return color(locationValues[d.properties.id]);
         })
+        .style("cursor", "pointer")
         .on("mouseover", function(d) {
             const sel = d3.select(this);
             sel.moveToFront();
@@ -791,40 +793,69 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText,
                 .style("top", (d3.event.pageY -30) + "px")
         })
         .on("click", function(d) {
-            updateTimeChart(allDatesAllLocations, dates, inputText, d, names);
-        })
+            updateTimeChart(allDatesAllLocations, dates, inputText, d.properties.id, d.properties.name);
+        });
 }
 
-function updateTop5(locationValues, names) {
-    top5 = true;
-    var i = 0;
-    var nameValuePairs = [];
-    Object.keys(locationValues).map((key) => {
-        if(!isNaN(locationValues[key])){
-            nameValuePairs.push([(names.find(loc => loc.id === (key))).name, locationValues[key]]) // Store name of location with result in array
-        }else {
-        }
-    });
+function updateRankings(customData, slideValue, allDates, inputText, names, pageSize = rankingsPageSize) {
+    const locationValues = customData[slideValue];
 
-    nameValuePairs.sort(function (a,b){
-        return a[1] - b[1]
-    });
-    nameValuePairs = nameValuePairs.slice(Math.max(nameValuePairs.length - 5, 0)).reverse(); // Get top 5
+    const nameValuePairs = Object.keys(locationValues)
+        .filter(key => !isNaN(locationValues[key]) && isFinite(locationValues[key]))
+        .map(key => {
+            return {
+                "name": names[key],
+                "value": locationValues[key],
+                "id": key
+            }
+        });
 
-    svg.select(".top5Text").text('Top 5:');
-    var xVal = 40;
-    var yVal = 360;
-    nameValuePairs.forEach((pair) =>{
-        svg.select(".text"+yVal)
-            .text(pair[0]+": "+pair[1])
-            .style("font-size", "15px")
-            .attr("alignment-baseline","middle");
-        yVal = yVal + 20;
-    });
+    nameValuePairs.sort((a, b) => b.value - a.value);
 
-    if(showTop5 === false){
-        svg.select(".top5")
-            .style("opacity", 0);
+    // Update text on top of table
+    d3.select("#rankingsexpr").text(inputText);
+
+    const rankedRegions = d3.select("#rankingslist table").selectAll(".rankedregion")
+        .data(nameValuePairs.slice(0, pageSize))
+        .on("click", function (d) {
+            updateTimeChart(customData, allDates, inputText, d.id, d.name);
+        });;
+
+    const newRanks = rankedRegions.enter().append("tr")
+        .attr("class", "rankedregion")
+        .on("click", function (d) {
+            updateTimeChart(customData, allDates, inputText, d.id, d.name);
+        });
+
+    newRanks.append("td").attr("class", "ranknum").text((d, i) => (i + 1));
+    newRanks.append("td").attr("class", "rankname").text(d => d.name);
+    newRanks.append("td").attr("class", "rankval").text(d => d.value);
+
+    rankedRegions.exit().remove();
+
+    rankedRegions.select(".ranknum").text((d, i) => (i + 1));
+    rankedRegions.select(".rankname").text(d => d.name);
+    rankedRegions.select(".rankval").text(d => d.value);
+
+    d3.select("#rankloadmore").remove();
+    d3.select("#rankloadall").remove();
+
+    if (pageSize < nameValuePairs.length) {
+        d3.select("#rankingslist").append("h5")
+            .attr("id", "rankloadmore")
+            .attr("class", "rankload")
+            .text(`Load ${rankingsPageSize} more`)
+            .on("click", function () {
+                updateRankings(customData, slideValue, allDates, inputText, names, pageSize + rankingsPageSize);
+            });
+
+        d3.select("#rankingslist").append("h5")
+            .attr("id", "rankloadall")
+            .attr("class", "rankload")
+            .text("Load all")
+            .on("click", function () {
+                updateRankings(customData, slideValue, allDates, inputText, names, Object.keys(locationValues).length);
+            });
     }
 }
 
@@ -1003,38 +1034,15 @@ function autocomplete() {
     autocompleteList.select("span").text(d => docs[d]);
 }
 
-function createTop5() {
-    const top5 = svg.append("g")
-        .attr("class", "top5")
-        .attr("id", "top5Id");
-
-    var xValTop5 = 40;
-    var yValTop5 = 360;
-    top5.append("text").attr("class", "top5Text").attr("x", xValTop5).attr("y", yValTop5 - 20)
-    for (let i = 0; i < 5; i++) {
-        top5.append("text").attr("class", "text"+yValTop5).attr("x", xValTop5).attr("y", yValTop5);
-        yValTop5 = yValTop5 + 20;
-    }
-}
-
-function updateTop5Toggle(value) {
-    showTop5 = showTop5 ? false : true;
-    var show = showTop5 ? 1 : 0;
-    svg.select(".top5")
-        .style("opacity", show);
-}
-
 // Called when data is initially loaded.
 function dataLoaded(geomapFeatures, allDates, baseData) {
     const slider = resetSlider(allDates);
     resetGeoMap(geomapFeatures);
-    top5 = false;
 
-    createTop5();
     inputExp = '';
 
     // Updates to expression textbox
-    function updateExpressionInput(inputText, refreshMap) {
+    function updateExpressionInput(inputText, refreshMap, clearSuggestions = false) {
         if (inputText === "") {
             d3.select("#parseroutput")
                 .text("Enter an expression.")
@@ -1042,7 +1050,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
         }
 
         // auto-complete suggestions here
-        // autocomplete(document.getElementById("expressioninput"), options);
         autocomplete();
         
         var ast;
@@ -1079,28 +1086,28 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .clamp(true)
                         .unknown(lowColor);
 
-                    // Get names for top5 list along with ID
-                    var names = [];
+                    // Get names for rankings list
+                    var names = {};
                     for (const [key, value] of Object.entries(baseData)) {
-                        names.push({
-                            "id": value.id,
-                            "name": value.name
-                        });
+                        names[key] = value.name;
                     }
 
                     d3.select("#timechart").selectAll("*").remove();
 
                     inputExp = inputText;
                     updateLegendLimits(domain);
-                    updateGeoMap(customData, color, slideValue, allDates, inputText, names);
-                    updateTop5(customData[slideValue], names);
+                    updateGeoMap(customData, color, slideValue, allDates, inputText);
+                    updateRankings(customData, slideValue, allDates, inputText, names);
 
                     // Updates slider
                     slider.on("input", function() {
                         updateSlider(allDates, this.value);
-                        updateGeoMap(customData, color, slideValue, allDates, inputText, names);
-                        updateTop5(customData[slideValue], names);
+                        updateGeoMap(customData, color, slideValue, allDates, inputText);
                         updateTimeChartFocusText(slideValue, allDates);
+                    });
+
+                    slider.on("change", function () {
+                        updateRankings(customData, slideValue, allDates, inputText, names);
                     });
 
                     // Updates legend minimum value
@@ -1109,13 +1116,13 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                    updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                                 }
                             }
                         })
                         .on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, true, color)) {
-                                updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                updateGeoMap(customData, color, slideValue, allDates, inputText);
                             }
                         });
 
@@ -1125,18 +1132,22 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                             if (d3.event.keyCode === 13) {
                                 d3.event.preventDefault();
                                 if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                    updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                    updateGeoMap(customData, color, slideValue, allDates, inputText);
                                 }
                             }
                         }).on("blur", () => {
                             if (userChangesLegend(d3.event.target.textContent, false, color)) {
-                                updateGeoMap(customData, color, slideValue, allDates, inputText, names);
+                                updateGeoMap(customData, color, slideValue, allDates, inputText);
                             }
                         });
         
                     d3.select("#parseroutput")
                         .text("Entered.")
                         .style("color", "black");
+
+                    if (clearSuggestions) {
+                        d3.select("#suggestions").node().value = null;
+                    }
                 }
             } else {
                 d3.select("#parseroutput")
@@ -1153,7 +1164,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
             clearTimeout(inputTimeout);
             inputTimeout = setTimeout(() => updateExpressionInput(this.value, false), 250);
         } else {
-            updateExpressionInput(this.value, true);
+            updateExpressionInput(this.value, true, true);
         }
     });
 
