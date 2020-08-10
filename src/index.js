@@ -1086,7 +1086,7 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
                         .clamp(true)
                         .unknown(lowColor);
 
-                    // Get names for top5 list along with ID
+                    // Get names for rankings list
                     var names = {};
                     for (const [key, value] of Object.entries(baseData)) {
                         names[key] = value.name;
