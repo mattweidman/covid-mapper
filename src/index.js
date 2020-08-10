@@ -72,6 +72,8 @@ d3.select("#viewtype").on("change", () => {
 
 var inputExp = '';
 
+const rankingsPageSize = 10;
+
 // Set properties.id and properties.name for every region
 function preprocessUsaMap(geomapFeatures, baseData) {
     for (const d of geomapFeatures) {
@@ -791,10 +793,11 @@ function updateGeoMap(allDatesAllLocations, color, slideValue, dates, inputText)
         })
 }
 
-function updateRankings(locationValues, names) {
-    // TODO: only show top 100 or so and let user click to see more
+function updateRankings(locationValues, names, pageSize = rankingsPageSize) {
+    // TODO: responsive UI when hovering over rows
+    // TODO: click on row to change line chart
 
-    var nameValuePairs = Object.keys(locationValues)
+    const nameValuePairs = Object.keys(locationValues)
         .filter(key => !isNaN(locationValues[key]) && isFinite(locationValues[key]))
         .map(key => [names[key], locationValues[key]]);
 
@@ -804,19 +807,40 @@ function updateRankings(locationValues, names) {
     d3.select("#rankingsexpr").text(inputExp);
 
     const rankedRegions = d3.select("#rankingslist table").selectAll(".rankedregion")
-        .data(nameValuePairs);
+        .data(nameValuePairs.slice(0, pageSize));
 
     const newRanks = rankedRegions.enter().append("tr")
         .attr("class", "rankedregion");
-    newRanks.append("td").attr("class", "ranknum").text((d, i) => i);
+    newRanks.append("td").attr("class", "ranknum").text((d, i) => (i + 1));
     newRanks.append("td").attr("class", "rankname").text(d => d[0]);
     newRanks.append("td").attr("class", "rankval").text(d => d[1]);
 
     rankedRegions.exit().remove();
 
-    rankedRegions.select(".ranknum").text((d, i) => i);
+    rankedRegions.select(".ranknum").text((d, i) => (i + 1));
     rankedRegions.select(".rankname").text(d => d[0]);
     rankedRegions.select(".rankval").text(d => d[1]);
+
+    d3.select("#rankloadmore").remove();
+    d3.select("#rankloadall").remove();
+
+    if (pageSize < nameValuePairs.length) {
+        d3.select("#rankingslist").append("h5")
+            .attr("id", "rankloadmore")
+            .attr("class", "rankload")
+            .text(`Load ${rankingsPageSize} more`)
+            .on("click", function () {
+                updateRankings(locationValues, names, pageSize + rankingsPageSize);
+            });
+
+        d3.select("#rankingslist").append("h5")
+            .attr("id", "rankloadall")
+            .attr("class", "rankload")
+            .text("Load all")
+            .on("click", function () {
+                updateRankings(locationValues, names, Object.keys(locationValues).length);
+            });
+    }
 }
 
 function createLegend() {
@@ -1010,7 +1034,6 @@ function dataLoaded(geomapFeatures, allDates, baseData) {
         }
 
         // auto-complete suggestions here
-        // autocomplete(document.getElementById("expressioninput"), options);
         autocomplete();
         
         var ast;
