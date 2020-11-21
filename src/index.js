@@ -277,21 +277,6 @@ function setPopulationData(baseData, rawPopulationData) {
     }
 }
 
-function getWhoRegionsMap(rawWorldData) {
-    const whoRegions = {};
-
-    for (const row of rawWorldData) {
-        const countryId = row["Country_code"];
-        const whoRegion = row["WHO_region"];
-
-        if (!(whoRegion in whoRegions)) {
-            whoRegions[countryId] = whoRegion;
-        }
-    }
-
-    return whoRegions;
-}
-
 // Compute the dates x locations matrix using the AST to evaluate.
 function computeCustomData(baseData, ast) {
     const geoIdToValueDictList = [];
@@ -383,7 +368,7 @@ function randStrGen() {
     return (Math.random() + "").substring(2);
 }
 
-function showWorldMap(whoRegion) {
+function showWorldMap() {
     path.projection(d3.geoRobinson());
 
     hideSphere();
@@ -401,11 +386,6 @@ function showWorldMap(whoRegion) {
         const baseData = preprocessWorldData(rawData, rawPopulationData, allDates);
         var geomapFeatures = geomap.features;
         preprocessWorldMap(geomapFeatures);
-
-        if (whoRegion) {
-            const whoRegions = getWhoRegionsMap(rawData);
-            geomapFeatures = geomapFeatures.filter(f => whoRegions[f.properties.id] === whoRegion);
-        }
 
         dataLoaded(geomapFeatures, allDates, baseData);
     });
