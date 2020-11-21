@@ -240,11 +240,11 @@ function preprocessWorldData(rawData, rawPopulationData, allDates) {
 
     for (const row of rawData) {
         // If baseData doesn't contain Country_code as a key, add it and initialize arrays
-        const countryCode = row[" Country_code"];
+        const countryCode = row["Country_code"];
         if (!(countryCode in baseData)) {
             baseData[countryCode] = {
                 id: countryCode,
-                name: row[" Country"],
+                name: row["Country"],
                 cases: Array.from(Array(allDates.length), () => 0),
                 deaths: Array.from(Array(allDates.length), () => 0),
                 newCases: Array.from(Array(allDates.length), () => 0),
@@ -255,10 +255,10 @@ function preprocessWorldData(rawData, rawPopulationData, allDates) {
         // Set date-specific properties
         const covidData = baseData[countryCode];
         const dateIndex = allDatesInv[row["Date_reported"]];
-        covidData.cases[dateIndex] = parseInt(row[" Cumulative_cases"]);
-        covidData.deaths[dateIndex] = parseInt(row[" Cumulative_deaths"]);
-        covidData.newCases[dateIndex] = parseInt(row[" New_cases"]);
-        covidData.newDeaths[dateIndex] = parseInt(row[" New_deaths"]);
+        covidData.cases[dateIndex] = parseInt(row["Cumulative_cases"]);
+        covidData.deaths[dateIndex] = parseInt(row["Cumulative_deaths"]);
+        covidData.newCases[dateIndex] = parseInt(row["New_cases"]);
+        covidData.newDeaths[dateIndex] = parseInt(row["New_deaths"]);
     }
 
     setPopulationData(baseData, rawPopulationData);
@@ -281,8 +281,8 @@ function getWhoRegionsMap(rawWorldData) {
     const whoRegions = {};
 
     for (const row of rawWorldData) {
-        const countryId = row[" Country_code"];
-        const whoRegion = row[" WHO_region"];
+        const countryId = row["Country_code"];
+        const whoRegion = row["WHO_region"];
 
         if (!(whoRegion in whoRegions)) {
             whoRegions[countryId] = whoRegion;
