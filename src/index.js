@@ -1,3 +1,8 @@
+const worldDataLink = "../data/who.csv";
+const usaCasesLink = "../data/usa-cases.csv";
+const usaDeathsLink = "../data/usa-deaths.csv";
+const usaPopulationsLink = "../data/usa-populations.csv";
+
 const width = 960, height = 550, legendHeight = 45;
 const lowColor = "#dcdcdc", highColor = "#8b0000";
  
@@ -91,7 +96,7 @@ function preprocessUsaMap(geomapFeatures, baseData) {
 function getDateListFromUsaData(rawData) {
     const allDates = [];
     for (const key in rawData[0]) {
-        if (key.includes("/")) {
+        if (key.includes("-")) {
             allDates.push(key);
         }
     }
@@ -99,8 +104,8 @@ function getDateListFromUsaData(rawData) {
 }
 
 // Convert raw USA data to new format with data separated by county.
-// casesCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,confirmedcases...]
-// deathsCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,deaths...]
+// casesCsv: CSV containing [countyFIPS,County Name,State,StateFIPS,confirmedcases...]
+// deathsCsv: CSV containing [countyFIPS,County Name,State,StateFIPS,deaths...]
 // populationCsv: CSV containing [countyFIPS,County Name,State,population]
 // allDates: list of date strings from CSV headers
 // returns map of location ID -> CovidData object for each location (see CovidData in ast.ts)
@@ -148,8 +153,8 @@ function preprocessUsaData(casesCsv, deathsCsv, populationCsv, allDates) {
 }
 
 // Convert raw USA data to new format with data separated by state.
-// casesCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,confirmedcases...]
-// deathsCsv: CSV containing [countyFIPS,County Name,State,stateFIPS,deaths...]
+// casesCsv: CSV containing [countyFIPS,County Name,State,StateFIPS,confirmedcases...]
+// deathsCsv: CSV containing [countyFIPS,County Name,State,StateFIPS,deaths...]
 // populationCsv: CSV containing [countyFIPS,County Name,State,population]
 // allDates: list of date strings from CSV headers
 // stateAbbrsCsv: CSV containing [state,abbreviation]
@@ -165,7 +170,7 @@ function preprocessUsaStatesData(casesCsv, deathsCsv, populationCsv, stateAbbrsC
 
     // Populate cases, deaths, and constants
     for (var i = 0; i < casesCsv.length; i++) {
-        const stateId = casesCsv[i]["stateFIPS"];
+        const stateId = casesCsv[i]["StateFIPS"];
 
         if (!(stateId in baseData)) {
             baseData[stateId] = {
@@ -376,7 +381,7 @@ function showWorldMap() {
     d3.select("#viewtype").property("value", "worldflat");
 
     Promise.all([
-        d3.csv("https://cors-anywhere.herokuapp.com/https://covid19.who.int/WHO-COVID-19-global-data.csv?" + randStrGen())
+        d3.csv(worldDataLink)
     ]).then(function (data) {
         const geomap = countriesJSON;
         const rawData = data[0];
@@ -398,9 +403,9 @@ function showUsaCounties() {
     d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv?" + randStrGen()),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv?" + randStrGen()),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv?" + randStrGen())
+        d3.csv(usaCasesLink),
+        d3.csv(usaDeathsLink),
+        d3.csv(usaPopulationsLink)
     ]).then(function (data) {
         const geomap = usJSON;
         const casesCsv = data[0];
@@ -423,9 +428,9 @@ function showUsaStates() {
     d3.selectAll(".viewtype").style("visibility", "hidden");
 
     Promise.all([
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv?" + randStrGen()),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv?" + randStrGen()),
-        d3.csv("https://cors-anywhere.herokuapp.com/https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_county_population_usafacts.csv?" + randStrGen())
+        d3.csv(usaCasesLink),
+        d3.csv(usaDeathsLink),
+        d3.csv(usaPopulationsLink)
     ]).then(function (data) {
         const geomap = usJSON;
         const stateAbbrsCsv = usStateAbbrsJSON;
@@ -593,7 +598,7 @@ function resetGeoMap(geomapFeatures) {
 }
 
 // world map: stored as YYYY-MM-DD
-// us maps: stored as M or MM/DD/YY
+// us maps: stored as M or MM-DD-YY
 // due to broswer inconsistencies we want to output [YYYY, MM, DD]
 // where MM ranges from 0 to 11 and all values should be integers, not strings
 function processDate(date) {
@@ -602,8 +607,8 @@ function processDate(date) {
                 parseInt(date.substring(5, 7)) - 1, 
                 parseInt(date.substring(8))];
     } else {
-        var firstSlash = date.indexOf("/");
-        var lastSlash = date.lastIndexOf("/");
+        var firstSlash = date.indexOf("-");
+        var lastSlash = date.lastIndexOf("-");
         var year = parseInt("20" + date.substring(lastSlash + 1));
         var month = parseInt(date.substring(0, firstSlash)) - 1;
         var day = date.substring(firstSlash + 1, lastSlash);

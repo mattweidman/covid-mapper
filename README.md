@@ -4,7 +4,14 @@ Create maps using COVID-19 data. Enter an expression and view a map of the data 
 
 Code based on: http://bl.ocks.org/TheMapSmith/bd3ef04e33483e671601c753856273cb
 
-Data: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
+Data: 
+
+WHO: https://covid19.who.int/WHO-COVID-19-global-data.csv
+
+USA: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
+* US cases: https://static.usafacts.org/public/data/covid-19/covid_confirmed_usafacts.csv
+* US deaths: https://static.usafacts.org/public/data/covid-19/covid_deaths_usafacts.csv
+* US populations: https://static.usafacts.org/public/data/covid-19/covid_county_population_usafacts.csv
 
 ![Map of covid cases](./usamap.png)
 
