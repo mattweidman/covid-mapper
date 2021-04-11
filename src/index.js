@@ -82,10 +82,16 @@ const rankingsPageSize = 10;
 // Set properties.id and properties.name for every region
 function preprocessUsaMap(geomapFeatures, baseData) {
     for (const d of geomapFeatures) {
-        d.properties.id = d.id;
+        let id = d.id + "";
 
-        if (d.id in baseData) {
-            d.properties.name = baseData[d.id].name;
+        if (id.length === 1) {
+            id = `0${id}`;
+        }
+
+        d.properties.id = id;
+
+        if (id in baseData) {
+            d.properties.name = baseData[id].name;
         } else {
             d.properties.name = "Unrecognized county";
         }
@@ -598,22 +604,13 @@ function resetGeoMap(geomapFeatures) {
 }
 
 // world map: stored as YYYY-MM-DD
-// us maps: stored as M or MM-DD-YY
+// us maps: stored as YYYY-MM-DD
 // due to broswer inconsistencies we want to output [YYYY, MM, DD]
 // where MM ranges from 0 to 11 and all values should be integers, not strings
 function processDate(date) {
-    if (d3.select("#mapoptions").node().value === "worldflat") {
-        return [parseInt(date.substring(0, 4)), 
-                parseInt(date.substring(5, 7)) - 1, 
-                parseInt(date.substring(8))];
-    } else {
-        var firstSlash = date.indexOf("-");
-        var lastSlash = date.lastIndexOf("-");
-        var year = parseInt("20" + date.substring(lastSlash + 1));
-        var month = parseInt(date.substring(0, firstSlash)) - 1;
-        var day = date.substring(firstSlash + 1, lastSlash);
-        return [year, month, day];
-    }
+    return [parseInt(date.substring(0, 4)), 
+        parseInt(date.substring(5, 7)) - 1, 
+        parseInt(date.substring(8))];
 }
 
 var xScale, yScale, timeGraphData;
